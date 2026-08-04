@@ -1,0 +1,172 @@
+.cabecalho-site {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: 76px;
+  border-bottom: 1px solid var(--borda);
+  background-color: var(--branco);
+}
+
+.conteudo-cabecalho {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--verde-escuro);
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.marca img {
+  width: 26px;
+  height: 26px;
+}
+
+.painel-cabecalho,
+.painel-cabecalho nav,
+.acoes-cabecalho {
+  display: flex;
+  align-items: center;
+}
+
+.painel-cabecalho {
+  flex: 1;
+  justify-content: flex-end;
+  gap: 45px;
+}
+
+.painel-cabecalho nav {
+  gap: 24px;
+}
+
+.painel-cabecalho nav a {
+  position: relative;
+  padding: 26px 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.painel-cabecalho nav a.ativo,
+.painel-cabecalho nav a:hover {
+  color: var(--verde-escuro);
+}
+
+.painel-cabecalho nav a.ativo {
+  border-bottom: 2px solid var(--verde-escuro);
+}
+
+.acoes-cabecalho {
+  gap: 18px;
+}
+
+.acoes-cabecalho .botao {
+  min-height: 44px;
+  padding: 9px 17px;
+  font-size: 13px;
+}
+
+.link-acessar {
+  padding: 0;
+  color: var(--verde-escuro);
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.botao-menu {
+  display: none;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: var(--fundo-claro);
+  cursor: pointer;
+}
+
+.botao-menu span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  margin: 4px auto;
+  background-color: var(--verde-escuro);
+}
+
+@media (max-width: 970px) {
+  .botao-menu {
+    display: block;
+  }
+
+  .painel-cabecalho {
+    position: fixed;
+    top: 76px;
+    right: 0;
+    left: 0;
+    display: none;
+    padding: 28px 5% 36px;
+    border-top: 1px solid var(--borda);
+    background-color: var(--branco);
+  }
+
+  .painel-cabecalho.aberto {
+    display: block;
+  }
+
+  .painel-cabecalho nav {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .painel-cabecalho nav a {
+    padding: 12px 0;
+    font-size: 16px;
+  }
+
+  .painel-cabecalho nav a.ativo {
+    border-bottom: none;
+    color: var(--verde-escuro);
+  }
+
+  .acoes-cabecalho {
+    margin-top: 24px;
+  }
+
+  .link-acessar {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  .marca {
+    font-size: 17px;
+  }
+
+  .painel-cabecalho {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .acoes-cabecalho {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+}

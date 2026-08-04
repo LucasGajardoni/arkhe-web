@@ -1,0 +1,128 @@
+.fundo-modal-conta {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(28, 28, 23, 0.55);
+}
+
+.modal-tipo-conta {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  padding: 36px;
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  background-color: var(--branco);
+  box-shadow: 0 18px 45px rgba(28, 28, 23, 0.2);
+}
+
+.fechar-modal-conta {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  color: var(--texto-secundario);
+  border-radius: 8px;
+  background-color: var(--fundo-claro);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.modal-tipo-conta h2 {
+  max-width: 390px;
+  margin-top: 5px;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.texto-modal-conta {
+  margin-top: 9px;
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
+.opcoes-modal-conta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.opcoes-modal-conta button {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  border-radius: 13px;
+  background-color: var(--branco);
+  cursor: pointer;
+  text-align: left;
+}
+
+.opcoes-modal-conta button:hover {
+  border-color: var(--verde-escuro);
+  background-color: #f7fbf9;
+}
+
+.opcoes-modal-conta button > span {
+  display: flex;
+  min-width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: var(--verde-escuro);
+  background-color: var(--fundo-claro);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.opcoes-modal-conta button div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.opcoes-modal-conta strong {
+  font-size: 15px;
+}
+
+.opcoes-modal-conta small {
+  margin-top: 2px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.opcoes-modal-conta b {
+  color: var(--verde-escuro);
+  font-size: 18px;
+}
+
+.aviso-modal-conta {
+  margin-top: 20px;
+  color: #777164;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .modal-tipo-conta {
+    padding: 30px 22px 24px;
+  }
+
+  .modal-tipo-conta h2 {
+    font-size: 24px;
+  }
+}

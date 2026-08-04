@@ -1,0 +1,92 @@
+.indicador-etapas {
+  margin-bottom: 28px;
+}
+
+.lista-etapas {
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  list-style: none;
+}
+
+.lista-etapas li {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  color: #8a867c;
+  text-align: center;
+}
+
+.lista-etapas li::after {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background-color: var(--borda);
+  content: '';
+}
+
+.lista-etapas li:last-child::after {
+  display: none;
+}
+
+.lista-etapas span {
+  z-index: 1;
+  display: flex;
+  width: 31px;
+  height: 31px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borda);
+  border-radius: 50%;
+  background-color: var(--branco);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lista-etapas small {
+  max-width: 90px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.lista-etapas .etapa-ativa span,
+.lista-etapas .etapa-concluida span {
+  color: var(--branco);
+  border-color: var(--verde-escuro);
+  background-color: var(--verde-escuro);
+}
+
+.lista-etapas .etapa-ativa small {
+  color: var(--verde-escuro);
+  font-weight: 800;
+}
+
+.etapa-mobile {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .lista-etapas {
+    display: none;
+  }
+
+  .etapa-mobile {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background-color: var(--branco);
+    color: var(--texto-secundario);
+    font-size: 13px;
+  }
+
+  .etapa-mobile strong {
+    color: var(--verde-escuro);
+  }
+}

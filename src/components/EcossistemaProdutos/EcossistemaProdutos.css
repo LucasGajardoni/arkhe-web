@@ -1,0 +1,216 @@
+.ecossistema {
+  padding: 100px 0;
+}
+
+.grade-produtos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 56px;
+}
+
+.cartao-produto {
+  position: relative;
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: 40px;
+  border: 1px solid var(--borda);
+  border-radius: 24px;
+  background-color: var(--branco);
+  box-shadow: 0 6px 18px rgba(28, 28, 23, 0.06);
+}
+
+.cartao-produto h3 {
+  max-width: 510px;
+  margin-top: 8px;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.cartao-produto p:not(.rotulo-produto) {
+  max-width: 510px;
+  margin-top: 14px;
+  color: var(--texto-secundario);
+}
+
+.rotulo-produto {
+  color: var(--verde-medio);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.cartao-conta,
+.cartao-investimentos {
+  grid-column: span 2;
+}
+
+.icone-produto {
+  display: flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--verde-escuro);
+  background-color: var(--fundo-claro);
+}
+
+.icone-produto svg,
+.link-texto svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.link-texto {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 9px;
+  color: var(--verde-escuro);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.link-texto svg {
+  width: 17px;
+}
+
+.cartao-pix {
+  color: var(--branco);
+  border-color: var(--verde-escuro);
+  background-color: var(--verde-escuro);
+}
+
+.cartao-pix .rotulo-produto,
+.cartao-pix p:not(.rotulo-produto) {
+  color: #d9e5e5;
+}
+
+.marca-pix {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  transform: rotate(45deg);
+}
+
+.marca-pix span {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  border: 2px solid var(--dourado-claro);
+  border-radius: 10px;
+}
+
+.marca-pix span:last-child {
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--dourado-claro);
+}
+
+.cartao-cartao {
+  gap: 26px;
+  background-color: var(--fundo-claro);
+}
+
+.cartao-cartao img {
+  width: 100%;
+  max-width: 285px;
+  margin: 0 auto -28px;
+  transform: rotate(-4deg);
+}
+
+.cartao-investimentos {
+  background-color: #faf9f4;
+}
+
+.cartao-investimentos ul {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.cartao-investimentos li {
+  padding: 17px;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background-color: var(--branco);
+}
+
+.cartao-investimentos li::before {
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background-color: var(--dourado);
+  content: '';
+}
+
+.cartao-investimentos li span,
+.cartao-investimentos li small {
+  display: block;
+}
+
+.cartao-investimentos li span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.cartao-investimentos li small {
+  margin-top: 3px;
+  color: var(--texto-secundario);
+  font-size: 11px;
+}
+
+@media (max-width: 850px) {
+  .grade-produtos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cartao-conta,
+  .cartao-investimentos {
+    grid-column: span 1;
+  }
+
+  .cartao-investimentos ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .ecossistema {
+    padding: 75px 0;
+  }
+
+  .grade-produtos {
+    grid-template-columns: 1fr;
+    margin-top: 40px;
+  }
+
+  .cartao-produto {
+    min-height: 310px;
+    padding: 28px;
+  }
+
+  .cartao-produto h3 {
+    font-size: 26px;
+  }
+}

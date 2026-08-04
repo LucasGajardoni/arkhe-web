@@ -1,0 +1,390 @@
+.pagina-cadastro {
+  min-height: 100vh;
+  background-color: var(--fundo);
+}
+
+.area-cadastro,
+.conclusao-cadastro {
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+
+.conclusao-cadastro h1 {
+  margin-bottom: 12px;
+  font-size: 42px;
+  line-height: 1.2;
+}
+
+.conclusao-cadastro > p {
+  color: var(--texto-secundario);
+}
+
+.layout-cadastro {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+  align-items: start;
+  gap: 28px;
+}
+
+.cartao-formulario {
+  padding: 42px;
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  background-color: var(--branco);
+  box-shadow: 0 10px 24px rgba(28, 28, 23, 0.07);
+}
+
+.titulo-formulario {
+  margin-bottom: 32px;
+}
+
+.titulo-formulario > p {
+  margin-bottom: 8px;
+  color: var(--dourado);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.titulo-formulario h1 {
+  margin-bottom: 10px;
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.titulo-formulario span {
+  color: var(--texto-secundario);
+  font-size: 14px;
+}
+
+.grade-formulario {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.campo-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grade-formulario > .campo-formulario:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.campo-formulario span small {
+  color: #898476;
+  font-weight: 500;
+}
+
+.campo-formulario input,
+.campo-formulario select {
+  width: 100%;
+  min-height: 47px;
+  padding: 10px 12px;
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  outline: none;
+  background-color: var(--branco);
+  font-size: 14px;
+}
+
+.campo-formulario input:focus,
+.campo-formulario select:focus {
+  border-color: var(--verde-medio);
+  box-shadow: 0 0 0 2px rgba(19, 122, 116, 0.12);
+}
+
+.erro-campo,
+.erro-geral {
+  color: #9b2c2c;
+  font-size: 12px;
+}
+
+.erro-geral {
+  margin-top: 18px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: #fff1f1;
+}
+
+.status-cep {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 12px;
+  color: var(--verde-medio);
+  font-size: 12px;
+}
+
+.mostrar-senha {
+  margin-top: 12px;
+  padding: 0;
+  color: var(--verde-medio);
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.consentimentos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.consentimentos label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.consentimentos input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--verde-escuro);
+}
+
+.aviso-simulacao {
+  margin-top: 22px;
+  padding: 14px;
+  color: var(--texto-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background-color: var(--fundo-claro);
+  font-size: 12px;
+}
+
+.acoes-formulario {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.botao:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.apoio-cadastro {
+  position: sticky;
+  top: 24px;
+  padding: 30px;
+  border-radius: 18px;
+  color: var(--branco);
+  background-color: var(--verde-escuro);
+}
+
+.apoio-cadastro > span {
+  color: var(--dourado-claro);
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.apoio-cadastro h2 {
+  margin: 12px 0;
+  font-size: 22px;
+}
+
+.apoio-cadastro p {
+  color: #d9e5e5;
+  font-size: 13px;
+}
+
+.apoio-cadastro hr {
+  margin: 24px 0;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.apoio-cadastro strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dourado-claro);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.revisao-cadastro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.bloco-revisao {
+  padding: 20px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background-color: #fdfcf8;
+}
+
+.topo-revisao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.topo-revisao h3 {
+  font-size: 15px;
+}
+
+.topo-revisao button {
+  color: var(--verde-medio);
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bloco-revisao dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.bloco-revisao dt {
+  color: #7c776b;
+}
+
+.bloco-revisao dd {
+  color: var(--texto);
+  text-align: right;
+}
+
+.miniaturas-revisao {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.miniaturas-revisao figure {
+  width: 82px;
+  overflow: hidden;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.miniaturas-revisao img {
+  width: 82px;
+  height: 58px;
+  object-fit: cover;
+}
+
+.miniaturas-revisao figcaption {
+  padding-top: 3px;
+  color: var(--texto-secundario);
+  font-size: 9px;
+  text-transform: capitalize;
+}
+
+.conclusao-cadastro {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.icone-conclusao {
+  display: flex;
+  width: 66px;
+  height: 66px;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  color: var(--branco);
+  background-color: var(--verde-escuro);
+  font-size: 28px;
+}
+
+.texto-secundario-conclusao {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.resumo-conclusao {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 32px;
+  text-align: left;
+}
+
+.resumo-conclusao div {
+  padding: 18px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background-color: var(--branco);
+}
+
+.resumo-conclusao dt {
+  color: var(--texto-secundario);
+  font-size: 11px;
+}
+
+.resumo-conclusao dd {
+  margin-top: 4px;
+  color: var(--verde-escuro);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .layout-cadastro {
+    grid-template-columns: 1fr;
+  }
+
+  .apoio-cadastro {
+    position: static;
+    order: -1;
+    padding: 22px;
+  }
+
+  .apoio-cadastro hr,
+  .apoio-cadastro strong,
+  .apoio-cadastro p:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .area-cadastro,
+  .conclusao-cadastro {
+    padding-top: 36px;
+    padding-bottom: 55px;
+  }
+
+  .grade-formulario,
+  .revisao-cadastro {
+    grid-template-columns: 1fr;
+  }
+
+  .cartao-formulario {
+    padding: 28px 22px;
+  }
+
+  .conclusao-cadastro h1 {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 520px) {
+  .acoes-formulario {
+    flex-direction: column-reverse;
+  }
+
+  .resumo-conclusao {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,18 @@
+.home {
+  overflow: hidden;
+}
+
+.aviso-academico {
+  padding: 6px 20px;
+  color: var(--branco);
+  background-color: var(--verde-escuro);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.aviso-academico span {
+  padding: 0 4px;
+  color: var(--dourado-claro);
+}

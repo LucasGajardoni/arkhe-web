@@ -1,0 +1,51 @@
+.cabecalho-cadastro {
+  height: 76px;
+  border-bottom: 1px solid var(--borda);
+  background-color: var(--branco);
+}
+
+.conteudo-cabecalho-cadastro {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.marca-cadastro {
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.voltar-inicio {
+  padding: 10px 14px;
+  color: var(--verde-escuro);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background-color: var(--branco);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aviso-cadastro {
+  padding: 6px 20px;
+  color: var(--branco);
+  background-color: var(--verde-escuro);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.aviso-cadastro span {
+  padding: 0 4px;
+  color: var(--dourado-claro);
+}
+
+@media (max-width: 520px) {
+  .voltar-inicio {
+    border: none;
+    padding-right: 0;
+  }
+}
