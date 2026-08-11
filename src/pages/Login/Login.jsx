@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CadastroHeader from '../../components/CadastroHeader/CadastroHeader.jsx'
-import CapturaFacial from '../../components/CapturaFacial/CapturaFacial.jsx'
+import ReconhecimentoFacial from '../../components/ReconhecimentoFacial/ReconhecimentoFacial.jsx'
+import { API_URL, FACE_API_URL, FACE_CLIENT_ID, FACE_CLIENT_SECRET } from '../../App.jsx'
 import './Login.css'
 
 export default function Login() {
@@ -10,7 +11,6 @@ export default function Login() {
   const [etapa, setEtapa] = useState(0)
   const [loginPF, setLoginPF] = useState({ cpf: '', senha: '', lembrarCpf: false })
   const [loginPJ, setLoginPJ] = useState({ cnpj: '', senha: '', cpfResponsavel: '' })
-  const [capturaLogin, setCapturaLogin] = useState({ frontal: '' })
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [recuperandoSenha, setRecuperandoSenha] = useState(false)
@@ -18,6 +18,8 @@ export default function Login() {
   const [dadosRecuperacao, setDadosRecuperacao] = useState({ cpf: '', cnpj: '', cpfResponsavel: '', email: '' })
   const [mensagemRecuperacao, setMensagemRecuperacao] = useState('')
   const [mensagemDemonstracao, setMensagemDemonstracao] = useState('')
+  const [mensagemErro, setMensagemErro] = useState('')
+  const [sessaoFacial, setSessaoFacial] = useState(null)
 
   function mascaraCpf(valor) {
     return valor.replace(/\D/g, '').slice(0, 11).replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2')
@@ -49,8 +51,6 @@ export default function Login() {
       navigate('/')
       return
     }
-    const etapaFacial = (tipoConta === 'PF' && etapa === 2) || (tipoConta === 'PJ' && etapa === 3)
-    if (etapaFacial) setCapturaLogin({ frontal: '' })
     setEtapa((etapaAtual) => etapaAtual - 1)
   }
 
@@ -59,24 +59,92 @@ export default function Login() {
     setEtapa(0)
     setLoginPF({ cpf: '', senha: '', lembrarCpf: false })
     setLoginPJ({ cnpj: '', senha: '', cpfResponsavel: '' })
-    setCapturaLogin({ frontal: '' })
     setMostrarSenha(false)
+    setMensagemErro('')
+    setSessaoFacial(null)
+  }
+
+  async function criarSessaoFacial(cpf) {
+    // A API aceita localizar a identidade pelo CPF, portanto este projeto não
+    // precisa salvar o identity_id da API facial no banco principal.
+    const resposta = await fetch(`${FACE_API_URL}/v1/verifications`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Id': FACE_CLIENT_ID,
+        'X-Client-Secret': FACE_CLIENT_SECRET,
+      },
+      body: JSON.stringify({
+        cpf: cpf.replace(/\D/g, ''),
+        purpose: 'login',
+        ttl_minutes: 10,
+      }),
+    })
+    const resultado = await resposta.json()
+    if (!resposta.ok) {
+      const detalhe = resultado.detail?.message || resultado.detail
+      throw new Error(typeof detalhe === 'string' ? detalhe : 'Não foi possível iniciar o reconhecimento facial.')
+    }
+    return resultado
+  }
+
+  async function autenticar(cpf, senha, cadastroFacial = false) {
+    setProcessando(true)
+    setMensagemErro('')
+    try {
+      const resposta = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cpf: cpf.replace(/\D/g, ''),
+          senha,
+          cadastro_facial: cadastroFacial,
+        }),
+      })
+      const resultado = await resposta.json()
+      if (!resposta.ok) {
+        // CPF ou senha inválidos pertencem à tela de credenciais. Isso é
+        // importante no fluxo PJ, em que a validação acontece após informar
+        // o CPF do responsável em uma etapa separada.
+        if (resposta.status === 401) {
+          setSessaoFacial(null)
+          setEtapa(1)
+        }
+        setMensagemErro(resultado.mensagem || 'Não foi possível entrar na conta.')
+        return
+      }
+
+      if (!cadastroFacial && resultado.reconhecimento_facial_pendente) {
+        const novaSessao = await criarSessaoFacial(cpf)
+        setSessaoFacial(novaSessao)
+        setEtapa(tipoConta === 'PF' ? 2 : 3)
+        return
+      }
+
+      localStorage.setItem('usuario', JSON.stringify(resultado.usuario))
+      if (resultado.token) localStorage.setItem('token', resultado.token)
+      if (tipoConta === 'PF' && loginPF.lembrarCpf) localStorage.setItem('cpfLembrado', loginPF.cpf)
+      else if (tipoConta === 'PF') localStorage.removeItem('cpfLembrado')
+      setEtapa(tipoConta === 'PF' ? 3 : 4)
+    } catch {
+      setMensagemErro('Não foi possível conectar ao servidor.')
+    } finally {
+      setProcessando(false)
+    }
   }
 
   function continuarCredenciais() {
-    if (tipoConta === 'PF') setEtapa(2)
-    else setEtapa(2)
+    if (tipoConta === 'PF') autenticar(loginPF.cpf, loginPF.senha)
+    else autenticar(loginPJ.cpfResponsavel, loginPJ.senha)
   }
 
-  function concluirConfirmacao() {
-    if (!capturaLogin.frontal) return
-    setProcessando(true)
-    setTimeout(() => {
-      setProcessando(false)
-      setLoginPF((dados) => ({ ...dados, senha: '' }))
-      setLoginPJ((dados) => ({ ...dados, senha: '' }))
-      setEtapa(tipoConta === 'PF' ? 3 : 4)
-    }, 800)
+  async function concluirReconhecimentoFacial() {
+    // Segunda chamada ao Flask. Somente ela envia cadastro_facial=true e faz
+    // o backend criar o cookie HttpOnly depois que o SDK encontrou o rosto.
+    const cpf = tipoConta === 'PF' ? loginPF.cpf : loginPJ.cpfResponsavel
+    const senha = tipoConta === 'PF' ? loginPF.senha : loginPJ.senha
+    await autenticar(cpf, senha, true)
   }
 
   function solicitarRecuperacao(evento) {
@@ -100,7 +168,9 @@ export default function Login() {
   function credenciais() {
     const pessoaFisica = tipoConta === 'PF'
     const dados = pessoaFisica ? loginPF : loginPJ
-    const documentoPreenchido = pessoaFisica ? loginPF.cpf : loginPJ.cnpj
+    const documentosPreenchidos = pessoaFisica
+      ? Boolean(loginPF.cpf)
+      : Boolean(loginPJ.cnpj && loginPJ.cpfResponsavel)
     return (
       <>
         <div className="cabecalho-login">
@@ -108,33 +178,31 @@ export default function Login() {
           <h1>{pessoaFisica ? 'Entre na sua conta' : 'Acesse sua conta empresarial'}</h1><p>Informe seus dados de acesso.</p>
         </div>
         <label className="campo-login"><span>{pessoaFisica ? 'CPF' : 'CNPJ'}</span><input name={pessoaFisica ? 'cpf' : 'cnpj'} value={pessoaFisica ? loginPF.cpf : loginPJ.cnpj} onChange={pessoaFisica ? alterarPF : alterarPJ} inputMode="numeric" autoComplete="username" /></label>
+        {!pessoaFisica && <label className="campo-login"><span>CPF do responsável</span><input name="cpfResponsavel" value={loginPJ.cpfResponsavel} onChange={alterarPJ} inputMode="numeric" autoComplete="username" /></label>}
         <label className="campo-login"><span>Senha</span><div className="entrada-senha-login"><input name="senha" type={mostrarSenha ? 'text' : 'password'} value={dados.senha} onChange={pessoaFisica ? alterarPF : alterarPJ} autoComplete="current-password" /><button type="button" onClick={() => setMostrarSenha(!mostrarSenha)}>{mostrarSenha ? 'Ocultar' : 'Mostrar'}</button></div></label>
         {pessoaFisica && <label className="lembrar-documento"><input name="lembrarCpf" type="checkbox" checked={loginPF.lembrarCpf} onChange={alterarPF} /> Lembrar meu CPF neste dispositivo</label>}
         <button className="esqueci-senha" type="button" onClick={() => setRecuperandoSenha(true)}>Esqueci minha senha</button>
-        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!documentoPreenchido || !dados.senha} onClick={continuarCredenciais}>Continuar</button></div>
+        {mensagemErro && !sessaoFacial && <p className="mensagem-login">{mensagemErro}</p>}
+        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!documentosPreenchidos || !dados.senha || processando} onClick={continuarCredenciais}>{processando ? 'Validando...' : 'Continuar'}</button></div>
         <button className="link-novo-cliente" type="button" onClick={() => navigate(`/cadastro/${tipoConta.toLowerCase()}`)}>{pessoaFisica ? 'Ainda não sou cliente' : 'Abrir uma conta PJ'}</button>
       </>
     )
   }
 
-  function responsavelPJ() {
+  function reconhecimentoFacial() {
     return (
       <>
-        <div className="cabecalho-login"><p className="rotulo-secao">CONTA EMPRESARIAL SELECIONADA</p><h1>Quem está acessando a conta?</h1><p>Informe o CPF do responsável autorizado.</p></div>
-        <div className="empresa-selecionada"><span>CNPJ da empresa</span><strong>{loginPJ.cnpj}</strong></div>
-        <label className="campo-login"><span>CPF do responsável</span><input name="cpfResponsavel" value={loginPJ.cpfResponsavel} onChange={alterarPJ} inputMode="numeric" /></label>
-        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!loginPJ.cpfResponsavel} onClick={() => setEtapa(3)}>Continuar</button></div>
-      </>
-    )
-  }
-
-  function confirmacaoFacial() {
-    return (
-      <>
-        <div className="cabecalho-login"><p className="rotulo-secao">CONFIRMAÇÃO FACIAL</p><h1>{tipoConta === 'PF' ? 'Confirme que é você' : 'Confirme a identidade do responsável'}</h1><p>{tipoConta === 'PF' ? 'Faça uma captura frontal para simular a confirmação da sua identidade.' : 'A captura será utilizada para simular a identificação do responsável.'}</p></div>
-        <CapturaFacial capturasFaciais={capturaLogin} setCapturasFaciais={setCapturaLogin} contaEmpresarial={tipoConta === 'PJ'} />
-        <p className="aviso-facial-login">Esta é uma simulação acadêmica. Nenhuma validação biométrica real está sendo executada.</p>
-        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!capturaLogin.frontal || processando} onClick={concluirConfirmacao}>{processando ? 'Confirmando sua identidade...' : 'Continuar'}</button></div>
+        <div className="cabecalho-login"><p className="rotulo-secao">RECONHECIMENTO FACIAL</p><h1>Confirme sua identidade</h1><p>Olhe para a câmera e siga as orientações do scanner.</p></div>
+        {sessaoFacial && (
+          <ReconhecimentoFacial
+            modo="login"
+            sessao={sessaoFacial}
+            aoConcluir={concluirReconhecimentoFacial}
+            aoErro={setMensagemErro}
+          />
+        )}
+        {mensagemErro && !sessaoFacial && <p className="mensagem-login">{mensagemErro}</p>}
+        {processando && <p className="mensagem-login">Criando sua sessão...</p>}
       </>
     )
   }
@@ -142,12 +210,12 @@ export default function Login() {
   function acessoFinalizado() {
     return (
       <div className="login-finalizado">
-        <span className="icone-acesso">✓</span><p className="rotulo-secao">ACESSO SIMULADO</p><h1>Acesso confirmado</h1><p>Você concluiu o fluxo de acesso do Banco Arkhé.</p><small>Como este é um ambiente acadêmico, nenhuma autenticação bancária real foi realizada.</small>
+        <span className="icone-acesso">✓</span><p className="rotulo-secao">ACESSO CONFIRMADO</p><h1>Login realizado</h1><p>Você entrou na sua conta do Banco Arkhé.</p>
         <dl>
           <div><dt>Tipo de conta</dt><dd>{tipoConta === 'PF' ? 'Pessoa Física' : 'Pessoa Jurídica'}</dd></div>
           <div><dt>{tipoConta === 'PF' ? 'Documento' : 'Empresa'}</dt><dd>{tipoConta === 'PF' ? loginPF.cpf : loginPJ.cnpj}</dd></div>
           {tipoConta === 'PJ' && <div><dt>Responsável</dt><dd>{loginPJ.cpfResponsavel}</dd></div>}
-          <div><dt>Captura facial</dt><dd>Concluída</dd></div><div><dt>Autenticação</dt><dd>Simulação finalizada</dd></div>
+          <div><dt>Autenticação</dt><dd>Concluída</dd></div>
         </dl>
         {mensagemDemonstracao && <p className="mensagem-demonstracao">{mensagemDemonstracao}</p>}
         <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={() => navigate('/')}>Voltar para a Home</button><button className="botao botao-principal" type="button" onClick={() => setMensagemDemonstracao('O ambiente da conta será integrado em uma próxima etapa.')}>Entrar na demonstração</button></div>
@@ -177,8 +245,7 @@ export default function Login() {
   let conteudo = escolhaTipo()
   if (recuperandoSenha) conteudo = recuperacaoSenha()
   else if (etapa === 1) conteudo = credenciais()
-  else if (tipoConta === 'PJ' && etapa === 2) conteudo = responsavelPJ()
-  else if ((tipoConta === 'PF' && etapa === 2) || (tipoConta === 'PJ' && etapa === 3)) conteudo = confirmacaoFacial()
+  else if ((tipoConta === 'PF' && etapa === 2) || (tipoConta === 'PJ' && etapa === 3)) conteudo = reconhecimentoFacial()
   else if ((tipoConta === 'PF' && etapa === 3) || (tipoConta === 'PJ' && etapa === 4)) conteudo = acessoFinalizado()
 
   return (

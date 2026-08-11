@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './CapturaFacial.css'
 
-function CapturaFacial({ capturasFaciais, setCapturasFaciais, contaEmpresarial = false }) {
+export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, contaEmpresarial = false }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -117,5 +117,3 @@ function CapturaFacial({ capturasFaciais, setCapturasFaciais, contaEmpresarial =
     </div>
   )
 }
-
-export default CapturaFacial

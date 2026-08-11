@@ -6,7 +6,7 @@ const beneficios = [
   { titulo: 'Transparência', texto: 'Informações claras e acessíveis.', icone: <><circle cx="12" cy="12" r="8" /><path d="M12 11v5M12 8h.01" /></> },
 ]
 
-function Beneficios() {
+export default function Beneficios() {
   return (
     <section className="beneficios" aria-labelledby="titulo-beneficios">
       <div className="conteudo">
@@ -26,5 +26,3 @@ function Beneficios() {
     </section>
   )
 }
-
-export default Beneficios

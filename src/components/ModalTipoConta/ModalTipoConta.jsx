@@ -1,6 +1,6 @@
 import './ModalTipoConta.css'
 
-function ModalTipoConta({ fechar, escolherTipo }) {
+export default function ModalTipoConta({ fechar, escolherTipo }) {
   return (
     <div className="fundo-modal-conta" role="presentation" onMouseDown={fechar}>
       <section className="modal-tipo-conta" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-conta" onMouseDown={(evento) => evento.stopPropagation()}>
@@ -25,5 +25,3 @@ function ModalTipoConta({ fechar, escolherTipo }) {
     </div>
   )
 }
-
-export default ModalTipoConta

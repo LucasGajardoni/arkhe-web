@@ -3,7 +3,7 @@ import './SecaoSeguranca.css'
 
 const itensSeguranca = ['Criptografia e proteção de dados', 'Biometria e autenticação multifator', 'Monitoramento inteligente de operações']
 
-function SecaoSeguranca() {
+export default function SecaoSeguranca() {
   return (
     <section className="seguranca" id="seguranca" aria-labelledby="titulo-seguranca">
       <div className="conteudo grade-seguranca">
@@ -18,5 +18,3 @@ function SecaoSeguranca() {
     </section>
   )
 }
-
-export default SecaoSeguranca

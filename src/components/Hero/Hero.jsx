@@ -1,7 +1,7 @@
 import imagemAplicativo from '../../assets/arkhe-app-preview.png'
 import './Hero.css'
 
-function Hero({ abrirCadastro, abrirLogin }) {
+export default function Hero({ abrirCadastro, abrirLogin }) {
   return (
     <section className="hero" id="inicio">
       <div className="conteudo grade-hero">
@@ -27,5 +27,3 @@ function Hero({ abrirCadastro, abrirLogin }) {
     </section>
   )
 }
-
-export default Hero

@@ -1,6 +1,6 @@
 import './ChamadaFinal.css'
 
-function ChamadaFinal({ abrirCadastro }) {
+export default function ChamadaFinal({ abrirCadastro }) {
   return (
     <section className="secao-chamada-final" id="abrir-conta" aria-labelledby="titulo-chamada">
       <div className="conteudo chamada-final">
@@ -14,5 +14,3 @@ function ChamadaFinal({ abrirCadastro }) {
     </section>
   )
 }
-
-export default ChamadaFinal

@@ -1,6 +1,6 @@
 import './IndicadorEtapas.css'
 
-function IndicadorEtapas({ etapas, etapaAtual }) {
+export default function IndicadorEtapas({ etapas, etapaAtual }) {
   return (
     <div className="indicador-etapas">
       <div className="etapa-mobile">
@@ -18,5 +18,3 @@ function IndicadorEtapas({ etapas, etapaAtual }) {
     </div>
   )
 }
-
-export default IndicadorEtapas

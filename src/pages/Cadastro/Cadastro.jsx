@@ -2,21 +2,21 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CadastroHeader from '../../components/CadastroHeader/CadastroHeader.jsx'
 import IndicadorEtapas from '../../components/IndicadorEtapas/IndicadorEtapas.jsx'
-import CapturaFacial from '../../components/CapturaFacial/CapturaFacial.jsx'
+import ReconhecimentoFacial from '../../components/ReconhecimentoFacial/ReconhecimentoFacial.jsx'
+import { API_URL, FACE_API_URL, FACE_CLIENT_ID, FACE_CLIENT_SECRET } from '../../App.jsx'
 import './Cadastro.css'
 
-const etapasPF = ['Dados pessoais', 'Contato', 'Endereço', 'Acesso', 'Foto facial', 'Revisão']
-const etapasPJ = ['Dados da empresa', 'Responsável', 'Contato', 'Endereço', 'Acesso', 'Foto facial', 'Revisão']
+const etapasPF = ['Dados pessoais', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial']
+const etapasPJ = ['Dados da empresa', 'Responsável', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial']
 
 const dadosIniciaisPF = {
-  nome: '', cpf: '', dataNascimento: '', nomeMae: '', nomePai: '', email: '', confirmarEmail: '', telefone: '',
+  nome: '', cpf: '', dataNascimento: '', email: '', confirmarEmail: '', telefone: '',
   cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', senha: '', confirmarSenha: '',
   aceitarTermos: false, aceitarDados: false, aceitarBiometria: false,
 }
 
 const dadosIniciaisPJ = {
-  cnpj: '', razaoSocial: '', nomeFantasia: '', dataAbertura: '', tipoJuridico: '', atividadePrincipal: '',
-  nomeResponsavel: '', cpfResponsavel: '', dataNascimentoResponsavel: '', nomeMaeResponsavel: '', nomePaiResponsavel: '', cargoResponsavel: '',
+  cnpj: '', razaoSocial: '', nomeFantasia: '', nomeResponsavel: '', cpfResponsavel: '', dataNascimentoResponsavel: '',
   emailEmpresarial: '', confirmarEmailEmpresarial: '', telefoneEmpresarial: '', cep: '', logradouro: '', numero: '', complemento: '',
   bairro: '', cidade: '', estado: '', senha: '', confirmarSenha: '', aceitarTermos: false, aceitarDadosPessoais: false,
   aceitarDadosEmpresariais: false, aceitarBiometria: false,
@@ -44,12 +44,13 @@ export default function Cadastro({ tipoConta }) {
   const [etapaAtual, setEtapaAtual] = useState(0)
   const [dadosPF, setDadosPF] = useState(dadosIniciaisPF)
   const [dadosPJ, setDadosPJ] = useState(dadosIniciaisPJ)
-  const [capturasFaciais, setCapturasFaciais] = useState({ frontal: '' })
   const [mensagemErro, setMensagemErro] = useState('')
   const [consultandoCep, setConsultandoCep] = useState(false)
   const [mensagemCep, setMensagemCep] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [sessaoFacial, setSessaoFacial] = useState(null)
+  const [facialConcluido, setFacialConcluido] = useState(false)
 
   const etapas = tipoConta === 'PJ' ? etapasPJ : etapasPF
   const dadosAtuais = tipoConta === 'PJ' ? dadosPJ : dadosPF
@@ -67,6 +68,23 @@ export default function Cadastro({ tipoConta }) {
 
   function aplicarMascaraCep(valor) {
     return valor.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2')
+  }
+
+  function cpfValido(valor) {
+    const cpf = valor.replace(/\D/g, '')
+    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false
+
+    function calcularDigito(tamanho) {
+      let soma = 0
+      for (let indice = 0; indice < tamanho; indice += 1) {
+        soma += Number(cpf[indice]) * (tamanho + 1 - indice)
+      }
+      const resto = (soma * 10) % 11
+      return resto === 10 ? 0 : resto
+    }
+
+    return calcularDigito(9) === Number(cpf[9])
+      && calcularDigito(10) === Number(cpf[10])
   }
 
   function alterarDados(evento) {
@@ -123,31 +141,108 @@ export default function Cadastro({ tipoConta }) {
     return idade >= 18
   }
 
+  function formatarDataBrasileira(data) {
+    if (!data) return ''
+    const [ano, mes, dia] = data.split('-')
+    if (!ano || !mes || !dia) return data
+    return `${dia}/${mes}/${ano}`
+  }
+
+  function mensagemErroApiFacial(resultado, mensagemPadrao) {
+    const detalhe = resultado?.detail
+    if (typeof detalhe === 'string') return detalhe
+    if (detalhe?.message) return detalhe.message
+    if (Array.isArray(detalhe)) {
+      return detalhe.map((erro) => {
+        const campo = erro.loc?.at(-1)
+        return `${campo ? `${campo}: ` : ''}${erro.msg || 'valor inválido'}`
+      }).join(' | ')
+    }
+    return mensagemPadrao
+  }
+
+  // Remove acentos, espaços e símbolos para comparar a senha com os dados
+  // pessoais de forma consistente. Exemplo: "Sôfia" passa a ser "sofia".
+  function normalizarTexto(valor) {
+    return String(valor || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+  }
+
+  // Reúne as regras básicas usadas pelo backend e verifica se a senha contém
+  // informações do cadastro. A data também é testada como dia+mês para impedir
+  // combinações previsíveis como "Sofia@2704".
+  function requisitosDaSenha(dados) {
+    const senha = dados.senha || ''
+    const senhaNormalizada = normalizarTexto(senha)
+    const empresarial = tipoConta === 'PJ'
+    const nome = empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome
+    const email = empresarial ? dadosPJ.emailEmpresarial : dadosPF.email
+    const cpf = empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf
+    const telefone = empresarial ? dadosPJ.telefoneEmpresarial : dadosPF.telefone
+    const nascimento = empresarial ? dadosPJ.dataNascimentoResponsavel : dadosPF.dataNascimento
+    const [ano = '', mes = '', dia = ''] = nascimento.split('-')
+
+    const palavrasPessoais = [
+      ...nome.split(/\s+/),
+      ...email.split('@')[0].split(/[^a-zA-ZÀ-ÿ0-9]+/),
+      ...(empresarial ? `${dadosPJ.razaoSocial} ${dadosPJ.nomeFantasia}`.split(/\s+/) : []),
+    ].map(normalizarTexto).filter((parte) => parte.length >= 3)
+
+    const numerosPessoais = [
+      cpf.replace(/\D/g, ''),
+      telefone.replace(/\D/g, ''),
+      cpf.replace(/\D/g, '').slice(-4),
+      telefone.replace(/\D/g, '').slice(-4),
+      dia && mes ? `${dia}${mes}` : '',
+      dia && mes && ano ? `${dia}${mes}${ano}` : '',
+      ano,
+      empresarial ? dadosPJ.cnpj.replace(/\D/g, '') : '',
+    ].filter((parte) => parte.length >= 4)
+
+    const contemDadosPessoais = [...palavrasPessoais, ...numerosPessoais]
+      .some((parte) => senhaNormalizada.includes(parte))
+
+    return {
+      tamanho: senha.length >= 8 && senha.length <= 12,
+      maiuscula: /[A-ZÀ-Ý]/.test(senha),
+      minuscula: /[a-zà-ÿ]/.test(senha),
+      numero: /\d/.test(senha),
+      especial: /[^A-Za-zÀ-ÿ0-9]/.test(senha),
+      semDadosPessoais: !contemDadosPessoais,
+    }
+  }
+
+  // A etapa de acesso só pode avançar quando todos os requisitos forem verdadeiros.
+  function senhaValida(dados) {
+    return Object.values(requisitosDaSenha(dados)).every(Boolean)
+  }
+
   function validarEtapa() {
     if (tipoConta === 'PF') {
-      if (etapaAtual === 0) return camposPreenchidos(['nome', 'cpf', 'dataNascimento', 'nomeMae']) && maiorDeIdade(dadosPF.dataNascimento)
+      if (etapaAtual === 0) return camposPreenchidos(['nome', 'cpf', 'dataNascimento']) && cpfValido(dadosPF.cpf) && maiorDeIdade(dadosPF.dataNascimento)
       if (etapaAtual === 1) return camposPreenchidos(['email', 'confirmarEmail', 'telefone']) && dadosPF.email === dadosPF.confirmarEmail
       if (etapaAtual === 2) return camposPreenchidos(['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
-      if (etapaAtual === 3) return camposPreenchidos(['senha', 'confirmarSenha']) && dadosPF.senha === dadosPF.confirmarSenha && dadosPF.aceitarTermos && dadosPF.aceitarDados && dadosPF.aceitarBiometria
-      if (etapaAtual === 4) return Boolean(capturasFaciais.frontal)
+      if (etapaAtual === 3) return camposPreenchidos(['senha', 'confirmarSenha']) && senhaValida(dadosPF) && dadosPF.senha === dadosPF.confirmarSenha && dadosPF.aceitarTermos && dadosPF.aceitarDados && dadosPF.aceitarBiometria
     } else {
-      if (etapaAtual === 0) return camposPreenchidos(['cnpj', 'razaoSocial', 'nomeFantasia', 'dataAbertura', 'tipoJuridico', 'atividadePrincipal'])
-      if (etapaAtual === 1) return camposPreenchidos(['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel', 'nomeMaeResponsavel', 'cargoResponsavel']) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
+      if (etapaAtual === 0) return camposPreenchidos(['cnpj', 'razaoSocial', 'nomeFantasia'])
+      if (etapaAtual === 1) return camposPreenchidos(['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel']) && cpfValido(dadosPJ.cpfResponsavel) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
       if (etapaAtual === 2) return camposPreenchidos(['emailEmpresarial', 'confirmarEmailEmpresarial', 'telefoneEmpresarial']) && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial
       if (etapaAtual === 3) return camposPreenchidos(['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
-      if (etapaAtual === 4) return camposPreenchidos(['senha', 'confirmarSenha']) && dadosPJ.senha === dadosPJ.confirmarSenha && dadosPJ.aceitarTermos && dadosPJ.aceitarDadosPessoais && dadosPJ.aceitarDadosEmpresariais && dadosPJ.aceitarBiometria
-      if (etapaAtual === 5) return Boolean(capturasFaciais.frontal)
+      if (etapaAtual === 4) return camposPreenchidos(['senha', 'confirmarSenha']) && senhaValida(dadosPJ) && dadosPJ.senha === dadosPJ.confirmarSenha && dadosPJ.aceitarTermos && dadosPJ.aceitarDadosPessoais && dadosPJ.aceitarDadosEmpresariais && dadosPJ.aceitarBiometria
     }
     return true
   }
 
   function mensagemValidacao() {
+    const etapaCpf = (tipoConta === 'PF' && etapaAtual === 0) || (tipoConta === 'PJ' && etapaAtual === 1)
     const etapaContato = (tipoConta === 'PF' && etapaAtual === 1) || (tipoConta === 'PJ' && etapaAtual === 2)
     const etapaAcesso = (tipoConta === 'PF' && etapaAtual === 3) || (tipoConta === 'PJ' && etapaAtual === 4)
-    const etapaFacial = (tipoConta === 'PF' && etapaAtual === 4) || (tipoConta === 'PJ' && etapaAtual === 5)
+    if (etapaCpf && !cpfValido(tipoConta === 'PJ' ? dadosPJ.cpfResponsavel : dadosPF.cpf)) return 'Informe um CPF válido para continuar.'
     if (etapaContato) return 'Os e-mails informados precisam ser iguais.'
-    if (etapaAcesso) return 'As senhas precisam ser iguais e todos os consentimentos devem ser aceitos.'
-    if (etapaFacial) return 'Capture a foto facial para continuar.'
+    if (etapaAcesso) return 'Confira os requisitos da senha, a confirmação e todos os consentimentos.'
     return 'Preencha todos os campos obrigatórios.'
   }
 
@@ -171,12 +266,109 @@ export default function Cadastro({ tipoConta }) {
     window.scrollTo(0, 0)
   }
 
-  function enviarCadastro() {
+  function montarDadosCadastro() {
+    const empresarial = tipoConta === 'PJ'
+    const dados = empresarial ? dadosPJ : dadosPF
+    const formData = new FormData()
+
+    formData.append('nome', empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome)
+    formData.append('email', empresarial ? dadosPJ.emailEmpresarial : dadosPF.email)
+    formData.append('telefone', (empresarial ? dadosPJ.telefoneEmpresarial : dadosPF.telefone).replace(/\D/g, ''))
+    formData.append('cpf', (empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf).replace(/\D/g, ''))
+    formData.append('cnpj', empresarial ? dadosPJ.cnpj.replace(/\D/g, '') : '')
+    formData.append('senha', dados.senha)
+    formData.append('data_nascimento', empresarial ? dadosPJ.dataNascimentoResponsavel : dadosPF.dataNascimento)
+    formData.append('cep', dados.cep.replace(/\D/g, ''))
+    formData.append('rua', dados.logradouro)
+    formData.append('numero', dados.numero)
+    formData.append('bairro', dados.bairro)
+    formData.append('cidade', dados.cidade)
+    formData.append('estado', dados.estado)
+    formData.append('complemento', dados.complemento)
+    formData.append('nome_fantasia', empresarial ? dadosPJ.nomeFantasia : '')
+    formData.append('razao_social', empresarial ? dadosPJ.razaoSocial : '')
+    formData.append('representante', empresarial ? dadosPJ.cpfResponsavel.replace(/\D/g, '') : '')
+    formData.append('tipo', '1')
+
+    return formData
+  }
+
+  async function salvarCadastro() {
     setEnviando(true)
-    setTimeout(() => {
-      setEnviando(false)
+    setMensagemErro('')
+
+    try {
+      // O banco só recebe o usuário depois que o scanner facial concluiu.
+      // Assim não existe uma conta no Flask sem biometria cadastrada.
+      const resposta = await fetch(`${API_URL}/adicionar_usuario`, {
+        method: 'POST',
+        credentials: 'include',
+        body: montarDadosCadastro(),
+      })
+      const resultado = await resposta.json()
+      if (!resposta.ok) {
+        setMensagemErro(resultado.mensagem || 'Não foi possível realizar o cadastro.')
+        return
+      }
+
       navigate('/login')
-    }, 900)
+    } catch {
+      setMensagemErro('Biometria concluída, mas não foi possível conectar ao servidor. Tente salvar novamente.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  async function concluirCadastroFacial() {
+    setFacialConcluido(true)
+    await salvarCadastro()
+  }
+
+  async function enviarCadastro() {
+    setEnviando(true)
+    setMensagemErro('')
+
+    const empresarial = tipoConta === 'PJ'
+
+    try {
+      // Primeiro verificamos a disponibilidade da API e criamos a sessão facial.
+      // Nenhum dado é gravado no banco principal antes de o rosto ser concluído.
+      const respostaFacial = await fetch(`${FACE_API_URL}/v1/enrollments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-Id': FACE_CLIENT_ID,
+          'X-Client-Secret': FACE_CLIENT_SECRET,
+        },
+        body: JSON.stringify({
+          cpf: (empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf).replace(/\D/g, ''),
+          display_name: empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome,
+          email: empresarial ? dadosPJ.emailEmpresarial : dadosPF.email,
+          phone: (empresarial ? dadosPJ.telefoneEmpresarial : dadosPF.telefone).replace(/\D/g, ''),
+          consent: {
+            accepted: true,
+            version: 'arkhe-termos-v1',
+            purpose: 'Cadastro e autenticação facial no Banco Arkhé',
+          },
+          ttl_minutes: 15,
+        }),
+      })
+      const resultadoFacial = await respostaFacial.json()
+      if (!respostaFacial.ok) {
+        setMensagemErro(mensagemErroApiFacial(
+          resultadoFacial,
+          `Não foi possível iniciar o cadastro facial (erro ${respostaFacial.status}). Nenhum usuário foi salvo.`,
+        ))
+        return
+      }
+
+      setSessaoFacial(resultadoFacial)
+      setEtapaAtual(tipoConta === 'PJ' ? 6 : 5)
+    } catch {
+      setMensagemErro('Não foi possível conectar à API facial. Nenhum usuário foi salvo.')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   function formularioEndereco() {
@@ -196,11 +388,30 @@ export default function Cadastro({ tipoConta }) {
 
   function formularioAcesso() {
     const empresarial = tipoConta === 'PJ'
+    const requisitos = requisitosDaSenha(dadosAtuais)
+    const itensSenha = [
+      ['tamanho', 'Entre 8 e 12 caracteres'],
+      ['maiuscula', 'Uma letra maiúscula'],
+      ['minuscula', 'Uma letra minúscula'],
+      ['numero', 'Um número'],
+      ['especial', 'Um caractere especial'],
+      ['semDadosPessoais', 'Não conter nome, documentos, telefone, e-mail ou data de nascimento'],
+    ]
     return (
       <>
         <div className="grade-formulario">
           <Campo nome="senha" rotulo="Senha" valor={dadosAtuais.senha} alterar={alterarDados} tipo={mostrarSenha ? 'text' : 'password'} autocomplete="new-password" />
           <Campo nome="confirmarSenha" rotulo="Confirmar senha" valor={dadosAtuais.confirmarSenha} alterar={alterarDados} tipo={mostrarSenha ? 'text' : 'password'} autocomplete="new-password" erro={dadosAtuais.confirmarSenha && dadosAtuais.senha !== dadosAtuais.confirmarSenha ? 'As senhas não são iguais.' : ''} />
+        </div>
+        <div className="requisitos-senha" aria-live="polite">
+          <strong>Sua senha precisa ter:</strong>
+          <ul>
+            {itensSenha.map(([chave, texto]) => (
+              <li className={requisitos[chave] ? 'requisito-atendido' : ''} key={chave}>
+                <span>{requisitos[chave] ? '✓' : '○'}</span> {texto}
+              </li>
+            ))}
+          </ul>
         </div>
         <button className="mostrar-senha" type="button" onClick={() => setMostrarSenha(!mostrarSenha)}>{mostrarSenha ? 'Ocultar senhas' : 'Mostrar senhas'}</button>
         <div className="consentimentos">
@@ -211,7 +422,7 @@ export default function Cadastro({ tipoConta }) {
               <label><input name="aceitarDadosEmpresariais" type="checkbox" checked={dadosPJ.aceitarDadosEmpresariais} onChange={alterarDados} /> Autorizo o tratamento dos dados empresariais nesta simulação.</label>
             </>
           ) : <label><input name="aceitarDados" type="checkbox" checked={dadosPF.aceitarDados} onChange={alterarDados} /> Autorizo o tratamento dos meus dados pessoais para esta simulação.</label>}
-          <label><input name="aceitarBiometria" type="checkbox" checked={dadosAtuais.aceitarBiometria} onChange={alterarDados} /> Autorizo a captura e o uso da imagem facial nesta simulação acadêmica.</label>
+          <label><input name="aceitarBiometria" type="checkbox" checked={dadosAtuais.aceitarBiometria} onChange={alterarDados} /> Autorizo o cadastro e o uso do meu rosto para autenticação.</label>
         </div>
         <p className="aviso-simulacao">Este projeto é acadêmico e não representa uma instituição financeira real.</p>
       </>
@@ -231,20 +442,15 @@ export default function Cadastro({ tipoConta }) {
     const empresarial = tipoConta === 'PJ'
     return (
       <div className="revisao-cadastro">
-        {empresarial && blocoRevisao('Dados da empresa', [['CNPJ', dadosPJ.cnpj], ['Razão social', dadosPJ.razaoSocial], ['Nome fantasia', dadosPJ.nomeFantasia], ['Data de abertura', dadosPJ.dataAbertura], ['Tipo jurídico', dadosPJ.tipoJuridico], ['Atividade', dadosPJ.atividadePrincipal]], () => setEtapaAtual(0))}
+        {empresarial && blocoRevisao('Dados da empresa', [['CNPJ', dadosPJ.cnpj], ['Razão social', dadosPJ.razaoSocial], ['Nome fantasia', dadosPJ.nomeFantasia]], () => setEtapaAtual(0))}
         {blocoRevisao(empresarial ? 'Responsável' : 'Dados pessoais', empresarial
-          ? [['Nome', dadosPJ.nomeResponsavel], ['CPF', dadosPJ.cpfResponsavel], ['Nascimento', dadosPJ.dataNascimentoResponsavel], ['Nome da mãe', dadosPJ.nomeMaeResponsavel], ['Nome do pai', dadosPJ.nomePaiResponsavel], ['Cargo', dadosPJ.cargoResponsavel]]
-          : [['Nome', dadosPF.nome], ['CPF', dadosPF.cpf], ['Nascimento', dadosPF.dataNascimento], ['Nome da mãe', dadosPF.nomeMae], ['Nome do pai', dadosPF.nomePai]], () => setEtapaAtual(empresarial ? 1 : 0))}
+          ? [['Nome', dadosPJ.nomeResponsavel], ['CPF', dadosPJ.cpfResponsavel], ['Nascimento', formatarDataBrasileira(dadosPJ.dataNascimentoResponsavel)]]
+          : [['Nome', dadosPF.nome], ['CPF', dadosPF.cpf], ['Nascimento', formatarDataBrasileira(dadosPF.dataNascimento)]], () => setEtapaAtual(empresarial ? 1 : 0))}
         {blocoRevisao('Contato', empresarial
           ? [['E-mail', dadosPJ.emailEmpresarial], ['Telefone', dadosPJ.telefoneEmpresarial]]
           : [['E-mail', dadosPF.email], ['Telefone', dadosPF.telefone]], () => setEtapaAtual(empresarial ? 2 : 1))}
         {blocoRevisao('Endereço', [['CEP', dadosAtuais.cep], ['Logradouro', `${dadosAtuais.logradouro}, ${dadosAtuais.numero}`], ['Complemento', dadosAtuais.complemento], ['Bairro', dadosAtuais.bairro], ['Cidade/Estado', `${dadosAtuais.cidade} - ${dadosAtuais.estado}`]], () => setEtapaAtual(empresarial ? 3 : 2))}
         {blocoRevisao('Acesso', [['Status', 'Senha de acesso criada']], () => setEtapaAtual(empresarial ? 4 : 3))}
-        <section className="bloco-revisao">
-          <div className="topo-revisao"><h3>Biometria</h3><button type="button" onClick={() => setEtapaAtual(empresarial ? 5 : 4)}>Refazer</button></div>
-          <p>Foto facial concluída</p>
-          <div className="miniaturas-revisao">{Object.entries(capturasFaciais).map(([nome, imagem]) => <figure key={nome}><img src={imagem} alt={`Captura ${nome}`} /><figcaption>{nome}</figcaption></figure>)}</div>
-        </section>
       </div>
     )
   }
@@ -256,24 +462,16 @@ export default function Cadastro({ tipoConta }) {
         <Campo nome="cnpj" rotulo="CNPJ" valor={dadosPJ.cnpj} alterar={alterarDados} />
         <Campo nome="razaoSocial" rotulo="Razão social" valor={dadosPJ.razaoSocial} alterar={alterarDados} />
         <Campo nome="nomeFantasia" rotulo="Nome fantasia" valor={dadosPJ.nomeFantasia} alterar={alterarDados} />
-        <Campo nome="dataAbertura" rotulo="Data de abertura" valor={dadosPJ.dataAbertura} alterar={alterarDados} tipo="date" />
-        <Campo nome="tipoJuridico" rotulo="Tipo jurídico" valor={dadosPJ.tipoJuridico} alterar={alterarDados} opcoes={['MEI', 'Empresário Individual', 'Sociedade Limitada', 'Sociedade Anônima', 'Outro']} />
-        <Campo nome="atividadePrincipal" rotulo="Atividade principal" valor={dadosPJ.atividadePrincipal} alterar={alterarDados} />
       </div> : <div className="grade-formulario">
         <Campo nome="nome" rotulo="Nome completo" valor={dadosPF.nome} alterar={alterarDados} autocomplete="name" />
-        <Campo nome="cpf" rotulo="CPF" valor={dadosPF.cpf} alterar={alterarDados} />
+        <Campo nome="cpf" rotulo="CPF" valor={dadosPF.cpf} alterar={alterarDados} erro={dadosPF.cpf.replace(/\D/g, '').length === 11 && !cpfValido(dadosPF.cpf) ? 'CPF inválido.' : ''} />
         <Campo nome="dataNascimento" rotulo="Data de nascimento" valor={dadosPF.dataNascimento} alterar={alterarDados} tipo="date" erro={dadosPF.dataNascimento && !maiorDeIdade(dadosPF.dataNascimento) ? 'É necessário ter 18 anos ou mais.' : ''} />
-        <Campo nome="nomeMae" rotulo="Nome da mãe" valor={dadosPF.nomeMae} alterar={alterarDados} />
-        <Campo nome="nomePai" rotulo="Nome do pai" valor={dadosPF.nomePai} alterar={alterarDados} obrigatorio={false} opcional />
       </div>
     }
     if (empresarial && etapaAtual === 1) return <div className="grade-formulario">
       <Campo nome="nomeResponsavel" rotulo="Nome completo" valor={dadosPJ.nomeResponsavel} alterar={alterarDados} autocomplete="name" />
-      <Campo nome="cpfResponsavel" rotulo="CPF" valor={dadosPJ.cpfResponsavel} alterar={alterarDados} />
+      <Campo nome="cpfResponsavel" rotulo="CPF" valor={dadosPJ.cpfResponsavel} alterar={alterarDados} erro={dadosPJ.cpfResponsavel.replace(/\D/g, '').length === 11 && !cpfValido(dadosPJ.cpfResponsavel) ? 'CPF inválido.' : ''} />
       <Campo nome="dataNascimentoResponsavel" rotulo="Data de nascimento" valor={dadosPJ.dataNascimentoResponsavel} alterar={alterarDados} tipo="date" erro={dadosPJ.dataNascimentoResponsavel && !maiorDeIdade(dadosPJ.dataNascimentoResponsavel) ? 'O responsável precisa ter 18 anos ou mais.' : ''} />
-      <Campo nome="nomeMaeResponsavel" rotulo="Nome da mãe" valor={dadosPJ.nomeMaeResponsavel} alterar={alterarDados} />
-      <Campo nome="nomePaiResponsavel" rotulo="Nome do pai" valor={dadosPJ.nomePaiResponsavel} alterar={alterarDados} obrigatorio={false} opcional />
-      <Campo nome="cargoResponsavel" rotulo="Cargo na empresa" valor={dadosPJ.cargoResponsavel} alterar={alterarDados} opcoes={['Sócio', 'Administrador', 'Diretor', 'Representante legal', 'Outro']} />
     </div>
     if ((!empresarial && etapaAtual === 1) || (empresarial && etapaAtual === 2)) return <div className="grade-formulario">
       <Campo nome={empresarial ? 'emailEmpresarial' : 'email'} rotulo={empresarial ? 'E-mail empresarial' : 'E-mail'} valor={empresarial ? dadosPJ.emailEmpresarial : dadosPF.email} alterar={alterarDados} tipo="email" autocomplete="email" />
@@ -282,14 +480,31 @@ export default function Cadastro({ tipoConta }) {
     </div>
     if ((!empresarial && etapaAtual === 2) || (empresarial && etapaAtual === 3)) return formularioEndereco()
     if ((!empresarial && etapaAtual === 3) || (empresarial && etapaAtual === 4)) return formularioAcesso()
-    if ((!empresarial && etapaAtual === 4) || (empresarial && etapaAtual === 5)) return <CapturaFacial capturasFaciais={capturasFaciais} setCapturasFaciais={setCapturasFaciais} contaEmpresarial={empresarial} />
+    if ((!empresarial && etapaAtual === 5) || (empresarial && etapaAtual === 6)) {
+      if (facialConcluido) return (
+        <div className="resultado-facial-cadastro">
+          <h3>Reconhecimento facial concluído</h3>
+          <p>{enviando ? 'Salvando seu cadastro...' : mensagemErro || 'Finalizando seu cadastro...'}</p>
+          {mensagemErro && <button className="botao botao-principal" type="button" disabled={enviando} onClick={salvarCadastro}>Tentar salvar novamente</button>}
+        </div>
+      )
+
+      return sessaoFacial && (
+        <ReconhecimentoFacial
+          modo="cadastro"
+          sessao={sessaoFacial}
+          aoConcluir={concluirCadastroFacial}
+          aoErro={setMensagemErro}
+        />
+      )
+    }
     return revisaoCadastro()
   }
 
-  const etapaRevisao = empresarial => empresarial ? 6 : 5
+  const etapaRevisao = empresarial => empresarial ? 5 : 4
   const titulos = tipoConta === 'PF'
-    ? ['Vamos começar pelos seus dados', 'Como podemos falar com você?', 'Onde você mora?', 'Crie seu acesso', 'Agora precisamos confirmar seu rosto', 'Revise seus dados']
-    : ['Conte sobre sua empresa', 'Quem será o responsável?', 'Contato empresarial', 'Endereço da empresa', 'Crie o acesso empresarial', 'Confirmação do responsável', 'Revise os dados empresariais']
+    ? ['Vamos começar pelos seus dados', 'Como podemos falar com você?', 'Onde você mora?', 'Crie seu acesso', 'Revise seus dados', 'Cadastre seu rosto']
+    : ['Conte sobre sua empresa', 'Quem será o responsável?', 'Contato empresarial', 'Endereço da empresa', 'Crie o acesso empresarial', 'Revise os dados empresariais', 'Cadastre o rosto do responsável']
 
   const naRevisao = etapaAtual === etapaRevisao(tipoConta === 'PJ')
 
@@ -302,13 +517,13 @@ export default function Cadastro({ tipoConta }) {
           <section className="cartao-formulario">
             <div className="titulo-formulario"><p>ETAPA {etapaAtual + 1}</p><h1>{titulos[etapaAtual]}</h1><span>{etapaAtual === 0 ? 'Preencha as informações para iniciar a abertura da conta.' : 'Confira os dados e continue quando estiver pronto.'}</span></div>
             {conteudoEtapa()}
-            {mensagemErro && <p className="erro-geral">{mensagemErro}</p>}
-            <div className="acoes-formulario">
+            {mensagemErro && !sessaoFacial && <p className="erro-geral">{mensagemErro}</p>}
+            {sessaoFacial && !naRevisao ? null : <div className="acoes-formulario">
               <button className="botao botao-secundario" type="button" onClick={voltar}>Voltar</button>
               {naRevisao
                 ? <button className="botao botao-principal" type="button" disabled={enviando} onClick={enviarCadastro}>{enviando ? 'Enviando...' : 'Enviar cadastro'}</button>
                 : <button className="botao botao-principal" type="button" disabled={!validarEtapa()} onClick={avancar}>Continuar</button>}
-            </div>
+            </div>}
           </section>
           <aside className="apoio-cadastro">
             <span>{String(etapaAtual + 1).padStart(2, '0')}</span>

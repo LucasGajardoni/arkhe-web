@@ -7,7 +7,7 @@ const colunasRodape = [
   ['Ajuda', ['Central de apoio', 'Canais de contato', 'Privacidade']],
 ]
 
-function Footer() {
+export default function Footer() {
   return (
     <footer className="rodape">
       <div className="conteudo">
@@ -32,5 +32,3 @@ function Footer() {
     </footer>
   )
 }
-
-export default Footer

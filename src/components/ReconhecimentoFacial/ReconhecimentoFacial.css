@@ -1,0 +1,9 @@
+.reconhecimento-facial { display: grid; gap: 14px; }
+.area-scanner-facial .face-identity-widget { display: grid; gap: 14px; }
+.area-scanner-facial .face-identity-video { width: 100%; max-height: 390px; border-radius: 16px; background: #111; object-fit: cover; transform: scaleX(-1); }
+.area-scanner-facial .face-identity-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.area-scanner-facial .face-identity-controls strong { color: var(--texto); font-size: 13px; }
+.area-scanner-facial .face-identity-controls button { min-height: 42px; padding: 9px 16px; border-radius: 9px; color: var(--branco); background: var(--verde-escuro); cursor: pointer; font-weight: 700; }
+.area-scanner-facial .face-identity-controls button[data-role='capture'] { display: none; }
+.area-scanner-facial .face-identity-controls button[data-role='stop'] { background: var(--texto-secundario); }
+.status-scanner-facial { padding: 11px 13px; border-radius: 9px; color: var(--texto-secundario); background: var(--fundo-claro); font-size: 12px; }

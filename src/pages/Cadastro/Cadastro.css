@@ -313,6 +313,39 @@
   font-size: 13px;
 }
 
+.requisitos-senha {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--fundo-claro);
+  color: var(--texto-secundario);
+  font-size: 12px;
+}
+
+.requisitos-senha strong {
+  color: var(--texto);
+}
+
+.requisitos-senha ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 18px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requisitos-senha li span {
+  display: inline-block;
+  width: 16px;
+}
+
+.requisitos-senha .requisito-atendido {
+  color: var(--verde-medio);
+  font-weight: 700;
+}
+
 .resumo-conclusao {
   display: grid;
   grid-template-columns: 1fr 1fr;

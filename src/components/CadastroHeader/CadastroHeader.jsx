@@ -1,7 +1,7 @@
 import logo from '../../assets/arkhe-logo.svg'
 import './CadastroHeader.css'
 
-function CadastroHeader({ voltarParaHome, textoAviso = 'CADASTRO SIMULADO' }) {
+export default function CadastroHeader({ voltarParaHome, textoAviso = 'CADASTRO SIMULADO' }) {
   return (
     <>
       <header className="cabecalho-cadastro">
@@ -17,5 +17,3 @@ function CadastroHeader({ voltarParaHome, textoAviso = 'CADASTRO SIMULADO' }) {
     </>
   )
 }
-
-export default CadastroHeader

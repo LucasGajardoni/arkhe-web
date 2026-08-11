@@ -7,7 +7,7 @@ const linksNavegacao = [
   ['Investimentos', '#investimentos'], ['Segurança', '#seguranca'],
 ]
 
-function Header({ abrirCadastro, abrirLogin }) {
+export default function Header({ abrirCadastro, abrirLogin }) {
   const [menuAberto, setMenuAberto] = useState(false)
   const fecharMenu = () => setMenuAberto(false)
 
@@ -33,5 +33,3 @@ function Header({ abrirCadastro, abrirLogin }) {
     </header>
   )
 }
-
-export default Header
