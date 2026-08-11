@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import CadastroHeader from '../../components/CadastroHeader/CadastroHeader.jsx'
 import CapturaFacial from '../../components/CapturaFacial/CapturaFacial.jsx'
 import './Login.css'
 
-function Login({ voltarParaHome, abrirCadastro }) {
+export default function Login() {
+  const navigate = useNavigate()
   const [tipoConta, setTipoConta] = useState('')
   const [etapa, setEtapa] = useState(0)
   const [loginPF, setLoginPF] = useState({ cpf: '', senha: '', lembrarCpf: false })
@@ -44,7 +46,7 @@ function Login({ voltarParaHome, abrirCadastro }) {
 
   function voltarEtapa() {
     if (etapa === 0) {
-      voltarParaHome()
+      navigate('/')
       return
     }
     const etapaFacial = (tipoConta === 'PF' && etapa === 2) || (tipoConta === 'PJ' && etapa === 3)
@@ -110,7 +112,7 @@ function Login({ voltarParaHome, abrirCadastro }) {
         {pessoaFisica && <label className="lembrar-documento"><input name="lembrarCpf" type="checkbox" checked={loginPF.lembrarCpf} onChange={alterarPF} /> Lembrar meu CPF neste dispositivo</label>}
         <button className="esqueci-senha" type="button" onClick={() => setRecuperandoSenha(true)}>Esqueci minha senha</button>
         <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!documentoPreenchido || !dados.senha} onClick={continuarCredenciais}>Continuar</button></div>
-        <button className="link-novo-cliente" type="button" onClick={abrirCadastro}>{pessoaFisica ? 'Ainda não sou cliente' : 'Abrir uma conta PJ'}</button>
+        <button className="link-novo-cliente" type="button" onClick={() => navigate(`/cadastro/${tipoConta.toLowerCase()}`)}>{pessoaFisica ? 'Ainda não sou cliente' : 'Abrir uma conta PJ'}</button>
       </>
     )
   }
@@ -148,7 +150,7 @@ function Login({ voltarParaHome, abrirCadastro }) {
           <div><dt>Captura facial</dt><dd>Concluída</dd></div><div><dt>Autenticação</dt><dd>Simulação finalizada</dd></div>
         </dl>
         {mensagemDemonstracao && <p className="mensagem-demonstracao">{mensagemDemonstracao}</p>}
-        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarParaHome}>Voltar para a Home</button><button className="botao botao-principal" type="button" onClick={() => setMensagemDemonstracao('O ambiente da conta será integrado em uma próxima etapa.')}>Entrar na demonstração</button></div>
+        <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={() => navigate('/')}>Voltar para a Home</button><button className="botao botao-principal" type="button" onClick={() => setMensagemDemonstracao('O ambiente da conta será integrado em uma próxima etapa.')}>Entrar na demonstração</button></div>
       </div>
     )
   }
@@ -181,7 +183,7 @@ function Login({ voltarParaHome, abrirCadastro }) {
 
   return (
     <div className="pagina-login">
-      <CadastroHeader voltarParaHome={voltarParaHome} textoAviso="ACESSO SIMULADO" />
+      <CadastroHeader voltarParaHome={() => navigate('/')} textoAviso="ACESSO SIMULADO" />
       <main className="conteudo area-login">
         <aside className="lateral-login"><p className="rotulo-secao">BANCO ARKHÉ</p><h2>Seu acesso, protegido em cada etapa.</h2><p>O Arkhé reúne credenciais e confirmação facial em uma experiência simples.</p><ul><li>Acesso PF e PJ</li><li>Confirmação facial</li><li>Controle de sessão</li><li>Proteção dos dados</li></ul><small>Recursos apresentados para fins acadêmicos. A autenticação real será integrada posteriormente.</small></aside>
         <section className="cartao-login">{conteudo}</section>
@@ -189,5 +191,3 @@ function Login({ voltarParaHome, abrirCadastro }) {
     </div>
   )
 }
-
-export default Login

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import Header from '../../components/Header/Header.jsx'
 import Hero from '../../components/Hero/Hero.jsx'
 import Beneficios from '../../components/Beneficios/Beneficios.jsx'
@@ -7,7 +8,11 @@ import ChamadaFinal from '../../components/ChamadaFinal/ChamadaFinal.jsx'
 import Footer from '../../components/Footer/Footer.jsx'
 import './Home.css'
 
-function Home({ abrirCadastro, abrirLogin }) {
+export default function Home() {
+  const navigate = useNavigate()
+  const abrirCadastro = () => navigate('/cadastro')
+  const abrirLogin = () => navigate('/login')
+
   return (
     <div className="home">
       <Header abrirCadastro={abrirCadastro} abrirLogin={abrirLogin} />
@@ -23,5 +28,3 @@ function Home({ abrirCadastro, abrirLogin }) {
     </div>
   )
 }
-
-export default Home

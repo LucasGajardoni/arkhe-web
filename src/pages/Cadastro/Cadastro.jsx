@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import CadastroHeader from '../../components/CadastroHeader/CadastroHeader.jsx'
 import IndicadorEtapas from '../../components/IndicadorEtapas/IndicadorEtapas.jsx'
 import CapturaFacial from '../../components/CapturaFacial/CapturaFacial.jsx'
@@ -38,8 +39,8 @@ function Campo({ nome, rotulo, valor, alterar, tipo = 'text', obrigatorio = true
   )
 }
 
-function Cadastro({ voltarParaHome, tipoContaInicial, irParaLogin }) {
-  const tipoConta = tipoContaInicial
+export default function Cadastro({ tipoConta }) {
+  const navigate = useNavigate()
   const [etapaAtual, setEtapaAtual] = useState(0)
   const [dadosPF, setDadosPF] = useState(dadosIniciaisPF)
   const [dadosPJ, setDadosPJ] = useState(dadosIniciaisPJ)
@@ -163,7 +164,7 @@ function Cadastro({ voltarParaHome, tipoContaInicial, irParaLogin }) {
   function voltar() {
     setMensagemErro('')
     if (etapaAtual === 0) {
-      voltarParaHome()
+      navigate('/cadastro')
     } else {
       setEtapaAtual((etapa) => etapa - 1)
     }
@@ -174,7 +175,7 @@ function Cadastro({ voltarParaHome, tipoContaInicial, irParaLogin }) {
     setEnviando(true)
     setTimeout(() => {
       setEnviando(false)
-      irParaLogin()
+      navigate('/login')
     }, 900)
   }
 
@@ -294,7 +295,7 @@ function Cadastro({ voltarParaHome, tipoContaInicial, irParaLogin }) {
 
   return (
     <div className="pagina-cadastro">
-      <CadastroHeader voltarParaHome={voltarParaHome} />
+      <CadastroHeader voltarParaHome={() => navigate('/')} />
       <main className="conteudo area-cadastro">
         <IndicadorEtapas etapas={etapas} etapaAtual={etapaAtual} />
         <div className="layout-cadastro">
@@ -322,5 +323,3 @@ function Cadastro({ voltarParaHome, tipoContaInicial, irParaLogin }) {
     </div>
   )
 }
-
-export default Cadastro

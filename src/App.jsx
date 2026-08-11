@@ -1,34 +1,20 @@
-import { useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Home from './pages/Home/Home.jsx'
 import Cadastro from './pages/Cadastro/Cadastro.jsx'
 import Login from './pages/Login/Login.jsx'
-import ModalTipoConta from './components/ModalTipoConta/ModalTipoConta.jsx'
+import EscolherConta from './pages/EscolherConta/EscolherConta.jsx'
 
-function App() {
-  const [paginaAtual, setPaginaAtual] = useState('home')
-  const [modalContaAberto, setModalContaAberto] = useState(false)
-  const [tipoConta, setTipoConta] = useState('PF')
-
-  function iniciarCadastro(tipo) {
-    setTipoConta(tipo)
-    setModalContaAberto(false)
-    setPaginaAtual('cadastro')
-  }
-
-  if (paginaAtual === 'cadastro') {
-    return <Cadastro tipoContaInicial={tipoConta} voltarParaHome={() => setPaginaAtual('home')} irParaLogin={() => setPaginaAtual('login')} />
-  }
-
-  if (paginaAtual === 'login') {
-    return <Login voltarParaHome={() => setPaginaAtual('home')} abrirCadastro={() => { setPaginaAtual('home'); setModalContaAberto(true) }} />
-  }
-
+export default function App() {
   return (
-    <>
-      <Home abrirCadastro={() => setModalContaAberto(true)} abrirLogin={() => setPaginaAtual('login')} />
-      {modalContaAberto && <ModalTipoConta fechar={() => setModalContaAberto(false)} escolherTipo={iniciarCadastro} />}
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<EscolherConta />} />
+        <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
+        <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
