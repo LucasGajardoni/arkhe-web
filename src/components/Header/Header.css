@@ -60,10 +60,6 @@
   color: var(--verde-escuro);
 }
 
-.painel-cabecalho nav a.ativo {
-  border-bottom: 2px solid var(--verde-escuro);
-}
-
 .acoes-cabecalho {
   gap: 18px;
 }

@@ -13,6 +13,7 @@ export const FACE_API_URL = 'https://apps-arkhe-identity-api.ucxocw.easypanel.ho
 export const FACE_CLIENT_ID = 'arkhe'
 export const FACE_CLIENT_SECRET = 'mariahsaudadespontinaindaamamuitoela'
 
+
 export default function App() {
   return (
     <BrowserRouter>

@@ -9,13 +9,14 @@ export default function Login() {
   const navigate = useNavigate()
   const [tipoConta, setTipoConta] = useState('')
   const [etapa, setEtapa] = useState(0)
-  const [loginPF, setLoginPF] = useState({ cpf: '', senha: '', lembrarCpf: false })
+  const [loginPF, setLoginPF] = useState({ cpf: '', senha: '' })
   const [loginPJ, setLoginPJ] = useState({ cnpj: '', senha: '', cpfResponsavel: '' })
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [recuperandoSenha, setRecuperandoSenha] = useState(false)
-  const [tipoRecuperacao, setTipoRecuperacao] = useState('PF')
-  const [dadosRecuperacao, setDadosRecuperacao] = useState({ cpf: '', cnpj: '', cpfResponsavel: '', email: '' })
+  const [etapaRecuperacao, setEtapaRecuperacao] = useState('email')
+  const [dadosRecuperacao, setDadosRecuperacao] = useState({ email: '', codigo: '', novaSenha: '', confirmarSenha: '' })
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
   const [mensagemRecuperacao, setMensagemRecuperacao] = useState('')
   const [mensagemDemonstracao, setMensagemDemonstracao] = useState('')
   const [mensagemErro, setMensagemErro] = useState('')
@@ -30,8 +31,8 @@ export default function Login() {
   }
 
   function alterarPF(evento) {
-    const { name, value, type, checked } = evento.target
-    setLoginPF((dados) => ({ ...dados, [name]: type === 'checkbox' ? checked : name === 'cpf' ? mascaraCpf(value) : value }))
+    const { name, value } = evento.target
+    setLoginPF((dados) => ({ ...dados, [name]: name === 'cpf' ? mascaraCpf(value) : value }))
   }
 
   function alterarPJ(evento) {
@@ -42,8 +43,9 @@ export default function Login() {
 
   function alterarRecuperacao(evento) {
     const { name, value } = evento.target
-    const valor = name === 'cnpj' ? mascaraCnpj(value) : name.includes('cpf') || name.includes('Cpf') ? mascaraCpf(value) : value
+    const valor = name === 'codigo' ? value.replace(/\D/g, '').slice(0, 6) : value
     setDadosRecuperacao((dados) => ({ ...dados, [name]: valor }))
+    setMensagemRecuperacao('')
   }
 
   function voltarEtapa() {
@@ -57,7 +59,7 @@ export default function Login() {
   function alterarTipoConta() {
     setTipoConta('')
     setEtapa(0)
-    setLoginPF({ cpf: '', senha: '', lembrarCpf: false })
+    setLoginPF({ cpf: '', senha: '' })
     setLoginPJ({ cnpj: '', senha: '', cpfResponsavel: '' })
     setMostrarSenha(false)
     setMensagemErro('')
@@ -124,8 +126,6 @@ export default function Login() {
 
       localStorage.setItem('usuario', JSON.stringify(resultado.usuario))
       if (resultado.token) localStorage.setItem('token', resultado.token)
-      if (tipoConta === 'PF' && loginPF.lembrarCpf) localStorage.setItem('cpfLembrado', loginPF.cpf)
-      else if (tipoConta === 'PF') localStorage.removeItem('cpfLembrado')
       setEtapa(tipoConta === 'PF' ? 3 : 4)
     } catch {
       setMensagemErro('Não foi possível conectar ao servidor.')
@@ -149,7 +149,26 @@ export default function Login() {
 
   function solicitarRecuperacao(evento) {
     evento.preventDefault()
-    setMensagemRecuperacao('A recuperação de senha será habilitada quando o backend estiver disponível.')
+    if (etapaRecuperacao === 'email') {
+      setEtapaRecuperacao('codigo')
+      setMensagemRecuperacao('Enviamos um código de 6 dígitos para o e-mail informado. (Simulação)')
+      return
+    }
+    if (etapaRecuperacao === 'codigo') {
+      setEtapaRecuperacao('senha')
+      setMensagemRecuperacao('Código confirmado. Agora crie uma nova senha.')
+      return
+    }
+    setEtapaRecuperacao('sucesso')
+    setMensagemRecuperacao('Sua senha foi alterada com sucesso. (Simulação)')
+  }
+
+  function fecharRecuperacao() {
+    setRecuperandoSenha(false)
+    setEtapaRecuperacao('email')
+    setDadosRecuperacao({ email: '', codigo: '', novaSenha: '', confirmarSenha: '' })
+    setMensagemRecuperacao('')
+    setMostrarNovaSenha(false)
   }
 
   function escolhaTipo() {
@@ -180,7 +199,6 @@ export default function Login() {
         <label className="campo-login"><span>{pessoaFisica ? 'CPF' : 'CNPJ'}</span><input name={pessoaFisica ? 'cpf' : 'cnpj'} value={pessoaFisica ? loginPF.cpf : loginPJ.cnpj} onChange={pessoaFisica ? alterarPF : alterarPJ} inputMode="numeric" autoComplete="username" /></label>
         {!pessoaFisica && <label className="campo-login"><span>CPF do responsável</span><input name="cpfResponsavel" value={loginPJ.cpfResponsavel} onChange={alterarPJ} inputMode="numeric" autoComplete="username" /></label>}
         <label className="campo-login"><span>Senha</span><div className="entrada-senha-login"><input name="senha" type={mostrarSenha ? 'text' : 'password'} value={dados.senha} onChange={pessoaFisica ? alterarPF : alterarPJ} autoComplete="current-password" /><button type="button" onClick={() => setMostrarSenha(!mostrarSenha)}>{mostrarSenha ? 'Ocultar' : 'Mostrar'}</button></div></label>
-        {pessoaFisica && <label className="lembrar-documento"><input name="lembrarCpf" type="checkbox" checked={loginPF.lembrarCpf} onChange={alterarPF} /> Lembrar meu CPF neste dispositivo</label>}
         <button className="esqueci-senha" type="button" onClick={() => setRecuperandoSenha(true)}>Esqueci minha senha</button>
         {mensagemErro && !sessaoFacial && <p className="mensagem-login">{mensagemErro}</p>}
         <div className="acoes-login"><button className="botao botao-secundario" type="button" onClick={voltarEtapa}>Voltar</button><button className="botao botao-principal" type="button" disabled={!documentosPreenchidos || !dados.senha || processando} onClick={continuarCredenciais}>{processando ? 'Validando...' : 'Continuar'}</button></div>
@@ -224,20 +242,45 @@ export default function Login() {
   }
 
   function recuperacaoSenha() {
-    const pj = tipoRecuperacao === 'PJ'
-    const valido = pj ? dadosRecuperacao.cnpj && dadosRecuperacao.cpfResponsavel && dadosRecuperacao.email : dadosRecuperacao.cpf && dadosRecuperacao.email
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dadosRecuperacao.email)
+    const codigoValido = dadosRecuperacao.codigo.length === 6
+    const senhaValida = dadosRecuperacao.novaSenha.length >= 8
+      && dadosRecuperacao.novaSenha === dadosRecuperacao.confirmarSenha
+    const numeroEtapa = etapaRecuperacao === 'email' ? 1 : etapaRecuperacao === 'codigo' ? 2 : 3
+
+    if (etapaRecuperacao === 'sucesso') return (
+      <div className="login-finalizado recuperacao-finalizada">
+        <span className="icone-acesso">✓</span>
+        <p className="rotulo-secao">SENHA REDEFINIDA</p>
+        <h1>Tudo certo!</h1>
+        <p>Sua nova senha foi cadastrada. Você já pode voltar e acessar sua conta.</p>
+        <p className="mensagem-login">{mensagemRecuperacao}</p>
+        <button className="botao botao-principal botao-largo" type="button" onClick={fecharRecuperacao}>Voltar ao login</button>
+      </div>
+    )
+
     return (
       <>
-        <div className="cabecalho-login"><p className="rotulo-secao">RECUPERAÇÃO</p><h1>Recuperar acesso</h1><p>Informe os dados usados no cadastro.</p></div>
-        <div className="abas-recuperacao"><button className={!pj ? 'selecionado' : ''} type="button" onClick={() => setTipoRecuperacao('PF')}>Pessoa Física</button><button className={pj ? 'selecionado' : ''} type="button" onClick={() => setTipoRecuperacao('PJ')}>Pessoa Jurídica</button></div>
+        <div className="cabecalho-login">
+          <p className="rotulo-secao">RECUPERAÇÃO DE SENHA</p>
+          <h1>{etapaRecuperacao === 'email' ? 'Recupere seu acesso' : etapaRecuperacao === 'codigo' ? 'Digite o código' : 'Crie uma nova senha'}</h1>
+          <p>{etapaRecuperacao === 'email' ? 'Informe o e-mail usado no cadastro.' : etapaRecuperacao === 'codigo' ? `Enviamos o código para ${dadosRecuperacao.email}.` : 'Escolha uma senha segura para sua conta.'}</p>
+        </div>
+        <div className="etapas-recuperacao" aria-label={`Etapa ${numeroEtapa} de 3`}><span className="ativa">1</span><i /><span className={numeroEtapa >= 2 ? 'ativa' : ''}>2</span><i /><span className={numeroEtapa >= 3 ? 'ativa' : ''}>3</span></div>
         <form onSubmit={solicitarRecuperacao}>
-          <label className="campo-login"><span>{pj ? 'CNPJ' : 'CPF'}</span><input name={pj ? 'cnpj' : 'cpf'} value={pj ? dadosRecuperacao.cnpj : dadosRecuperacao.cpf} onChange={alterarRecuperacao} inputMode="numeric" /></label>
-          {pj && <label className="campo-login"><span>CPF do responsável</span><input name="cpfResponsavel" value={dadosRecuperacao.cpfResponsavel} onChange={alterarRecuperacao} inputMode="numeric" /></label>}
-          <label className="campo-login"><span>{pj ? 'E-mail empresarial' : 'E-mail'}</span><input name="email" type="email" value={dadosRecuperacao.email} onChange={alterarRecuperacao} /></label>
+          {etapaRecuperacao === 'email' && <label className="campo-login"><span>E-mail</span><input name="email" type="email" value={dadosRecuperacao.email} onChange={alterarRecuperacao} placeholder="seuemail@exemplo.com" autoComplete="email" autoFocus /></label>}
+          {etapaRecuperacao === 'codigo' && <label className="campo-login campo-codigo"><span>Código de verificação</span><input name="codigo" value={dadosRecuperacao.codigo} onChange={alterarRecuperacao} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" autoFocus /></label>}
+          {etapaRecuperacao === 'senha' && <>
+            <label className="campo-login"><span>Nova senha</span><div className="entrada-senha-login"><input name="novaSenha" type={mostrarNovaSenha ? 'text' : 'password'} value={dadosRecuperacao.novaSenha} onChange={alterarRecuperacao} autoComplete="new-password" autoFocus /><button type="button" onClick={() => setMostrarNovaSenha(!mostrarNovaSenha)}>{mostrarNovaSenha ? 'Ocultar' : 'Mostrar'}</button></div></label>
+            <label className="campo-login"><span>Confirmar nova senha</span><input name="confirmarSenha" type={mostrarNovaSenha ? 'text' : 'password'} value={dadosRecuperacao.confirmarSenha} onChange={alterarRecuperacao} autoComplete="new-password" /></label>
+            <small className="ajuda-senha">Use pelo menos 8 caracteres.</small>
+            {dadosRecuperacao.confirmarSenha && dadosRecuperacao.novaSenha !== dadosRecuperacao.confirmarSenha && <p className="mensagem-erro-recuperacao">As senhas não coincidem.</p>}
+          </>}
           {mensagemRecuperacao && <p className="mensagem-login">{mensagemRecuperacao}</p>}
-          <button className="botao botao-principal botao-largo" type="submit" disabled={!valido}>Solicitar recuperação</button>
+          <button className="botao botao-principal botao-largo" type="submit" disabled={etapaRecuperacao === 'email' ? !emailValido : etapaRecuperacao === 'codigo' ? !codigoValido : !senhaValida}>{etapaRecuperacao === 'email' ? 'Enviar código' : etapaRecuperacao === 'codigo' ? 'Confirmar código' : 'Redefinir senha'}</button>
         </form>
-        <button className="link-novo-cliente" type="button" onClick={() => { setRecuperandoSenha(false); setMensagemRecuperacao('') }}>Voltar ao login</button>
+        {etapaRecuperacao === 'codigo' && <button className="link-novo-cliente" type="button" onClick={() => setMensagemRecuperacao('Um novo código foi enviado. (Simulação)')}>Reenviar código</button>}
+        <button className="link-novo-cliente" type="button" onClick={fecharRecuperacao}>Voltar ao login</button>
       </>
     )
   }

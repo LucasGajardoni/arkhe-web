@@ -28,10 +28,14 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
   const areaScanner = useRef(null)
   const scanner = useRef(null)
   const temporizadorCaptura = useRef(null)
+  const temporizadorInicializacao = useRef(null)
+  const cameraPronta = useRef(false)
   const concluir = useRef(aoConcluir)
   const informarErro = useRef(aoErro)
   const [iniciando, setIniciando] = useState(true)
   const [tentativa, setTentativa] = useState(0)
+  const [reinicio, setReinicio] = useState(0)
+  const [erroScanner, setErroScanner] = useState('')
   const [mensagem, setMensagem] = useState('Preparando a câmera...')
 
   useEffect(() => {
@@ -45,6 +49,9 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
 
     async function iniciarScanner() {
       setIniciando(true)
+      setErroScanner('')
+      cameraPronta.current = false
+      informarErro.current?.('')
       setMensagem('Preparando a câmera...')
 
       try {
@@ -86,6 +93,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
               if (tentativa >= 2) {
                 const texto = 'Rosto não reconhecido. A pessoa não corresponde ao cadastro.'
                 setMensagem(texto)
+                setErroScanner(texto)
                 informarErro.current?.(texto)
                 return
               }
@@ -105,6 +113,10 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
             if (!ativo) return
             const texto = erro?.message || 'Não foi possível realizar o reconhecimento facial.'
 
+            // O SDK pode emitir falhas transitórias enquanto o elemento de vídeo
+            // ainda está sendo montado. Nesse intervalo mantemos o carregamento.
+            if (!cameraPronta.current) return
+
             const maisDeUmRosto = erro?.code === 'ARKHE_MULTIPLE_FACES'
               || texto.toLowerCase().includes('mais de uma face')
               || texto.toLowerCase().includes('mais de um rosto')
@@ -118,11 +130,13 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
               scanner.current?.stop?.()
               const aviso = 'Mais de um rosto detectado. Deixe apenas uma pessoa em frente à câmera e tente novamente.'
               setMensagem(aviso)
+              setErroScanner(aviso)
               informarErro.current?.(aviso)
               return
             }
 
             setMensagem(texto)
+            setErroScanner(texto)
             informarErro.current?.(texto)
 
             // Durante o cadastro, erros de enquadramento podem ser corrigidos
@@ -143,14 +157,20 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
 
         // Inicia o escaneamento automaticamente assim que a câmera estiver pronta.
         // O usuário apenas olha para a câmera e segue as orientações na tela.
-        agendarCaptura(700)
+        temporizadorInicializacao.current = setTimeout(() => {
+          if (!ativo) return
+          cameraPronta.current = true
+          setIniciando(false)
+          setMensagem('Câmera pronta. Olhe diretamente para a tela.')
+          agendarCaptura(700)
+        }, 1200)
       } catch (erro) {
         if (!ativo) return
         const texto = erro?.message || 'Não foi possível iniciar o reconhecimento facial.'
         setMensagem(texto)
+        setErroScanner(texto)
         informarErro.current?.(texto)
-      } finally {
-        if (ativo) setIniciando(false)
+        setIniciando(false)
       }
     }
 
@@ -159,16 +179,30 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
     return () => {
       ativo = false
       clearTimeout(temporizadorCaptura.current)
+      clearTimeout(temporizadorInicializacao.current)
       scanner.current?.stop?.()
       scanner.current = null
       if (elementoScanner) elementoScanner.innerHTML = ''
     }
-  }, [modo, sessao, tentativa])
+  }, [modo, sessao, tentativa, reinicio])
+
+  function tentarNovamente() {
+    setTentativa(0)
+    setErroScanner('')
+    informarErro.current?.('')
+    setReinicio((valor) => valor + 1)
+  }
 
   return (
     <div className="reconhecimento-facial">
       <div ref={areaScanner} className="area-scanner-facial" />
       <p className="status-scanner-facial">{iniciando ? 'Preparando a câmera...' : mensagem}</p>
+      {erroScanner && (
+        <div className="erro-scanner-facial" role="alert">
+          <p>{erroScanner}</p>
+          <button className="botao botao-principal" type="button" onClick={tentarNovamente}>Tentar novamente</button>
+        </div>
+      )}
     </div>
   )
 }

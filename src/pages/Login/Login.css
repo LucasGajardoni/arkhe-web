@@ -16,9 +16,7 @@
 .entrada-senha-login { position: relative; }
 .entrada-senha-login input { padding-right: 75px; }
 .entrada-senha-login button { position: absolute; top: 50%; right: 12px; color: var(--verde-medio); background: transparent; cursor: pointer; font-size: 11px; font-weight: 800; transform: translateY(-50%); }
-.lembrar-documento { display: flex; align-items: center; gap: 8px; margin-top: -3px; color: var(--texto-secundario); font-size: 12px; }
-.lembrar-documento input { width: 16px; height: 16px; accent-color: var(--verde-escuro); }
-.esqueci-senha { display: block; margin: 14px 0 20px auto; color: var(--verde-medio); background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }
+.esqueci-senha { display: block; margin: -3px 0 20px; color: var(--verde-medio); background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }
 .botao-largo { width: 100%; margin-top: 10px; }
 .acoes-login { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; }
 .link-novo-cliente { display: block; margin: 22px auto 0; color: var(--verde-medio); background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }
@@ -36,6 +34,14 @@
 .abas-recuperacao { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; padding: 4px; border-radius: 10px; background: var(--fundo-claro); }
 .abas-recuperacao button { min-height: 40px; color: var(--texto-secundario); border-radius: 8px; background: transparent; cursor: pointer; font-size: 12px; font-weight: 700; }
 .abas-recuperacao button.selecionado { color: var(--verde-escuro); background: var(--branco); box-shadow: 0 2px 7px rgba(28,28,23,.08); }
+.etapas-recuperacao { display: flex; align-items: center; margin: -5px 0 28px; }
+.etapas-recuperacao span { display: flex; width: 28px; height: 28px; align-items: center; justify-content: center; flex: 0 0 auto; border: 1px solid var(--borda); border-radius: 50%; color: var(--texto-secundario); background: var(--branco); font-size: 11px; font-weight: 800; }
+.etapas-recuperacao span.ativa { color: var(--branco); border-color: var(--verde-escuro); background: var(--verde-escuro); }
+.etapas-recuperacao i { height: 1px; flex: 1; background: var(--borda); }
+.campo-codigo input { text-align: center; letter-spacing: .55em; font-size: 20px; font-weight: 800; }
+.ajuda-senha { display: block; margin-top: -8px; color: var(--texto-secundario); font-size: 11px; }
+.mensagem-erro-recuperacao { margin: 10px 0 0; color: #8b2f28; font-size: 12px; }
+.recuperacao-finalizada { padding-top: 35px; }
 .mensagem-login, .mensagem-demonstracao { margin: 16px 0; padding: 11px; color: var(--verde-escuro); border-radius: 8px; background: #edf7f3; font-size: 12px; }
 .login-finalizado { text-align: center; }
 .login-finalizado > small { display: block; margin-top: 7px; color: var(--texto-secundario); font-size: 11px; }
