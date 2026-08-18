@@ -73,6 +73,10 @@ export function useLogin() {
       }
       localStorage.setItem('usuario', JSON.stringify(resultado.usuario))
       if (resultado.token) localStorage.setItem('token', resultado.token)
+      if (pessoaFisica) {
+        navigate('/dashboard', { replace: true })
+        return
+      }
       setEtapa(etapaFinal)
     } catch (erro) {
       if (erro.status === 401) {

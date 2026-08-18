@@ -3,6 +3,7 @@ import Home from './pages/Home/Home.jsx'
 import Cadastro from './pages/Cadastro/Cadastro.jsx'
 import Login from './pages/Login/Login.jsx'
 import EscolherConta from './pages/EscolherConta/EscolherConta.jsx'
+import Dashboard from './pages/Dashboard/Dashboard.jsx'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/cadastro" element={<EscolherConta />} />
         <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
         <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
