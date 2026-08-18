@@ -1,28 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { FACE_API_URL } from '../../App.jsx'
+import { carregarSdkFacial, criarScannerFacial } from '../../services/facialService.js'
 import './ReconhecimentoFacial.css'
-
-const SDK_ID = 'arkhe-face-identity-sdk'
-
-function carregarSdkFacial() {
-  if (window.FaceIdentity) return Promise.resolve()
-
-  return new Promise((resolve, reject) => {
-    const existente = document.getElementById(SDK_ID)
-    if (existente) {
-      existente.addEventListener('load', resolve, { once: true })
-      existente.addEventListener('error', reject, { once: true })
-      return
-    }
-
-    const script = document.createElement('script')
-    script.id = SDK_ID
-    script.src = `${FACE_API_URL}/static/sdk/face-identity.js`
-    script.onload = resolve
-    script.onerror = () => reject(new Error('Não foi possível carregar o scanner facial.'))
-    document.head.appendChild(script)
-  })
-}
 
 export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro }) {
   const areaScanner = useRef(null)
@@ -70,7 +48,6 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
         }
 
         const opcoes = {
-          baseUrl: FACE_API_URL,
           sessionId: sessao.session_id,
           sessionToken: sessao.session_token,
           mount: areaScanner.current,
@@ -151,9 +128,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
           },
         }
 
-        scanner.current = modo === 'cadastro'
-          ? await window.FaceIdentity.enroll(opcoes)
-          : await window.FaceIdentity.verify(opcoes)
+        scanner.current = await criarScannerFacial(modo, opcoes)
 
         // Inicia o escaneamento automaticamente assim que a câmera estiver pronta.
         // O usuário apenas olha para a câmera e segue as orientações na tela.

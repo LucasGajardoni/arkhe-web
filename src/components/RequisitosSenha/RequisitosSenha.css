@@ -1,0 +1,6 @@
+.requisitos-senha { margin: 18px 0; padding: 16px; border: 1px solid var(--borda); border-radius: 10px; background: var(--fundo-claro); }
+.requisitos-senha strong { color: var(--texto); font-size: 12px; }
+.requisitos-senha ul { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.requisitos-senha li { color: var(--texto-secundario); font-size: 11px; }
+.requisitos-senha li span { display: inline-block; width: 18px; color: #8b2f28; font-weight: 800; }
+.requisitos-senha li.requisito-atendido, .requisitos-senha li.requisito-atendido span { color: var(--verde-medio); }
