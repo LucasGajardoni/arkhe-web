@@ -17,6 +17,11 @@ export function cpfValido(valor) {
     && calcularDigito(10) === Number(cpf[10])
 }
 
+export function nomeValido(nome) {
+  const nomeLimpo = String(nome || '').trim()
+  return nomeLimpo.length > 0 && /^[\p{L}\s]+$/u.test(nomeLimpo)
+}
+
 export function maiorDeIdade(dataNascimento) {
   if (!dataNascimento) return false
   const nascimento = new Date(`${dataNascimento}T00:00:00`)

@@ -4,7 +4,7 @@ import { cadastrarUsuario } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
 import { criarSessaoCadastro } from '../services/facialService.js'
 import { mascaraCep, mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../utils/formatadores.js'
-import { camposPreenchidos, cpfValido, maiorDeIdade, senhaValida } from '../utils/validadores.js'
+import { camposPreenchidos, cpfValido, maiorDeIdade, nomeValido, senhaValida } from '../utils/validadores.js'
 
 export const ETAPAS_CADASTRO = {
   PF: ['Dados pessoais', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial'],
@@ -90,13 +90,13 @@ export function useCadastro(tipoConta) {
 
   function validarEtapa() {
     if (!empresarial) {
-      if (etapaAtual === 0) return camposPreenchidos(dadosPF, ['nome', 'cpf', 'dataNascimento']) && cpfValido(dadosPF.cpf) && maiorDeIdade(dadosPF.dataNascimento)
+      if (etapaAtual === 0) return camposPreenchidos(dadosPF, ['nome', 'cpf', 'dataNascimento']) && nomeValido(dadosPF.nome) && cpfValido(dadosPF.cpf) && maiorDeIdade(dadosPF.dataNascimento)
       if (etapaAtual === 1) return camposPreenchidos(dadosPF, ['email', 'confirmarEmail', 'telefone']) && dadosPF.email === dadosPF.confirmarEmail
       if (etapaAtual === 2) return camposPreenchidos(dadosPF, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
       if (etapaAtual === 3) return camposPreenchidos(dadosPF, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPF.senha === dadosPF.confirmarSenha && dadosPF.aceitarTermos && dadosPF.aceitarDados && dadosPF.aceitarBiometria
     } else {
       if (etapaAtual === 0) return camposPreenchidos(dadosPJ, ['cnpj', 'razaoSocial', 'nomeFantasia'])
-      if (etapaAtual === 1) return camposPreenchidos(dadosPJ, ['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel']) && cpfValido(dadosPJ.cpfResponsavel) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
+      if (etapaAtual === 1) return camposPreenchidos(dadosPJ, ['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel']) && nomeValido(dadosPJ.nomeResponsavel) && cpfValido(dadosPJ.cpfResponsavel) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
       if (etapaAtual === 2) return camposPreenchidos(dadosPJ, ['emailEmpresarial', 'confirmarEmailEmpresarial', 'telefoneEmpresarial']) && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial
       if (etapaAtual === 3) return camposPreenchidos(dadosPJ, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
       if (etapaAtual === 4) return camposPreenchidos(dadosPJ, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPJ.senha === dadosPJ.confirmarSenha && dadosPJ.aceitarTermos && dadosPJ.aceitarDadosPessoais && dadosPJ.aceitarDadosEmpresariais && dadosPJ.aceitarBiometria
@@ -108,6 +108,8 @@ export function useCadastro(tipoConta) {
     const etapaCpf = (!empresarial && etapaAtual === 0) || (empresarial && etapaAtual === 1)
     const etapaContato = (!empresarial && etapaAtual === 1) || (empresarial && etapaAtual === 2)
     const etapaAcesso = (!empresarial && etapaAtual === 3) || (empresarial && etapaAtual === 4)
+    const nome = empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome
+    if (etapaCpf && nome && !nomeValido(nome)) return 'Informe o nome usando apenas letras e espaços.'
     if (etapaCpf && !cpfValido(empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf)) return 'Informe um CPF válido para continuar.'
     if (etapaContato) return 'Os e-mails informados precisam ser iguais.'
     if (etapaAcesso) return 'Confira os requisitos da senha, a confirmação e todos os consentimentos.'
