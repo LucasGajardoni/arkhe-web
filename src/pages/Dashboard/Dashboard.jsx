@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import arkheLogo from '../../assets/arkhe-logo.svg'
 import Icone from '../../components/Dashboard/Icone.jsx'
+import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import './Dashboard.css'
 
 const atalhos = [['pix', 'Pix'], ['transferir', 'Transferir'], ['cartao', 'Cartões'], ['extrato', 'Extrato']]
@@ -17,7 +18,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [usuario] = useState(lerUsuario)
   const [saldoVisivel, setSaldoVisivel] = useState(true)
-  const [menuAberto, setMenuAberto] = useState(false)
+  const [perfilAberto, setPerfilAberto] = useState(false)
   useEffect(() => { if (!usuario) navigate('/login', { replace: true }) }, [navigate, usuario])
   function sair() { localStorage.removeItem('usuario'); localStorage.removeItem('token'); navigate('/login', { replace: true }) }
   if (!usuario) return null
@@ -27,8 +28,8 @@ export default function Dashboard() {
   return <div className="pagina-dashboard">
     <header className="cabecalho-dashboard"><div className="conteudo-dashboard-largo barra-dashboard">
       <button className="marca-dashboard" type="button" onClick={() => navigate('/')}><span><img src={arkheLogo} alt="" /></span><strong>ARKHÉ</strong></button>
-      <nav className={menuAberto ? 'aberto' : ''}><button className="ativo" type="button">Visão geral</button><button type="button">Movimentações</button><button type="button">Cartões</button><button type="button">Planejamento</button></nav>
-      <div className="perfil-topo-dashboard"><button className="notificacao-dashboard" type="button"><Icone nome="sino" tamanho={20} /><i /></button><button className="usuario-dashboard" type="button" onClick={() => setMenuAberto(!menuAberto)}><span>{iniciais}</span><div><small>Conta pessoal</small><strong>{primeiroNome}</strong></div></button><button className="sair-dashboard" type="button" onClick={sair}><Icone nome="sair" tamanho={20} /></button></div>
+      <nav><button className="ativo" type="button">Visão geral</button><button type="button">Movimentações</button><button type="button">Cartões</button><button type="button">Planejamento</button></nav>
+      <div className="perfil-topo-dashboard"><button className="usuario-dashboard" type="button" onClick={() => setPerfilAberto(true)}><span>{iniciais}</span><div><small>Conta pessoal</small><strong>{primeiroNome}</strong></div></button><button className="sair-dashboard" type="button" onClick={sair}><Icone nome="sair" tamanho={20} /></button></div>
     </div></header>
 
     <main>
@@ -48,5 +49,6 @@ export default function Dashboard() {
       </div>
     </main>
     <nav className="navegacao-mobile-dashboard"><button className="ativo" type="button"><Icone nome="inicio" /><span>Início</span></button><button type="button"><Icone nome="pix" /><span>Pix</span></button><button type="button"><Icone nome="transferir" /><span>Transferir</span></button><button type="button"><Icone nome="cartao" /><span>Cartões</span></button></nav>
+    {perfilAberto && <ModalPerfil usuario={usuario} fechar={() => setPerfilAberto(false)} />}
   </div>
 }
