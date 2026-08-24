@@ -17,6 +17,24 @@ export function cpfValido(valor) {
     && calcularDigito(10) === Number(cpf[10])
 }
 
+export function cnpjValido(valor) {
+  const cnpj = somenteNumeros(valor)
+  if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false
+
+  function calcularDigito(base, pesos) {
+    const soma = base
+      .split('')
+      .reduce((total, digito, indice) => total + Number(digito) * pesos[indice], 0)
+    const resto = soma % 11
+    return resto < 2 ? 0 : 11 - resto
+  }
+
+  const primeiroDigito = calcularDigito(cnpj.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+  const segundoDigito = calcularDigito(`${cnpj.slice(0, 12)}${primeiroDigito}`, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+
+  return cnpj.endsWith(`${primeiroDigito}${segundoDigito}`)
+}
+
 export function nomeValido(nome) {
   const nomeLimpo = String(nome || '').trim()
   return nomeLimpo.length > 0 && /^[\p{L}\s]+$/u.test(nomeLimpo)

@@ -6,10 +6,10 @@ import EtapaEndereco from './EtapaEndereco.jsx'
 import RevisaoCadastro from './RevisaoCadastro.jsx'
 
 export default function ConteudoEtapaCadastro({ cadastro }) {
-  const { empresarial, etapaAtual, etapaRevisao, etapaFacial, dadosPF, dadosPJ, dadosAtuais, dadosValidacaoSenha, alterarDados, consultandoCep, mensagemCep, mostrarSenha, setMostrarSenha, setEtapaAtual, facialConcluido, enviando, mensagemErro, sessaoFacial, salvarCadastro, concluirCadastroFacial, setMensagemErro } = cadastro
+  const { empresarial, etapaAtual, etapaRevisao, etapaFacial, dadosPF, dadosPJ, dadosAtuais, dadosValidacaoSenha, alterarDados, erroEmailCadastro, verificarEmailDisponivel, consultandoCep, mensagemCep, mostrarSenha, setMostrarSenha, setEtapaAtual, facialConcluido, enviando, mensagemErro, sessaoFacial, salvarCadastro, concluirCadastroFacial, setMensagemErro } = cadastro
   if (etapaAtual === 0) return <EtapaDados empresarial={empresarial} dadosPF={dadosPF} dadosPJ={dadosPJ} alterar={alterarDados} />
   if (empresarial && etapaAtual === 1) return <EtapaResponsavel dados={dadosPJ} alterar={alterarDados} />
-  if (etapaAtual === (empresarial ? 2 : 1)) return <EtapaContato empresarial={empresarial} dados={dadosAtuais} alterar={alterarDados} />
+  if (etapaAtual === (empresarial ? 2 : 1)) return <EtapaContato empresarial={empresarial} dados={dadosAtuais} alterar={alterarDados} erroEmail={erroEmailCadastro} verificarEmail={verificarEmailDisponivel} />
   if (etapaAtual === (empresarial ? 3 : 2)) return <EtapaEndereco dados={dadosAtuais} alterar={alterarDados} consultando={consultandoCep} mensagem={mensagemCep} />
   if (etapaAtual === (empresarial ? 4 : 3)) return <EtapaAcesso empresarial={empresarial} dadosPF={dadosPF} dadosPJ={dadosPJ} dadosAtuais={dadosAtuais} dadosValidacao={dadosValidacaoSenha} alterar={alterarDados} mostrarSenha={mostrarSenha} alternarSenha={() => setMostrarSenha(!mostrarSenha)} />
   if (etapaAtual === etapaRevisao) return <RevisaoCadastro empresarial={empresarial} dadosPF={dadosPF} dadosPJ={dadosPJ} dadosAtuais={dadosAtuais} editarEtapa={setEtapaAtual} />

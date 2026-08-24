@@ -18,8 +18,16 @@ async function lerJson(resposta) {
   }
 }
 
+async function requisitar(url, opcoes, mensagemConexao = 'Não foi possível conectar ao servidor. Confirme se o backend está ligado.') {
+  try {
+    return await fetch(url, opcoes)
+  } catch {
+    throw new ErroApi(mensagemConexao, 0, {})
+  }
+}
+
 async function enviarJson(caminho, dados, mensagemPadrao) {
-  const resposta = await fetch(`${API_URL}${caminho}`, {
+  const resposta = await requisitar(`${API_URL}${caminho}`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -58,6 +66,38 @@ export function trocarSenha({ email, codigo, novaSenha }) {
   }, 'Não foi possível alterar a senha.')
 }
 
+export function verificarEmailCadastro(email) {
+  return enviarJson('/verificar_email_cadastro', {
+    email: String(email || '').trim().toLowerCase(),
+  }, 'Não foi possível verificar o e-mail.')
+}
+
+export async function editarUsuario({ idUsuario, nome, email, telefone, cpf }) {
+  const formData = new FormData()
+  const token = localStorage.getItem('token')
+  formData.append('nome', String(nome || '').trim())
+  formData.append('email', String(email || '').trim().toLowerCase())
+  formData.append('telefone', somenteNumeros(telefone))
+  formData.append('cpf', somenteNumeros(cpf))
+
+  const resposta = await requisitar(`${API_URL}/edicao_usuario/${idUsuario}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  }, 'Não foi possível salvar as alterações. Confirme se o backend está ligado.')
+  const resultado = await lerJson(resposta)
+
+  if (!resposta.ok) {
+    const mensagem = resposta.status === 403
+      ? 'Sua sessão expirou. Saia e entre novamente para editar seus dados.'
+      : resultado.mensagem || 'Não foi possível editar o usuário.'
+    throw new ErroApi(mensagem, resposta.status, resultado)
+  }
+
+  return resultado
+}
+
 function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
   const empresarial = tipoConta === 'PJ'
   const dados = empresarial ? dadosPJ : dadosPF
@@ -86,7 +126,7 @@ function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
 }
 
 export async function cadastrarUsuario({ tipoConta, dadosPF, dadosPJ }) {
-  const resposta = await fetch(`${API_URL}/adicionar_usuario`, {
+  const resposta = await requisitar(`${API_URL}/adicionar_usuario`, {
     method: 'POST',
     credentials: 'include',
     body: montarDadosCadastro(tipoConta, dadosPF, dadosPJ),

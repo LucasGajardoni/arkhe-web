@@ -6,7 +6,7 @@ import './Cadastro.css'
 
 export default function Cadastro({ tipoConta }) {
   const cadastro = useCadastro(tipoConta)
-  const { navigate, etapaAtual, etapas, titulos, etapaRevisao, mensagemErro, sessaoFacial, enviando, validarEtapa, avancar, voltar, enviarCadastro } = cadastro
+  const { navigate, etapaAtual, etapas, titulos, etapaRevisao, mensagemErro, sessaoFacial, enviando, consultandoEmail, validarEtapa, avancar, voltar, enviarCadastro } = cadastro
 
   return (
     <div className="pagina-cadastro">
@@ -26,7 +26,7 @@ export default function Cadastro({ tipoConta }) {
               <button className="botao botao-secundario" type="button" onClick={voltar}>Voltar</button>
               {etapaAtual === etapaRevisao
                 ? <button className="botao botao-principal" type="button" disabled={enviando} onClick={enviarCadastro}>{enviando ? 'Enviando...' : 'Enviar cadastro'}</button>
-                : <button className="botao botao-principal" type="button" disabled={!validarEtapa()} onClick={avancar}>Continuar</button>}
+                : <button className="botao botao-principal" type="button" disabled={!validarEtapa()} onClick={avancar}>{consultandoEmail ? 'Verificando e-mail...' : 'Continuar'}</button>}
             </div>}
           </section>
           <aside className="apoio-cadastro">

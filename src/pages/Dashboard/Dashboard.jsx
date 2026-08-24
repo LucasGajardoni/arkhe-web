@@ -16,7 +16,7 @@ function lerUsuario() { try { return JSON.parse(localStorage.getItem('usuario'))
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [usuario] = useState(lerUsuario)
+  const [usuario, setUsuario] = useState(lerUsuario)
   const [saldoVisivel, setSaldoVisivel] = useState(true)
   const [perfilAberto, setPerfilAberto] = useState(false)
   useEffect(() => { if (!usuario) navigate('/login', { replace: true }) }, [navigate, usuario])
@@ -49,6 +49,6 @@ export default function Dashboard() {
       </div>
     </main>
     <nav className="navegacao-mobile-dashboard"><button className="ativo" type="button"><Icone nome="inicio" /><span>Início</span></button><button type="button"><Icone nome="pix" /><span>Pix</span></button><button type="button"><Icone nome="transferir" /><span>Transferir</span></button><button type="button"><Icone nome="cartao" /><span>Cartões</span></button></nav>
-    {perfilAberto && <ModalPerfil usuario={usuario} fechar={() => setPerfilAberto(false)} />}
+    {perfilAberto && <ModalPerfil usuario={usuario} fechar={() => setPerfilAberto(false)} aoAtualizar={setUsuario} />}
   </div>
 }

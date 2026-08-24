@@ -1,6 +1,6 @@
 import Campo from './CampoFormulario.jsx'
 import { somenteNumeros } from '../../utils/formatadores.js'
-import { cpfValido, maiorDeIdade, nomeValido } from '../../utils/validadores.js'
+import { cnpjValido, cpfValido, maiorDeIdade, nomeValido } from '../../utils/validadores.js'
 
 export default function EtapaDados({ empresarial, dadosPF, dadosPJ, alterar }) {
   if (!empresarial) return (
@@ -13,7 +13,7 @@ export default function EtapaDados({ empresarial, dadosPF, dadosPJ, alterar }) {
 
   return (
     <div className="grade-formulario">
-      <Campo nome="cnpj" rotulo="CNPJ" valor={dadosPJ.cnpj} alterar={alterar} />
+      <Campo nome="cnpj" rotulo="CNPJ" valor={dadosPJ.cnpj} alterar={alterar} erro={somenteNumeros(dadosPJ.cnpj).length === 14 && !cnpjValido(dadosPJ.cnpj) ? 'CNPJ inválido.' : ''} />
       <Campo nome="razaoSocial" rotulo="Razão social" valor={dadosPJ.razaoSocial} alterar={alterar} />
       <Campo nome="nomeFantasia" rotulo="Nome fantasia" valor={dadosPJ.nomeFantasia} alterar={alterar} />
     </div>

@@ -19,6 +19,18 @@ export function mascaraCnpj(valor) {
     .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
 }
 
+export function mascaraCpfParcial(valor) {
+  const cpf = somenteNumeros(valor)
+  if (!cpf) return ''
+  return `${cpf.slice(0, 3).padEnd(3, '*')}.***.***-**`
+}
+
+export function mascaraCnpjParcial(valor) {
+  const cnpj = somenteNumeros(valor)
+  if (!cnpj) return ''
+  return `${cnpj.slice(0, 2).padEnd(2, '*')}.***.***/****-**`
+}
+
 export function mascaraTelefone(valor) {
   return somenteNumeros(valor)
     .slice(0, 11)

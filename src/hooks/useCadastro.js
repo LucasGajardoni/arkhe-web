@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cadastrarUsuario } from '../services/authService.js'
+import { cadastrarUsuario, verificarEmailCadastro } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
 import { criarSessaoCadastro } from '../services/facialService.js'
 import { mascaraCep, mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../utils/formatadores.js'
-import { camposPreenchidos, cpfValido, maiorDeIdade, nomeValido, senhaValida } from '../utils/validadores.js'
+import { camposPreenchidos, cnpjValido, cpfValido, emailValido, maiorDeIdade, nomeValido, senhaValida } from '../utils/validadores.js'
 
 export const ETAPAS_CADASTRO = {
   PF: ['Dados pessoais', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial'],
@@ -35,12 +35,16 @@ export function useCadastro(tipoConta) {
   const [dadosPF, setDadosPF] = useState(dadosIniciaisPF)
   const [dadosPJ, setDadosPJ] = useState(dadosIniciaisPJ)
   const [mensagemErro, setMensagemErro] = useState('')
+  const [erroEmailCadastro, setErroEmailCadastro] = useState('')
+  const [consultandoEmail, setConsultandoEmail] = useState(false)
+  const [emailVerificado, setEmailVerificado] = useState('')
   const [consultandoCep, setConsultandoCep] = useState(false)
   const [mensagemCep, setMensagemCep] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [facialConcluido, setFacialConcluido] = useState(false)
+  const consultaEmailAtual = useRef(0)
 
   const empresarial = tipoConta === 'PJ'
   const dadosAtuais = empresarial ? dadosPJ : dadosPF
@@ -50,6 +54,8 @@ export function useCadastro(tipoConta) {
   const titulos = TITULOS_CADASTRO[tipoConta]
   const etapaRevisao = empresarial ? 5 : 4
   const etapaFacial = empresarial ? 6 : 5
+  const etapaContato = empresarial ? 2 : 1
+  const emailCadastro = (empresarial ? dadosPJ.emailEmpresarial : dadosPF.email).trim().toLowerCase()
 
   async function consultarCep(cep) {
     setConsultandoCep(true)
@@ -84,6 +90,12 @@ export function useCadastro(tipoConta) {
       novoValor = mascaraCep(value)
       if (somenteNumeros(novoValor).length === 8) consultarCep(novoValor)
     }
+    if (name === 'email' || name === 'emailEmpresarial') {
+      consultaEmailAtual.current += 1
+      setConsultandoEmail(false)
+      setErroEmailCadastro('')
+      setEmailVerificado('')
+    }
     setDadosAtuais((dados) => ({ ...dados, [name]: novoValor }))
     setMensagemErro('')
   }
@@ -91,13 +103,13 @@ export function useCadastro(tipoConta) {
   function validarEtapa() {
     if (!empresarial) {
       if (etapaAtual === 0) return camposPreenchidos(dadosPF, ['nome', 'cpf', 'dataNascimento']) && nomeValido(dadosPF.nome) && cpfValido(dadosPF.cpf) && maiorDeIdade(dadosPF.dataNascimento)
-      if (etapaAtual === 1) return camposPreenchidos(dadosPF, ['email', 'confirmarEmail', 'telefone']) && dadosPF.email === dadosPF.confirmarEmail
+      if (etapaAtual === 1) return camposPreenchidos(dadosPF, ['email', 'confirmarEmail', 'telefone']) && emailValido(dadosPF.email) && dadosPF.email === dadosPF.confirmarEmail && !erroEmailCadastro && !consultandoEmail
       if (etapaAtual === 2) return camposPreenchidos(dadosPF, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
       if (etapaAtual === 3) return camposPreenchidos(dadosPF, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPF.senha === dadosPF.confirmarSenha && dadosPF.aceitarTermos && dadosPF.aceitarDados && dadosPF.aceitarBiometria
     } else {
-      if (etapaAtual === 0) return camposPreenchidos(dadosPJ, ['cnpj', 'razaoSocial', 'nomeFantasia'])
+      if (etapaAtual === 0) return camposPreenchidos(dadosPJ, ['cnpj', 'razaoSocial', 'nomeFantasia']) && cnpjValido(dadosPJ.cnpj)
       if (etapaAtual === 1) return camposPreenchidos(dadosPJ, ['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel']) && nomeValido(dadosPJ.nomeResponsavel) && cpfValido(dadosPJ.cpfResponsavel) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
-      if (etapaAtual === 2) return camposPreenchidos(dadosPJ, ['emailEmpresarial', 'confirmarEmailEmpresarial', 'telefoneEmpresarial']) && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial
+      if (etapaAtual === 2) return camposPreenchidos(dadosPJ, ['emailEmpresarial', 'confirmarEmailEmpresarial', 'telefoneEmpresarial']) && emailValido(dadosPJ.emailEmpresarial) && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial && !erroEmailCadastro && !consultandoEmail
       if (etapaAtual === 3) return camposPreenchidos(dadosPJ, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
       if (etapaAtual === 4) return camposPreenchidos(dadosPJ, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPJ.senha === dadosPJ.confirmarSenha && dadosPJ.aceitarTermos && dadosPJ.aceitarDadosPessoais && dadosPJ.aceitarDadosEmpresariais && dadosPJ.aceitarBiometria
     }
@@ -105,19 +117,53 @@ export function useCadastro(tipoConta) {
   }
 
   function mensagemValidacao() {
+    const etapaEmpresa = empresarial && etapaAtual === 0
     const etapaCpf = (!empresarial && etapaAtual === 0) || (empresarial && etapaAtual === 1)
     const etapaContato = (!empresarial && etapaAtual === 1) || (empresarial && etapaAtual === 2)
     const etapaAcesso = (!empresarial && etapaAtual === 3) || (empresarial && etapaAtual === 4)
     const nome = empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome
+    const email = empresarial ? dadosPJ.emailEmpresarial : dadosPF.email
+    if (etapaEmpresa && dadosPJ.cnpj && !cnpjValido(dadosPJ.cnpj)) return 'Informe um CNPJ válido para continuar.'
     if (etapaCpf && nome && !nomeValido(nome)) return 'Informe o nome usando apenas letras e espaços.'
     if (etapaCpf && !cpfValido(empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf)) return 'Informe um CPF válido para continuar.'
+    if (etapaContato && erroEmailCadastro) return erroEmailCadastro
+    if (etapaContato && email && !emailValido(email)) return 'Informe um e-mail válido para continuar.'
     if (etapaContato) return 'Os e-mails informados precisam ser iguais.'
     if (etapaAcesso) return 'Confira os requisitos da senha, a confirmação e todos os consentimentos.'
     return 'Preencha todos os campos obrigatórios.'
   }
 
-  function avancar() {
+  async function verificarEmailDisponivel({ forcar = false } = {}) {
+    if (!emailValido(emailCadastro)) return false
+    if (!forcar && emailVerificado === emailCadastro && !erroEmailCadastro) return true
+
+    const identificadorConsulta = consultaEmailAtual.current + 1
+    consultaEmailAtual.current = identificadorConsulta
+    setConsultandoEmail(true)
+    setErroEmailCadastro('')
+
+    try {
+      await verificarEmailCadastro(emailCadastro)
+      if (identificadorConsulta !== consultaEmailAtual.current) return false
+      setEmailVerificado(emailCadastro)
+      return true
+    } catch (erro) {
+      if (identificadorConsulta !== consultaEmailAtual.current) return false
+      const mensagem = String(erro.message || '').toLocaleLowerCase('pt-BR')
+      const duplicado = erro.status === 409 || mensagem.includes('email já cadastrado') || mensagem.includes('e-mail já cadastrado')
+      setEmailVerificado('')
+      setErroEmailCadastro(duplicado
+        ? 'Este e-mail já está cadastrado.'
+        : 'Não foi possível verificar o e-mail. Confirme se o backend está ligado e tente novamente.')
+      return false
+    } finally {
+      if (identificadorConsulta === consultaEmailAtual.current) setConsultandoEmail(false)
+    }
+  }
+
+  async function avancar() {
     if (!validarEtapa()) return setMensagemErro(mensagemValidacao())
+    if (etapaAtual === etapaContato && !(await verificarEmailDisponivel())) return
     setMensagemErro('')
     setEtapaAtual((etapa) => etapa + 1)
     window.scrollTo(0, 0)
@@ -137,7 +183,22 @@ export function useCadastro(tipoConta) {
       await cadastrarUsuario({ tipoConta, dadosPF, dadosPJ })
       navigate('/login')
     } catch (erro) {
-      setMensagemErro(erro.message || 'Biometria concluída, mas não foi possível conectar ao servidor. Tente novamente.')
+      const mensagem = erro.message || 'Biometria concluída, mas não foi possível conectar ao servidor. Tente novamente.'
+      const emailDuplicado = mensagem.toLocaleLowerCase('pt-BR').includes('email já cadastrado')
+        || mensagem.toLocaleLowerCase('pt-BR').includes('e-mail já cadastrado')
+
+      if (emailDuplicado) {
+        setErroEmailCadastro('Este e-mail já está cadastrado.')
+        setEmailVerificado('')
+        setMensagemErro('')
+        setSessaoFacial(null)
+        setFacialConcluido(false)
+        setEtapaAtual(etapaContato)
+        window.scrollTo(0, 0)
+        return
+      }
+
+      setMensagemErro(mensagem)
     } finally {
       setEnviando(false)
     }
@@ -147,6 +208,12 @@ export function useCadastro(tipoConta) {
     setEnviando(true)
     setMensagemErro('')
     try {
+      if (!(await verificarEmailDisponivel({ forcar: true }))) {
+        setEtapaAtual(etapaContato)
+        window.scrollTo(0, 0)
+        return
+      }
+
       const sessao = await criarSessaoCadastro({
         cpf: empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf,
         nome: empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome,
@@ -170,7 +237,7 @@ export function useCadastro(tipoConta) {
   return {
     navigate, empresarial, etapaAtual, setEtapaAtual, etapas, titulos, etapaRevisao, etapaFacial,
     dadosPF, dadosPJ, dadosAtuais, dadosValidacaoSenha, alterarDados,
-    mensagemErro, setMensagemErro, consultandoCep, mensagemCep, mostrarSenha, setMostrarSenha,
+    mensagemErro, setMensagemErro, erroEmailCadastro, consultandoEmail, verificarEmailDisponivel, consultandoCep, mensagemCep, mostrarSenha, setMostrarSenha,
     enviando, sessaoFacial, facialConcluido, validarEtapa, avancar, voltar,
     salvarCadastro, enviarCadastro, concluirCadastroFacial,
   }

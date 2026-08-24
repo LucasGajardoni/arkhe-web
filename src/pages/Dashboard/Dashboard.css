@@ -35,8 +35,12 @@
 .modal-perfil form input { min-height: 46px; padding: 0 13px; border: 1px solid var(--borda); border-radius: 10px; outline: none; color: var(--texto); background: #fff; font-size: 12px; }
 .modal-perfil form input:focus { border-color: var(--verde-medio); box-shadow: 0 0 0 3px rgba(19,122,116,.09); }.modal-perfil form input[readonly] { color: #8a8374; background: #f4f1e9; }
 .modal-perfil form label small { color: #8a8374; font-size: 8px; }
+.modal-perfil form label small.erro-campo-modal-perfil { color: #a63434; }
 .aviso-modal-perfil { display: flex; grid-column: 1 / -1; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; color: var(--verde-escuro); background: #edf7f3; }
 .aviso-modal-perfil > span { display: grid; width: 23px; height: 23px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: var(--verde-medio); font-size: 10px; font-weight: 800; }.aviso-modal-perfil p { font-size: 9px; }
+.mensagem-modal-perfil { grid-column: 1 / -1; padding: 12px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+.mensagem-modal-perfil.erro { color: #8c2626; background: #fff0f0; }
+.mensagem-modal-perfil.sucesso { color: #0d4d4d; background: #edf7f3; }
 .modal-perfil form footer { display: flex; grid-column: 1 / -1; justify-content: end; gap: 10px; margin-top: 3px; }.modal-perfil form footer .botao { min-height: 44px; font-size: 11px; }.modal-perfil form footer button:disabled { cursor: not-allowed; opacity: .45; }
 @keyframes aparecer-modal { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 560px) { .fundo-modal-perfil { align-items: end; padding: 0; }.modal-perfil { width: 100%; max-height: 92vh; border-radius: 22px 22px 0 0; }.modal-perfil > header { padding: 24px 20px 20px; }.identidade-modal-perfil { margin: 20px 20px 0; }.modal-perfil form { grid-template-columns: 1fr; padding: 20px; }.modal-perfil form footer { position: sticky; bottom: 0; background: #fff; }.modal-perfil form footer .botao { width: auto; flex: 1; } }
