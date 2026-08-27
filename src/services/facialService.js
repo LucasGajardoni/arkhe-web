@@ -1,16 +1,19 @@
-import { FACE_API_URL, FACE_CLIENT_ID, FACE_CLIENT_SECRET } from '../config/api.js'
+import { FACE_API_URL, FACE_SESSION_API_URL } from '../config/api.js'
 import { somenteNumeros } from '../utils/formatadores.js'
 
 const SDK_ID = 'arkhe-face-identity-sdk'
 
 async function requisicaoFacial(caminho, dados, mensagemPadrao) {
-  const resposta = await fetch(`${FACE_API_URL}${caminho}`, {
+  if (!FACE_SESSION_API_URL) {
+    throw new Error(
+      'Integração facial desativada: configure um proxy seguro no backend para criar sessões biométricas.',
+    )
+  }
+
+  const resposta = await fetch(`${FACE_SESSION_API_URL}${caminho}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Client-Id': FACE_CLIENT_ID,
-      'X-Client-Secret': FACE_CLIENT_SECRET,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
   })
   let resultado = {}
