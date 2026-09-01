@@ -44,3 +44,19 @@
 .modal-perfil form footer { display: flex; grid-column: 1 / -1; justify-content: end; gap: 10px; margin-top: 3px; }.modal-perfil form footer .botao { min-height: 44px; font-size: 11px; }.modal-perfil form footer button:disabled { cursor: not-allowed; opacity: .45; }
 @keyframes aparecer-modal { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 560px) { .fundo-modal-perfil { align-items: end; padding: 0; }.modal-perfil { width: 100%; max-height: 92vh; border-radius: 22px 22px 0 0; }.modal-perfil > header { padding: 24px 20px 20px; }.identidade-modal-perfil { margin: 20px 20px 0; }.modal-perfil form { grid-template-columns: 1fr; padding: 20px; }.modal-perfil form footer { position: sticky; bottom: 0; background: #fff; }.modal-perfil form footer .botao { width: auto; flex: 1; } }
+
+@media (min-width: 651px) { .atalhos-dashboard { grid-template-columns: repeat(3, 1fr); } }
+
+/* Leitura mais confortável na área logada. */
+.marca-dashboard strong { font-size: 21px; }
+.barra-dashboard > nav button { font-size: 13px; }
+.barra-dashboard > nav button.ativo::after { display: none; }
+.usuario-dashboard small { font-size: 9px; }
+.usuario-dashboard strong { font-size: 13px; }
+.atalhos-dashboard button > strong { font-size: 13px; }
+.titulo-bloco-dashboard p,
+.objetivo-dashboard > p { font-size: 9px; }
+.titulo-bloco-dashboard h2 { font-size: 24px; }
+.lista-dashboard article strong { font-size: 13px; }
+.lista-dashboard article small { font-size: 10px; }
+.lista-dashboard article b { font-size: 12px; }

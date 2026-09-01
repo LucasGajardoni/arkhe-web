@@ -56,3 +56,10 @@ export function normalizarTexto(valor) {
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '')
 }
+
+export function formatarChavePix(tipo, valor) {
+  if (tipo === 'cpf') return mascaraCpf(valor)
+  if (tipo === 'cnpj') return mascaraCnpj(valor)
+  if (tipo === 'telefone') return mascaraTelefone(valor)
+  return String(valor || '')
+}

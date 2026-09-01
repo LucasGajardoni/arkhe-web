@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cadastrarUsuario, verificarEmailCadastro } from '../services/authService.js'
+import { cadastrarUsuario } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
 import { criarSessaoCadastro } from '../services/facialService.js'
 import { mascaraCep, mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../utils/formatadores.js'
@@ -36,15 +36,13 @@ export function useCadastro(tipoConta) {
   const [dadosPJ, setDadosPJ] = useState(dadosIniciaisPJ)
   const [mensagemErro, setMensagemErro] = useState('')
   const [erroEmailCadastro, setErroEmailCadastro] = useState('')
-  const [consultandoEmail, setConsultandoEmail] = useState(false)
-  const [emailVerificado, setEmailVerificado] = useState('')
+  const consultandoEmail = false
   const [consultandoCep, setConsultandoCep] = useState(false)
   const [mensagemCep, setMensagemCep] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [facialConcluido, setFacialConcluido] = useState(false)
-  const consultaEmailAtual = useRef(0)
 
   const empresarial = tipoConta === 'PJ'
   const dadosAtuais = empresarial ? dadosPJ : dadosPF
@@ -91,10 +89,7 @@ export function useCadastro(tipoConta) {
       if (somenteNumeros(novoValor).length === 8) consultarCep(novoValor)
     }
     if (name === 'email' || name === 'emailEmpresarial') {
-      consultaEmailAtual.current += 1
-      setConsultandoEmail(false)
       setErroEmailCadastro('')
-      setEmailVerificado('')
     }
     setDadosAtuais((dados) => ({ ...dados, [name]: novoValor }))
     setMensagemErro('')
@@ -133,32 +128,10 @@ export function useCadastro(tipoConta) {
     return 'Preencha todos os campos obrigatórios.'
   }
 
-  async function verificarEmailDisponivel({ forcar = false } = {}) {
-    if (!emailValido(emailCadastro)) return false
-    if (!forcar && emailVerificado === emailCadastro && !erroEmailCadastro) return true
-
-    const identificadorConsulta = consultaEmailAtual.current + 1
-    consultaEmailAtual.current = identificadorConsulta
-    setConsultandoEmail(true)
-    setErroEmailCadastro('')
-
-    try {
-      await verificarEmailCadastro(emailCadastro)
-      if (identificadorConsulta !== consultaEmailAtual.current) return false
-      setEmailVerificado(emailCadastro)
-      return true
-    } catch (erro) {
-      if (identificadorConsulta !== consultaEmailAtual.current) return false
-      const mensagem = String(erro.message || '').toLocaleLowerCase('pt-BR')
-      const duplicado = erro.status === 409 || mensagem.includes('email já cadastrado') || mensagem.includes('e-mail já cadastrado')
-      setEmailVerificado('')
-      setErroEmailCadastro(duplicado
-        ? 'Este e-mail já está cadastrado.'
-        : 'Não foi possível verificar o e-mail. Confirme se o backend está ligado e tente novamente.')
-      return false
-    } finally {
-      if (identificadorConsulta === consultaEmailAtual.current) setConsultandoEmail(false)
-    }
+  function verificarEmailDisponivel() {
+    const valido = emailValido(emailCadastro)
+    setErroEmailCadastro(valido ? '' : 'Informe um e-mail válido.')
+    return valido
   }
 
   async function avancar() {
@@ -189,7 +162,6 @@ export function useCadastro(tipoConta) {
 
       if (emailDuplicado) {
         setErroEmailCadastro('Este e-mail já está cadastrado.')
-        setEmailVerificado('')
         setMensagemErro('')
         setSessaoFacial(null)
         setFacialConcluido(false)
@@ -208,7 +180,7 @@ export function useCadastro(tipoConta) {
     setEnviando(true)
     setMensagemErro('')
     try {
-      if (!(await verificarEmailDisponivel({ forcar: true }))) {
+      if (!verificarEmailDisponivel()) {
         setEtapaAtual(etapaContato)
         window.scrollTo(0, 0)
         return

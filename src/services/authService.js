@@ -66,12 +66,6 @@ export function trocarSenha({ email, codigo, novaSenha }) {
   }, 'Não foi possível alterar a senha.')
 }
 
-export function verificarEmailCadastro(email) {
-  return enviarJson('/verificar_email_cadastro', {
-    email: String(email || '').trim().toLowerCase(),
-  }, 'Não foi possível verificar o e-mail.')
-}
-
 export async function editarUsuario({ idUsuario, nome, email, telefone, cpf }) {
   const formData = new FormData()
   const token = localStorage.getItem('token')

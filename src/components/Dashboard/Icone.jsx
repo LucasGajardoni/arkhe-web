@@ -9,6 +9,9 @@ const caminhos = {
   sair: <><path d="M10 5H5v14h5"/><path d="m14 8 4 4-4 4M18 12H9"/></>,
   seta: <><path d="m9 18 6-6-6-6"/></>,
   mais: <><path d="M12 5v14M5 12h14"/></>,
+  setaCima: <><path d="M12 19V5M6 11l6-6 6 6"/></>,
+  setaBaixo: <><path d="M12 5v14M18 13l-6 6-6-6"/></>,
+  chave: <><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M15 8l3 3M17 6l2 2"/></>,
 }
 
 export default function Icone({ nome, tamanho = 22 }) {
