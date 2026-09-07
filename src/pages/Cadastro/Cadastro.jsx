@@ -1,3 +1,4 @@
+import { Navigate, useLocation } from 'react-router-dom'
 import CadastroHeader from '../../components/CadastroHeader/CadastroHeader.jsx'
 import ConteudoEtapaCadastro from '../../components/Cadastro/ConteudoEtapaCadastro.jsx'
 import IndicadorEtapas from '../../components/IndicadorEtapas/IndicadorEtapas.jsx'
@@ -5,8 +6,76 @@ import { useCadastro } from '../../hooks/useCadastro.js'
 import './Cadastro.css'
 
 export default function Cadastro({ tipoConta }) {
-  const cadastro = useCadastro(tipoConta)
-  const { navigate, etapaAtual, etapas, titulos, etapaRevisao, mensagemErro, sessaoFacial, enviando, consultandoEmail, validarEtapa, avancar, voltar, enviarCadastro } = cadastro
+  const location = useLocation()
+  const cadastro = useCadastro(tipoConta, location.state || {})
+  const {
+    navigate,
+    clienteExistente,
+    fluxoVerificado,
+    etapaAtual,
+    etapas,
+    titulos,
+    etapaRevisao,
+    mensagemErro,
+    sessaoFacial,
+    enviando,
+    validarEtapa,
+    avancar,
+    voltar,
+    enviarCadastro,
+  } = cadastro
+
+  if (!fluxoVerificado) return <Navigate to="/cadastro" replace />
+
+  let descricaoEtapa = 'Confira os dados e continue quando estiver pronto.'
+  if (etapaAtual === 0 && clienteExistente) {
+    descricaoEtapa = 'Seu cadastro já foi confirmado. Informe apenas os dados da nova conta.'
+  } else if (etapaAtual === 0) {
+    descricaoEtapa = 'Preencha as informações para iniciar a abertura da conta.'
+  }
+
+  let acoesFormulario = null
+  if (!sessaoFacial || etapaAtual === etapaRevisao) {
+    let botaoPrincipal
+
+    if (etapaAtual === etapaRevisao) {
+      let textoBotao = 'Enviar cadastro'
+      if (clienteExistente) textoBotao = 'Abrir nova conta'
+      if (enviando) textoBotao = 'Enviando...'
+      if (enviando && clienteExistente) textoBotao = 'Abrindo conta...'
+
+      botaoPrincipal = (
+        <button
+          className="botao botao-principal"
+          type="button"
+          disabled={enviando}
+          onClick={enviarCadastro}
+        >
+          {textoBotao}
+        </button>
+      )
+    } else {
+      botaoPrincipal = (
+        <button
+          className="botao botao-principal"
+          type="button"
+          disabled={!validarEtapa()}
+          onClick={avancar}
+        >
+          Continuar
+        </button>
+      )
+    }
+
+    acoesFormulario = (
+      <div className="acoes-formulario">
+        <button className="botao botao-secundario" type="button" onClick={voltar}>
+          Voltar
+        </button>
+        {botaoPrincipal}
+      </div>
+    )
+  }
 
   return (
     <div className="pagina-cadastro">
@@ -18,16 +87,11 @@ export default function Cadastro({ tipoConta }) {
             <div className="titulo-formulario">
               <p>ETAPA {etapaAtual + 1}</p>
               <h1>{titulos[etapaAtual]}</h1>
-              <span>{etapaAtual === 0 ? 'Preencha as informações para iniciar a abertura da conta.' : 'Confira os dados e continue quando estiver pronto.'}</span>
+              <span>{descricaoEtapa}</span>
             </div>
             <ConteudoEtapaCadastro cadastro={cadastro} />
-            {mensagemErro && !sessaoFacial && <p className="erro-geral">{mensagemErro}</p>}
-            {sessaoFacial && etapaAtual !== etapaRevisao ? null : <div className="acoes-formulario">
-              <button className="botao botao-secundario" type="button" onClick={voltar}>Voltar</button>
-              {etapaAtual === etapaRevisao
-                ? <button className="botao botao-principal" type="button" disabled={enviando} onClick={enviarCadastro}>{enviando ? 'Enviando...' : 'Enviar cadastro'}</button>
-                : <button className="botao botao-principal" type="button" disabled={!validarEtapa()} onClick={avancar}>{consultandoEmail ? 'Verificando e-mail...' : 'Continuar'}</button>}
-            </div>}
+            {mensagemErro && !sessaoFacial && <p className="erro-geral" role="alert">{mensagemErro}</p>}
+            {acoesFormulario}
           </section>
           <aside className="apoio-cadastro">
             <span>{String(etapaAtual + 1).padStart(2, '0')}</span>

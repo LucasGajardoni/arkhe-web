@@ -16,7 +16,9 @@ export default function Home() {
   return (
     <div className="home">
       <Header abrirCadastro={abrirCadastro} abrirLogin={abrirLogin} />
-      <div className="aviso-academico" role="note">AMBIENTE ACADÊMICO <span>•</span> PROJETO EXPERIMENTAL 2026</div>
+      <div className="aviso-academico" role="note">
+        AMBIENTE ACADÊMICO <span>•</span> PROJETO EXPERIMENTAL 2026
+      </div>
       <main>
         <Hero abrirCadastro={abrirCadastro} abrirLogin={abrirLogin} />
         <Beneficios />

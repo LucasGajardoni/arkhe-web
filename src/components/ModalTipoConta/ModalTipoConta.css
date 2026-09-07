@@ -50,6 +50,94 @@
   font-size: 14px;
 }
 
+.formulario-cpf-conta {
+  margin-top: 26px;
+}
+
+.formulario-cpf-conta label {
+  display: grid;
+  gap: 8px;
+  color: var(--texto);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.formulario-cpf-conta input {
+  width: 100%;
+  height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  color: var(--texto);
+  background-color: var(--branco);
+  font: inherit;
+  outline: none;
+}
+
+.formulario-cpf-conta input:focus {
+  border-color: var(--verde-escuro);
+  box-shadow: 0 0 0 3px rgba(30, 82, 62, 0.1);
+}
+
+.erro-modal-conta {
+  margin-top: 10px;
+  color: #8b2f28;
+  font-size: 12px;
+}
+
+.botao-cpf-conta {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.cliente-existente-conta {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background-color: #f7fbf9;
+}
+
+.cliente-existente-conta > span {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: var(--branco);
+  background-color: var(--verde-escuro);
+  font-weight: 800;
+}
+
+.cliente-existente-conta p {
+  display: grid;
+  gap: 3px;
+}
+
+.cliente-existente-conta strong {
+  font-size: 13px;
+}
+
+.cliente-existente-conta small {
+  color: var(--texto-secundario);
+  font-size: 11px;
+}
+
+.voltar-modal-conta {
+  display: block;
+  margin: 17px auto 0;
+  color: var(--verde-escuro);
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .opcoes-modal-conta {
   display: flex;
   flex-direction: column;

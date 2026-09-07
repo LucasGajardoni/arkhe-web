@@ -1,4 +1,4 @@
-import { normalizarTexto, somenteNumeros } from './formatadores.js'
+import { somenteNumeros } from './formatadores.js'
 
 export function cpfValido(valor) {
   const cpf = somenteNumeros(valor)
@@ -10,7 +10,8 @@ export function cpfValido(valor) {
       soma += Number(cpf[indice]) * (tamanho + 1 - indice)
     }
     const resto = (soma * 10) % 11
-    return resto === 10 ? 0 : resto
+    if (resto === 10) return 0
+    return resto
   }
 
   return calcularDigito(9) === Number(cpf[9])
@@ -26,11 +27,15 @@ export function cnpjValido(valor) {
       .split('')
       .reduce((total, digito, indice) => total + Number(digito) * pesos[indice], 0)
     const resto = soma % 11
-    return resto < 2 ? 0 : 11 - resto
+    if (resto < 2) return 0
+    return 11 - resto
   }
 
   const primeiroDigito = calcularDigito(cnpj.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
-  const segundoDigito = calcularDigito(`${cnpj.slice(0, 12)}${primeiroDigito}`, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
+  const segundoDigito = calcularDigito(
+    `${cnpj.slice(0, 12)}${primeiroDigito}`,
+    [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2],
+  )
 
   return cnpj.endsWith(`${primeiroDigito}${segundoDigito}`)
 }
@@ -59,56 +64,6 @@ export function emailValido(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-export function requisitosSenha({ senha = '', nome = '', email = '', cpf = '', telefone = '', nascimento = '', cnpj = '', empresa = '' }) {
-  const senhaNormalizada = normalizarTexto(senha)
-  const [ano = '', mes = '', dia = ''] = nascimento.split('-')
-
-  const palavrasPessoais = [
-    ...nome.split(/\s+/),
-    ...email.split('@')[0].split(/[^a-zA-ZÀ-ÿ0-9]+/),
-    ...empresa.split(/\s+/),
-  ].map(normalizarTexto).filter((parte) => parte.length >= 3)
-
-  const cpfLimpo = somenteNumeros(cpf)
-  const telefoneLimpo = somenteNumeros(telefone)
-  const numerosPessoais = [
-    cpfLimpo,
-    telefoneLimpo,
-    cpfLimpo.slice(-4),
-    telefoneLimpo.slice(-4),
-    dia && mes ? `${dia}${mes}` : '',
-    dia && mes && ano ? `${dia}${mes}${ano}` : '',
-    ano,
-    somenteNumeros(cnpj),
-  ].filter((parte) => parte.length >= 4)
-
-  const contemDadosPessoais = [...palavrasPessoais, ...numerosPessoais]
-    .some((parte) => senhaNormalizada.includes(parte))
-
-  return {
-    tamanho: senha.length >= 8 && senha.length <= 12,
-    maiuscula: /[A-ZÀ-Ý]/.test(senha),
-    minuscula: /[a-zà-ÿ]/.test(senha),
-    numero: /\d/.test(senha),
-    especial: /[^A-Za-zÀ-ÿ0-9]/.test(senha),
-    semDadosPessoais: !contemDadosPessoais,
-  }
-}
-
-export function requisitosDaSenha({ tipoConta, dadosPF, dadosPJ }) {
-  const empresarial = tipoConta === 'PJ'
-  return requisitosSenha({
-    senha: empresarial ? dadosPJ.senha : dadosPF.senha,
-    nome: empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome,
-    email: empresarial ? dadosPJ.emailEmpresarial : dadosPF.email,
-    cpf: empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf,
-    telefone: empresarial ? dadosPJ.telefoneEmpresarial : dadosPF.telefone,
-    nascimento: empresarial ? dadosPJ.dataNascimentoResponsavel : dadosPF.dataNascimento,
-    cnpj: empresarial ? dadosPJ.cnpj : '',
-    empresa: empresarial ? `${dadosPJ.razaoSocial} ${dadosPJ.nomeFantasia}` : '',
-  })
-}
-
-export function senhaValida(dadosCadastro) {
-  return Object.values(requisitosDaSenha(dadosCadastro)).every(Boolean)
+export function pinValido(pin) {
+  return /^\d{6}$/.test(String(pin || ''))
 }

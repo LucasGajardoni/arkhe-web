@@ -1,69 +1,169 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cadastrarUsuario } from '../services/authService.js'
+import { adicionarConta, cadastrarUsuario } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
 import { criarSessaoCadastro } from '../services/facialService.js'
-import { mascaraCep, mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../utils/formatadores.js'
-import { camposPreenchidos, cnpjValido, cpfValido, emailValido, maiorDeIdade, nomeValido, senhaValida } from '../utils/validadores.js'
+import { useSessao } from './useSessao.js'
+import {
+  mascaraCep,
+  mascaraCnpj,
+  mascaraCpf,
+  mascaraTelefone,
+  somenteNumeros,
+} from '../utils/formatadores.js'
+import {
+  camposPreenchidos,
+  cnpjValido,
+  cpfValido,
+  emailValido,
+  maiorDeIdade,
+  nomeValido,
+  pinValido,
+} from '../utils/validadores.js'
 
-export const ETAPAS_CADASTRO = {
-  PF: ['Dados pessoais', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial'],
-  PJ: ['Dados da empresa', 'Responsável', 'Contato', 'Endereço', 'Acesso', 'Revisão', 'Reconhecimento facial'],
+const FLUXOS_CADASTRO = {
+  novoPF: [
+    { id: 'pessoais', nome: 'Dados pessoais', titulo: 'Vamos começar pelos seus dados' },
+    { id: 'contato', nome: 'Contato', titulo: 'Como podemos falar com você?' },
+    { id: 'endereco', nome: 'Endereço', titulo: 'Onde você mora?' },
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da sua conta' },
+    { id: 'revisao', nome: 'Revisão', titulo: 'Revise seus dados' },
+    { id: 'facial', nome: 'Reconhecimento facial', titulo: 'Cadastre seu rosto' },
+  ],
+  novoPJ: [
+    { id: 'empresa', nome: 'Dados da empresa', titulo: 'Conte sobre sua empresa' },
+    { id: 'responsavel', nome: 'Responsável', titulo: 'Quem será o responsável?' },
+    { id: 'contato', nome: 'Contato', titulo: 'Contato empresarial' },
+    { id: 'endereco', nome: 'Endereço', titulo: 'Endereço da empresa' },
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da conta empresarial' },
+    { id: 'revisao', nome: 'Revisão', titulo: 'Revise os dados empresariais' },
+    { id: 'facial', nome: 'Reconhecimento facial', titulo: 'Cadastre o rosto do responsável' },
+  ],
+  existentePF: [
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da nova conta PF' },
+    { id: 'revisao', nome: 'Revisão', titulo: 'Revise a nova conta' },
+  ],
+  existentePJ: [
+    { id: 'empresa', nome: 'Dados da empresa', titulo: 'Conte sobre sua nova empresa' },
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da nova conta PJ' },
+    { id: 'revisao', nome: 'Revisão', titulo: 'Revise a nova conta empresarial' },
+  ],
 }
 
-export const TITULOS_CADASTRO = {
-  PF: ['Vamos começar pelos seus dados', 'Como podemos falar com você?', 'Onde você mora?', 'Crie seu acesso', 'Revise seus dados', 'Cadastre seu rosto'],
-  PJ: ['Conte sobre sua empresa', 'Quem será o responsável?', 'Contato empresarial', 'Endereço da empresa', 'Crie o acesso empresarial', 'Revise os dados empresariais', 'Cadastre o rosto do responsável'],
+function dadosIniciaisPessoaFisica(cpf) {
+  return {
+    nome: '',
+    cpf,
+    dataNascimento: '',
+    email: '',
+    confirmarEmail: '',
+    telefone: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    pin: '',
+    confirmarPin: '',
+    aceitarTermos: false,
+    aceitarDados: false,
+    aceitarBiometria: false,
+  }
 }
 
-const dadosIniciaisPF = {
-  nome: '', cpf: '', dataNascimento: '', email: '', confirmarEmail: '', telefone: '',
-  cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', senha: '', confirmarSenha: '',
-  aceitarTermos: false, aceitarDados: false, aceitarBiometria: false,
+function dadosIniciaisPessoaJuridica(cpf) {
+  return {
+    cnpj: '',
+    razaoSocial: '',
+    nomeFantasia: '',
+    nomeResponsavel: '',
+    cpfResponsavel: cpf,
+    dataNascimentoResponsavel: '',
+    emailEmpresarial: '',
+    confirmarEmailEmpresarial: '',
+    telefoneEmpresarial: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    pin: '',
+    confirmarPin: '',
+    aceitarTermos: false,
+    aceitarDadosPessoais: false,
+    aceitarDadosEmpresariais: false,
+    aceitarBiometria: false,
+  }
 }
 
-const dadosIniciaisPJ = {
-  cnpj: '', razaoSocial: '', nomeFantasia: '', nomeResponsavel: '', cpfResponsavel: '', dataNascimentoResponsavel: '',
-  emailEmpresarial: '', confirmarEmailEmpresarial: '', telefoneEmpresarial: '', cep: '', logradouro: '', numero: '', complemento: '',
-  bairro: '', cidade: '', estado: '', senha: '', confirmarSenha: '', aceitarTermos: false, aceitarDadosPessoais: false,
-  aceitarDadosEmpresariais: false, aceitarBiometria: false,
-}
-
-export function useCadastro(tipoConta) {
+export function useCadastro(tipoConta, fluxo = {}) {
   const navigate = useNavigate()
+  const { selecionarConta } = useSessao()
+  const empresarial = tipoConta === 'PJ'
+  const clienteExistente = fluxo.clienteExistente === true
+  const cpfVerificado = mascaraCpf(fluxo.cpfVerificado || '')
+  let fluxoVerificado = cpfValido(cpfVerificado)
+    && typeof fluxo.clienteExistente === 'boolean'
+
+  if (clienteExistente) {
+    const contaAutenticada = fluxo.tipoContaAutenticada
+    fluxoVerificado = fluxoVerificado
+      && ['PF', 'PJ'].includes(contaAutenticada)
+      && contaAutenticada !== tipoConta
+  }
+
+  let chaveFluxo = 'novoPF'
+  if (empresarial) chaveFluxo = 'novoPJ'
+  if (clienteExistente && !empresarial) chaveFluxo = 'existentePF'
+  if (clienteExistente && empresarial) chaveFluxo = 'existentePJ'
+
+  const configuracaoEtapas = FLUXOS_CADASTRO[chaveFluxo]
+  const etapas = configuracaoEtapas.map((etapa) => etapa.nome)
+  const titulos = configuracaoEtapas.map((etapa) => etapa.titulo)
+
   const [etapaAtual, setEtapaAtual] = useState(0)
-  const [dadosPF, setDadosPF] = useState(dadosIniciaisPF)
-  const [dadosPJ, setDadosPJ] = useState(dadosIniciaisPJ)
+  const [dadosPF, setDadosPF] = useState(() => dadosIniciaisPessoaFisica(cpfVerificado))
+  const [dadosPJ, setDadosPJ] = useState(() => dadosIniciaisPessoaJuridica(cpfVerificado))
   const [mensagemErro, setMensagemErro] = useState('')
   const [erroEmailCadastro, setErroEmailCadastro] = useState('')
-  const consultandoEmail = false
   const [consultandoCep, setConsultandoCep] = useState(false)
   const [mensagemCep, setMensagemCep] = useState('')
-  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [mostrarPin, setMostrarPin] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [facialConcluido, setFacialConcluido] = useState(false)
 
-  const empresarial = tipoConta === 'PJ'
-  const dadosAtuais = empresarial ? dadosPJ : dadosPF
-  const setDadosAtuais = empresarial ? setDadosPJ : setDadosPF
-  const dadosValidacaoSenha = { tipoConta, dadosPF, dadosPJ }
-  const etapas = ETAPAS_CADASTRO[tipoConta]
-  const titulos = TITULOS_CADASTRO[tipoConta]
-  const etapaRevisao = empresarial ? 5 : 4
-  const etapaFacial = empresarial ? 6 : 5
-  const etapaContato = empresarial ? 2 : 1
-  const emailCadastro = (empresarial ? dadosPJ.emailEmpresarial : dadosPF.email).trim().toLowerCase()
+  const etapa = configuracaoEtapas[etapaAtual]
+  let etapaId = ''
+  if (etapa) etapaId = etapa.id
+  const etapaRevisao = configuracaoEtapas.findIndex((item) => item.id === 'revisao')
+  const etapaFacial = configuracaoEtapas.findIndex((item) => item.id === 'facial')
+  let dadosAtuais = dadosPF
+  let setDadosAtuais = setDadosPF
+  let emailCadastro = dadosPF.email
+
+  if (empresarial) {
+    dadosAtuais = dadosPJ
+    setDadosAtuais = setDadosPJ
+    emailCadastro = dadosPJ.emailEmpresarial
+  }
 
   async function consultarCep(cep) {
     setConsultandoCep(true)
     setMensagemCep('')
+
     try {
       const endereco = await consultarEnderecoPorCep(cep)
+
       if (!endereco) {
         setMensagemCep('CEP não encontrado. Preencha o endereço manualmente.')
         return
       }
+
       setDadosAtuais((dados) => ({
         ...dados,
         logradouro: dados.logradouro || endereco.logradouro,
@@ -80,92 +180,191 @@ export function useCadastro(tipoConta) {
 
   function alterarDados(evento) {
     const { name, value, type, checked } = evento.target
-    let novoValor = type === 'checkbox' ? checked : value
+    let novoValor = value
+
+    if (type === 'checkbox') novoValor = checked
     if (name === 'cpf' || name === 'cpfResponsavel') novoValor = mascaraCpf(value)
     if (name === 'cnpj') novoValor = mascaraCnpj(value)
     if (name === 'telefone' || name === 'telefoneEmpresarial') novoValor = mascaraTelefone(value)
+    if (name === 'pin' || name === 'confirmarPin') novoValor = somenteNumeros(value).slice(0, 6)
+
     if (name === 'cep') {
       novoValor = mascaraCep(value)
       if (somenteNumeros(novoValor).length === 8) consultarCep(novoValor)
     }
+
     if (name === 'email' || name === 'emailEmpresarial') {
       setErroEmailCadastro('')
     }
+
     setDadosAtuais((dados) => ({ ...dados, [name]: novoValor }))
     setMensagemErro('')
   }
 
   function validarEtapa() {
-    if (!empresarial) {
-      if (etapaAtual === 0) return camposPreenchidos(dadosPF, ['nome', 'cpf', 'dataNascimento']) && nomeValido(dadosPF.nome) && cpfValido(dadosPF.cpf) && maiorDeIdade(dadosPF.dataNascimento)
-      if (etapaAtual === 1) return camposPreenchidos(dadosPF, ['email', 'confirmarEmail', 'telefone']) && emailValido(dadosPF.email) && dadosPF.email === dadosPF.confirmarEmail && !erroEmailCadastro && !consultandoEmail
-      if (etapaAtual === 2) return camposPreenchidos(dadosPF, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
-      if (etapaAtual === 3) return camposPreenchidos(dadosPF, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPF.senha === dadosPF.confirmarSenha && dadosPF.aceitarTermos && dadosPF.aceitarDados && dadosPF.aceitarBiometria
-    } else {
-      if (etapaAtual === 0) return camposPreenchidos(dadosPJ, ['cnpj', 'razaoSocial', 'nomeFantasia']) && cnpjValido(dadosPJ.cnpj)
-      if (etapaAtual === 1) return camposPreenchidos(dadosPJ, ['nomeResponsavel', 'cpfResponsavel', 'dataNascimentoResponsavel']) && nomeValido(dadosPJ.nomeResponsavel) && cpfValido(dadosPJ.cpfResponsavel) && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
-      if (etapaAtual === 2) return camposPreenchidos(dadosPJ, ['emailEmpresarial', 'confirmarEmailEmpresarial', 'telefoneEmpresarial']) && emailValido(dadosPJ.emailEmpresarial) && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial && !erroEmailCadastro && !consultandoEmail
-      if (etapaAtual === 3) return camposPreenchidos(dadosPJ, ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado'])
-      if (etapaAtual === 4) return camposPreenchidos(dadosPJ, ['senha', 'confirmarSenha']) && senhaValida(dadosValidacaoSenha) && dadosPJ.senha === dadosPJ.confirmarSenha && dadosPJ.aceitarTermos && dadosPJ.aceitarDadosPessoais && dadosPJ.aceitarDadosEmpresariais && dadosPJ.aceitarBiometria
+    if (etapaId === 'empresa') {
+      return camposPreenchidos(dadosPJ, ['cnpj', 'razaoSocial', 'nomeFantasia'])
+        && cnpjValido(dadosPJ.cnpj)
     }
+
+    if (etapaId === 'pessoais') {
+      return camposPreenchidos(dadosPF, ['nome', 'cpf', 'dataNascimento'])
+        && nomeValido(dadosPF.nome)
+        && cpfValido(dadosPF.cpf)
+        && maiorDeIdade(dadosPF.dataNascimento)
+    }
+
+    if (etapaId === 'responsavel') {
+      return camposPreenchidos(dadosPJ, [
+        'nomeResponsavel',
+        'cpfResponsavel',
+        'dataNascimentoResponsavel',
+      ])
+        && nomeValido(dadosPJ.nomeResponsavel)
+        && cpfValido(dadosPJ.cpfResponsavel)
+        && maiorDeIdade(dadosPJ.dataNascimentoResponsavel)
+    }
+
+    if (etapaId === 'contato') {
+      let valido = camposPreenchidos(dadosPF, ['email', 'confirmarEmail', 'telefone'])
+        && emailValido(dadosPF.email)
+        && dadosPF.email === dadosPF.confirmarEmail
+
+      if (empresarial) {
+        valido = camposPreenchidos(dadosPJ, [
+          'emailEmpresarial',
+          'confirmarEmailEmpresarial',
+          'telefoneEmpresarial',
+        ])
+          && emailValido(dadosPJ.emailEmpresarial)
+          && dadosPJ.emailEmpresarial === dadosPJ.confirmarEmailEmpresarial
+      }
+
+      return valido && !erroEmailCadastro
+    }
+
+    if (etapaId === 'endereco') {
+      return camposPreenchidos(dadosAtuais, [
+        'cep',
+        'logradouro',
+        'numero',
+        'bairro',
+        'cidade',
+        'estado',
+      ])
+    }
+
+    if (etapaId === 'acesso') {
+      const pinCorreto = pinValido(dadosAtuais.pin)
+        && dadosAtuais.pin === dadosAtuais.confirmarPin
+
+      if (clienteExistente) return pinCorreto
+
+      let consentimentosAceitos = dadosPF.aceitarTermos
+        && dadosPF.aceitarDados
+        && dadosPF.aceitarBiometria
+
+      if (empresarial) {
+        consentimentosAceitos = dadosPJ.aceitarTermos
+          && dadosPJ.aceitarDadosPessoais
+          && dadosPJ.aceitarDadosEmpresariais
+          && dadosPJ.aceitarBiometria
+      }
+
+      return pinCorreto && consentimentosAceitos
+    }
+
     return true
   }
 
   function mensagemValidacao() {
-    const etapaEmpresa = empresarial && etapaAtual === 0
-    const etapaCpf = (!empresarial && etapaAtual === 0) || (empresarial && etapaAtual === 1)
-    const etapaContato = (!empresarial && etapaAtual === 1) || (empresarial && etapaAtual === 2)
-    const etapaAcesso = (!empresarial && etapaAtual === 3) || (empresarial && etapaAtual === 4)
-    const nome = empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome
-    const email = empresarial ? dadosPJ.emailEmpresarial : dadosPF.email
-    if (etapaEmpresa && dadosPJ.cnpj && !cnpjValido(dadosPJ.cnpj)) return 'Informe um CNPJ válido para continuar.'
-    if (etapaCpf && nome && !nomeValido(nome)) return 'Informe o nome usando apenas letras e espaços.'
-    if (etapaCpf && !cpfValido(empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf)) return 'Informe um CPF válido para continuar.'
-    if (etapaContato && erroEmailCadastro) return erroEmailCadastro
-    if (etapaContato && email && !emailValido(email)) return 'Informe um e-mail válido para continuar.'
-    if (etapaContato) return 'Os e-mails informados precisam ser iguais.'
-    if (etapaAcesso) return 'Confira os requisitos da senha, a confirmação e todos os consentimentos.'
+    if (etapaId === 'empresa' && dadosPJ.cnpj && !cnpjValido(dadosPJ.cnpj)) {
+      return 'Informe um CNPJ válido para continuar.'
+    }
+
+    if (etapaId === 'pessoais') {
+      if (dadosPF.nome && !nomeValido(dadosPF.nome)) {
+        return 'Informe o nome usando apenas letras e espaços.'
+      }
+      if (!cpfValido(dadosPF.cpf)) return 'Informe um CPF válido para continuar.'
+    }
+
+    if (etapaId === 'responsavel') {
+      if (dadosPJ.nomeResponsavel && !nomeValido(dadosPJ.nomeResponsavel)) {
+        return 'Informe o nome usando apenas letras e espaços.'
+      }
+      if (!cpfValido(dadosPJ.cpfResponsavel)) return 'Informe um CPF válido para continuar.'
+    }
+
+    if (etapaId === 'contato') {
+      if (erroEmailCadastro) return erroEmailCadastro
+      if (emailCadastro && !emailValido(emailCadastro)) {
+        return 'Informe um e-mail válido para continuar.'
+      }
+      return 'Os e-mails informados precisam ser iguais.'
+    }
+
+    if (etapaId === 'acesso') {
+      if (!pinValido(dadosAtuais.pin)) return 'O PIN deve possuir exatamente 6 dígitos.'
+      if (dadosAtuais.pin !== dadosAtuais.confirmarPin) return 'Os PINs informados precisam ser iguais.'
+      if (!clienteExistente) return 'Aceite todos os consentimentos para continuar.'
+    }
+
     return 'Preencha todos os campos obrigatórios.'
   }
 
   function verificarEmailDisponivel() {
-    const valido = emailValido(emailCadastro)
-    setErroEmailCadastro(valido ? '' : 'Informe um e-mail válido.')
+    const valido = emailValido(emailCadastro.trim().toLowerCase())
+    let mensagem = 'Informe um e-mail válido.'
+    if (valido) mensagem = ''
+    setErroEmailCadastro(mensagem)
     return valido
   }
 
   async function avancar() {
-    if (!validarEtapa()) return setMensagemErro(mensagemValidacao())
-    if (etapaAtual === etapaContato && !(await verificarEmailDisponivel())) return
+    if (!validarEtapa()) {
+      setMensagemErro(mensagemValidacao())
+      return
+    }
+
+    if (etapaId === 'contato' && !verificarEmailDisponivel()) return
+
     setMensagemErro('')
-    setEtapaAtual((etapa) => etapa + 1)
+    setEtapaAtual((atual) => atual + 1)
     window.scrollTo(0, 0)
   }
 
   function voltar() {
     setMensagemErro('')
-    if (etapaAtual === 0) navigate('/cadastro')
-    else setEtapaAtual((etapa) => etapa - 1)
+
+    if (etapaAtual === 0) {
+      navigate('/cadastro')
+    } else {
+      setEtapaAtual((atual) => atual - 1)
+    }
+
     window.scrollTo(0, 0)
   }
 
-  async function salvarCadastro() {
+  async function salvarNovoUsuario() {
     setEnviando(true)
     setMensagemErro('')
+
     try {
       await cadastrarUsuario({ tipoConta, dadosPF, dadosPJ })
-      navigate('/login')
+      navigate('/login', { replace: true })
     } catch (erro) {
-      const mensagem = erro.message || 'Biometria concluída, mas não foi possível conectar ao servidor. Tente novamente.'
+      const mensagem = erro.message
+        || 'Biometria concluída, mas não foi possível conectar ao servidor. Tente novamente.'
       const emailDuplicado = mensagem.toLocaleLowerCase('pt-BR').includes('email já cadastrado')
         || mensagem.toLocaleLowerCase('pt-BR').includes('e-mail já cadastrado')
 
       if (emailDuplicado) {
+        const indiceContato = configuracaoEtapas.findIndex((item) => item.id === 'contato')
         setErroEmailCadastro('Este e-mail já está cadastrado.')
-        setMensagemErro('')
         setSessaoFacial(null)
         setFacialConcluido(false)
-        setEtapaAtual(etapaContato)
+        setEtapaAtual(indiceContato)
         window.scrollTo(0, 0)
         return
       }
@@ -176,22 +375,65 @@ export function useCadastro(tipoConta) {
     }
   }
 
-  async function enviarCadastro() {
+  async function salvarContaExistente() {
     setEnviando(true)
     setMensagemErro('')
+
+    try {
+      await adicionarConta({
+        tipoConta,
+        pin: dadosAtuais.pin,
+        cnpj: dadosPJ.cnpj,
+        nomeFantasia: dadosPJ.nomeFantasia,
+        razaoSocial: dadosPJ.razaoSocial,
+        representante: cpfVerificado,
+      })
+      selecionarConta(tipoConta, { cnpj: dadosPJ.cnpj })
+      navigate('/dashboard', {
+        replace: true,
+        state: { tipoContaAtiva: tipoConta },
+      })
+    } catch (erro) {
+      setMensagemErro(erro.message || 'Não foi possível abrir a nova conta.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  async function enviarCadastro() {
+    if (clienteExistente) {
+      await salvarContaExistente()
+      return
+    }
+
+    setEnviando(true)
+    setMensagemErro('')
+
     try {
       if (!verificarEmailDisponivel()) {
-        setEtapaAtual(etapaContato)
+        const indiceContato = configuracaoEtapas.findIndex((item) => item.id === 'contato')
+        setEtapaAtual(indiceContato)
         window.scrollTo(0, 0)
         return
       }
 
-      const sessao = await criarSessaoCadastro({
-        cpf: empresarial ? dadosPJ.cpfResponsavel : dadosPF.cpf,
-        nome: empresarial ? dadosPJ.nomeResponsavel : dadosPF.nome,
-        email: empresarial ? dadosPJ.emailEmpresarial : dadosPF.email,
-        telefone: empresarial ? dadosPJ.telefoneEmpresarial : dadosPF.telefone,
-      })
+      let dadosFaciais = {
+        cpf: dadosPF.cpf,
+        nome: dadosPF.nome,
+        email: dadosPF.email,
+        telefone: dadosPF.telefone,
+      }
+
+      if (empresarial) {
+        dadosFaciais = {
+          cpf: dadosPJ.cpfResponsavel,
+          nome: dadosPJ.nomeResponsavel,
+          email: dadosPJ.emailEmpresarial,
+          telefone: dadosPJ.telefoneEmpresarial,
+        }
+      }
+
+      const sessao = await criarSessaoCadastro(dadosFaciais)
       setSessaoFacial(sessao)
       setEtapaAtual(etapaFacial)
     } catch (erro) {
@@ -203,14 +445,43 @@ export function useCadastro(tipoConta) {
 
   async function concluirCadastroFacial() {
     setFacialConcluido(true)
-    await salvarCadastro()
+    await salvarNovoUsuario()
   }
 
   return {
-    navigate, empresarial, etapaAtual, setEtapaAtual, etapas, titulos, etapaRevisao, etapaFacial,
-    dadosPF, dadosPJ, dadosAtuais, dadosValidacaoSenha, alterarDados,
-    mensagemErro, setMensagemErro, erroEmailCadastro, consultandoEmail, verificarEmailDisponivel, consultandoCep, mensagemCep, mostrarSenha, setMostrarSenha,
-    enviando, sessaoFacial, facialConcluido, validarEtapa, avancar, voltar,
-    salvarCadastro, enviarCadastro, concluirCadastroFacial,
+    navigate,
+    empresarial,
+    clienteExistente,
+    fluxoVerificado,
+    cpfVerificado,
+    etapaAtual,
+    setEtapaAtual,
+    etapaId,
+    etapas,
+    titulos,
+    etapaRevisao,
+    etapaFacial,
+    dadosPF,
+    dadosPJ,
+    dadosAtuais,
+    alterarDados,
+    mensagemErro,
+    setMensagemErro,
+    erroEmailCadastro,
+    verificarEmailDisponivel,
+    consultandoCep,
+    mensagemCep,
+    mostrarPin,
+    setMostrarPin,
+    enviando,
+    sessaoFacial,
+    facialConcluido,
+    validarEtapa,
+    avancar,
+    voltar,
+    salvarNovoUsuario,
+    salvarContaExistente,
+    enviarCadastro,
+    concluirCadastroFacial,
   }
 }

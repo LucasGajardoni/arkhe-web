@@ -8,6 +8,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
   const temporizadorCaptura = useRef(null)
   const temporizadorInicializacao = useRef(null)
   const cameraPronta = useRef(false)
+  const conclusaoEmAndamento = useRef(false)
   const concluir = useRef(aoConcluir)
   const informarErro = useRef(aoErro)
   const [iniciando, setIniciando] = useState(true)
@@ -29,6 +30,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
       setIniciando(true)
       setErroScanner('')
       cameraPronta.current = false
+      conclusaoEmAndamento.current = false
       informarErro.current?.('')
       setMensagem('Preparando a câmera...')
 
@@ -61,7 +63,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
             if (modo === 'cadastro' && !resultado.ready) agendarCaptura()
           },
           onSuccess(resultado) {
-            if (!ativo) return
+            if (!ativo || conclusaoEmAndamento.current) return
 
             // No login, o SDK considera a tentativa concluída mesmo quando o
             // rosto não combina. Permitimos no máximo três leituras para não
@@ -83,8 +85,16 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
               return
             }
 
+            conclusaoEmAndamento.current = true
             clearTimeout(temporizadorCaptura.current)
-            concluir.current(resultado)
+            Promise.resolve(concluir.current?.(resultado)).catch((erro) => {
+              if (!ativo) return
+              conclusaoEmAndamento.current = false
+              const texto = erro?.message || 'Não foi possível concluir o reconhecimento facial.'
+              setMensagem(texto)
+              setErroScanner(texto)
+              informarErro.current?.(texto)
+            })
           },
           onError(erro) {
             if (!ativo) return
@@ -162,16 +172,20 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
   }, [modo, sessao, tentativa, reinicio])
 
   function tentarNovamente() {
+    conclusaoEmAndamento.current = false
     setTentativa(0)
     setErroScanner('')
     informarErro.current?.('')
     setReinicio((valor) => valor + 1)
   }
 
+  let textoStatus = mensagem
+  if (iniciando) textoStatus = 'Preparando a câmera...'
+
   return (
     <div className="reconhecimento-facial">
       <div ref={areaScanner} className="area-scanner-facial" />
-      <p className="status-scanner-facial">{iniciando ? 'Preparando a câmera...' : mensagem}</p>
+      <p className="status-scanner-facial">{textoStatus}</p>
       {erroScanner && (
         <div className="erro-scanner-facial" role="alert">
           <p>{erroScanner}</p>

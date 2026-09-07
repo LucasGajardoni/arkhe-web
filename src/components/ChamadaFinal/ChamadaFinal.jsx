@@ -9,7 +9,9 @@ export default function ChamadaFinal({ abrirCadastro }) {
           <h2 id="titulo-chamada">Comece agora sua jornada com o Arkhé</h2>
           <p>Uma experiência bancária moderna, segura e transparente para pessoas e empresas.</p>
         </div>
-        <button className="botao botao-chamada" type="button" onClick={abrirCadastro}>Abrir minha conta agora <span aria-hidden="true">→</span></button>
+        <button className="botao botao-chamada" type="button" onClick={abrirCadastro}>
+          Abrir minha conta agora <span aria-hidden="true">→</span>
+        </button>
       </div>
     </section>
   )

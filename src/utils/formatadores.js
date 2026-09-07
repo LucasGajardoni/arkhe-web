@@ -49,14 +49,6 @@ export function formatarDataBrasileira(data) {
   return `${dia}/${mes}/${ano}`
 }
 
-export function normalizarTexto(valor) {
-  return String(valor || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-}
-
 export function formatarChavePix(tipo, valor) {
   if (tipo === 'cpf') return mascaraCpf(valor)
   if (tipo === 'cnpj') return mascaraCnpj(valor)

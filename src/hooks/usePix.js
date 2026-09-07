@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { adicionarChavePix, buscarChavesPix, excluirChavePix } from '../services/pixService.js'
 import { somenteNumeros } from '../utils/formatadores.js'
 
+function extrairChaves(resposta) {
+  if (Array.isArray(resposta.chaves)) return resposta.chaves
+  return []
+}
+
 export function usePix(usuario) {
   const [chaves, setChaves] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -29,7 +34,7 @@ export function usePix(usuario) {
     setErro('')
     try {
       const resposta = await buscarChavesPix()
-      setChaves(Array.isArray(resposta.chaves) ? resposta.chaves : [])
+      setChaves(extrairChaves(resposta))
     } catch (falha) {
       setErro(falha.message)
     } finally {
@@ -39,11 +44,21 @@ export function usePix(usuario) {
 
   useEffect(() => {
     let ativo = true
+
     buscarChavesPix()
-      .then((resposta) => { if (ativo) setChaves(Array.isArray(resposta.chaves) ? resposta.chaves : []) })
-      .catch((falha) => { if (ativo) setErro(falha.message) })
-      .finally(() => { if (ativo) setCarregando(false) })
-    return () => { ativo = false }
+      .then((resposta) => {
+        if (ativo) setChaves(extrairChaves(resposta))
+      })
+      .catch((falha) => {
+        if (ativo) setErro(falha.message)
+      })
+      .finally(() => {
+        if (ativo) setCarregando(false)
+      })
+
+    return () => {
+      ativo = false
+    }
   }, [])
 
   function alterarTipo(novoTipo) {
@@ -58,7 +73,11 @@ export function usePix(usuario) {
     setProcessando(true)
     setErro('')
     try {
-      const valorEnviar = ['telefone', 'cpf', 'cnpj'].includes(tipo) ? somenteNumeros(valor) : valor.trim()
+      let valorEnviar = valor.trim()
+      if (['telefone', 'cpf', 'cnpj'].includes(tipo)) {
+        valorEnviar = somenteNumeros(valor)
+      }
+
       const resposta = await adicionarChavePix(tipo, valorEnviar)
       setMensagem(resposta.mensagem || 'Chave Pix cadastrada com sucesso.')
       setModalCadastro(false)
@@ -86,5 +105,25 @@ export function usePix(usuario) {
     }
   }
 
-  return { chaves, carregando, processando, erro, setErro, mensagem, setMensagem, modalCadastro, setModalCadastro, chaveExclusao, setChaveExclusao, tipo, alterarTipo, tiposDisponiveis, valor, valorValido, cadastrar, excluir, carregar }
+  return {
+    chaves,
+    carregando,
+    processando,
+    erro,
+    setErro,
+    mensagem,
+    setMensagem,
+    modalCadastro,
+    setModalCadastro,
+    chaveExclusao,
+    setChaveExclusao,
+    tipo,
+    alterarTipo,
+    tiposDisponiveis,
+    valor,
+    valorValido,
+    cadastrar,
+    excluir,
+    carregar,
+  }
 }

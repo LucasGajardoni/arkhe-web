@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import './CapturaFacial.css'
 
-export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, contaEmpresarial = false }) {
+export default function CapturaFacial({
+  capturasFaciais,
+  setCapturasFaciais,
+  contaEmpresarial = false,
+}) {
+  let estadoInicial = 'introducao'
+  if (capturasFaciais.frontal) estadoInicial = 'concluida'
+
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
-  const [estadoCaptura, setEstadoCaptura] = useState(capturasFaciais.frontal ? 'concluida' : 'introducao')
+  const [estadoCaptura, setEstadoCaptura] = useState(estadoInicial)
   const [mensagemErro, setMensagemErro] = useState('')
 
   function encerrarCamera() {
@@ -29,7 +36,13 @@ export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, con
     setMensagemErro('')
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error()
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } }, audio: false })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 640 },
+        },
+        audio: false,
+      })
       streamRef.current = stream
       setEstadoCaptura('camera')
     } catch (erro) {
@@ -74,20 +87,39 @@ export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, con
   }
 
   if (estadoCaptura === 'introducao') {
+    let titulo = 'Confirme sua foto'
+    if (contaEmpresarial) titulo = 'Foto do responsável'
+
     return (
       <div className="introducao-facial introducao-facial-compacta">
         <div className="icone-camera" aria-hidden="true">◎</div>
-        <h3>{contaEmpresarial ? 'Foto do responsável' : 'Confirme sua foto'}</h3>
+        <h3>{titulo}</h3>
         <p>Fique em um local iluminado e mantenha o rosto dentro da área indicada.</p>
-        <button className="botao botao-principal" type="button" onClick={iniciarCamera}>Abrir câmera</button>
+        <button className="botao botao-principal" type="button" onClick={iniciarCamera}>
+          Abrir câmera
+        </button>
       </div>
     )
   }
 
-  if (estadoCaptura === 'solicitando') return <div className="estado-facial"><span className="carregando" /><p>Abrindo câmera...</p></div>
+  if (estadoCaptura === 'solicitando') {
+    return (
+      <div className="estado-facial">
+        <span className="carregando" />
+        <p>Abrindo câmera...</p>
+      </div>
+    )
+  }
 
   if (estadoCaptura === 'erro') {
-    return <div className="estado-facial"><p className="mensagem-erro">{mensagemErro}</p><button className="botao botao-principal" type="button" onClick={iniciarCamera}>Tentar novamente</button></div>
+    return (
+      <div className="estado-facial">
+        <p className="mensagem-erro">{mensagemErro}</p>
+        <button className="botao botao-principal" type="button" onClick={iniciarCamera}>
+          Tentar novamente
+        </button>
+      </div>
+    )
   }
 
   if (estadoCaptura === 'concluida') {
@@ -95,8 +127,12 @@ export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, con
       <div className="captura-concluida captura-concluida-compacta">
         <span className="sinal-concluido">✓</span>
         <h3>Foto capturada</h3>
-        <figure className="foto-facial"><img src={capturasFaciais.frontal} alt="Captura facial frontal" /></figure>
-        <button className="botao botao-secundario" type="button" onClick={refazerCaptura}>Refazer foto</button>
+        <figure className="foto-facial">
+          <img src={capturasFaciais.frontal} alt="Captura facial frontal" />
+        </figure>
+        <button className="botao botao-secundario" type="button" onClick={refazerCaptura}>
+          Refazer foto
+        </button>
       </div>
     )
   }
@@ -111,8 +147,12 @@ export default function CapturaFacial({ capturasFaciais, setCapturasFaciais, con
       <canvas ref={canvasRef} hidden />
       {mensagemErro && <p className="mensagem-erro">{mensagemErro}</p>}
       <div className="acoes-camera">
-        <button className="botao botao-secundario" type="button" onClick={cancelarCaptura}>Cancelar</button>
-        <button className="botao botao-principal" type="button" onClick={capturarImagem}>Capturar foto</button>
+        <button className="botao botao-secundario" type="button" onClick={cancelarCaptura}>
+          Cancelar
+        </button>
+        <button className="botao botao-principal" type="button" onClick={capturarImagem}>
+          Capturar foto
+        </button>
       </div>
     </div>
   )

@@ -8,16 +8,23 @@ export default function Login() {
 
   return (
     <div className="pagina-login">
-      <CadastroHeader voltarParaHome={() => login.navigate('/')} textoAviso="ACESSO SIMULADO" />
+      <CadastroHeader voltarParaHome={login.voltarEtapa} textoAviso="ACESSO SEGURO" />
       <main className="conteudo area-login">
         <aside className="lateral-login">
           <p className="rotulo-secao">BANCO ARKHÉ</p>
           <h2>Seu acesso, protegido em cada etapa.</h2>
-          <p>O Arkhé reúne credenciais e confirmação facial em uma experiência simples.</p>
-          <ul><li>Acesso PF e PJ</li><li>Confirmação facial</li><li>Controle de sessão</li><li>Proteção dos dados</li></ul>
-          <small>Recursos apresentados para fins acadêmicos. A autenticação real será integrada posteriormente.</small>
+          <p>O Arkhé reúne o PIN da sua conta e a confirmação facial em uma experiência simples.</p>
+          <ul>
+            <li>Acesso PF e PJ</li>
+            <li>Confirmação facial</li>
+            <li>Controle de sessão</li>
+            <li>Proteção dos dados</li>
+          </ul>
+          <small>Recursos apresentados para fins acadêmicos. Sua sessão é mantida pelo cookie seguro do servidor.</small>
         </aside>
-        <section className="cartao-login"><ConteudoLogin login={login} /></section>
+        <section className="cartao-login">
+          <ConteudoLogin login={login} />
+        </section>
       </main>
     </div>
   )

@@ -22,15 +22,25 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
   const podeSalvar = nomeOk && emailOk && telefoneOk && alterado && !salvando
 
   useEffect(() => {
-    function fecharComEsc(evento) { if (evento.key === 'Escape') fechar() }
+    function fecharComEsc(evento) {
+      if (evento.key === 'Escape') fechar()
+    }
+
     document.addEventListener('keydown', fecharComEsc)
     document.body.style.overflow = 'hidden'
-    return () => { document.removeEventListener('keydown', fecharComEsc); document.body.style.overflow = '' }
+
+    return () => {
+      document.removeEventListener('keydown', fecharComEsc)
+      document.body.style.overflow = ''
+    }
   }, [fechar])
 
   function alterar(evento) {
     const { name, value } = evento.target
-    setDados((atuais) => ({ ...atuais, [name]: name === 'telefone' ? mascaraTelefone(value) : value }))
+    let novoValor = value
+    if (name === 'telefone') novoValor = mascaraTelefone(value)
+
+    setDados((atuais) => ({ ...atuais, [name]: novoValor }))
     setMensagem('')
     setErro('')
   }
@@ -45,7 +55,6 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
 
     try {
       const resposta = await editarUsuario({
-        idUsuario: usuario.id_usuario,
         nome: dados.nome,
         email: dados.email,
         telefone: dados.telefone,
@@ -57,8 +66,10 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
         email: dados.email.trim().toLowerCase(),
         telefone: somenteNumeros(dados.telefone),
       }
-      localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado))
-      aoAtualizar(usuarioAtualizado)
+      aoAtualizar({
+        ...usuarioAtualizado,
+        usuario: resposta.usuario,
+      })
       setMensagem(resposta.mensagem || 'Usuário atualizado com sucesso')
     } catch (falha) {
       setErro(falha.message || 'Não foi possível salvar as alterações.')
@@ -67,19 +78,76 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
     }
   }
 
-  return <div className="fundo-modal-perfil" role="presentation" onMouseDown={(evento) => { if (evento.target === evento.currentTarget) fechar() }}>
-    <section className="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil">
-      <header><div><p>MINHA CONTA</p><h2 id="titulo-modal-perfil">Dados pessoais</h2><span>Confira e mantenha suas informações atualizadas.</span></div><button type="button" onClick={fechar} aria-label="Fechar modal">×</button></header>
-      <div className="identidade-modal-perfil"><div>{usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'}</div><p><strong>{usuario?.nome}</strong><span>Cliente Arkhé · Conta pessoal</span></p></div>
-      <form onSubmit={salvar}>
-        <label><span>Nome completo</span><input name="nome" value={dados.nome} onChange={alterar} autoComplete="name" />{dados.nome && !nomeOk && <small className="erro-campo-modal-perfil">Use apenas letras e espaços.</small>}</label>
-        <label><span>E-mail</span><input name="email" type="email" value={dados.email} onChange={alterar} autoComplete="email" />{dados.email && !emailOk && <small className="erro-campo-modal-perfil">Informe um e-mail válido.</small>}</label>
-        <label><span>Telefone</span><input name="telefone" value={dados.telefone} onChange={alterar} inputMode="tel" autoComplete="tel" />{dados.telefone && !telefoneOk && <small className="erro-campo-modal-perfil">Informe um telefone com DDD.</small>}</label>
-        <label><span>CPF</span><input value={mascaraCpfParcial(usuario?.cpf || '')} readOnly /><small>O CPF não pode ser alterado.</small></label>
-        {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
-        {mensagem && <p className="mensagem-modal-perfil sucesso" role="status">{mensagem}</p>}
-        <footer><button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button><button className="botao botao-principal" type="submit" disabled={!podeSalvar}>{salvando ? 'Salvando...' : 'Salvar alterações'}</button></footer>
-      </form>
-    </section>
-  </div>
+  function fecharAoClicarFora(evento) {
+    if (evento.target === evento.currentTarget) fechar()
+  }
+
+  let iniciais = 'AR'
+  if (usuario?.nome) {
+    iniciais = usuario.nome.split(' ').slice(0, 2).map((nome) => nome[0]).join('')
+  }
+
+  let textoSalvar = 'Salvar alterações'
+  if (salvando) textoSalvar = 'Salvando...'
+  let rotuloConta = 'Conta Arkhé'
+  if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
+  if (usuario?.tipoConta === 'PJ') rotuloConta = 'Conta empresarial'
+
+  return (
+    <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
+      <section className="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil">
+        <header>
+          <div>
+            <p>MINHA CONTA</p>
+            <h2 id="titulo-modal-perfil">Dados pessoais</h2>
+            <span>Confira e mantenha suas informações atualizadas.</span>
+          </div>
+          <button type="button" onClick={fechar} aria-label="Fechar modal">×</button>
+        </header>
+        <div className="identidade-modal-perfil">
+          <div>{iniciais}</div>
+          <p>
+            <strong>{usuario?.nome}</strong>
+            <span>Cliente Arkhé · {rotuloConta}</span>
+          </p>
+        </div>
+        <form onSubmit={salvar}>
+          <label>
+            <span>Nome completo</span>
+            <input name="nome" value={dados.nome} onChange={alterar} autoComplete="name" />
+            {dados.nome && !nomeOk && (
+              <small className="erro-campo-modal-perfil">Use apenas letras e espaços.</small>
+            )}
+          </label>
+          <label>
+            <span>E-mail</span>
+            <input name="email" type="email" value={dados.email} onChange={alterar} autoComplete="email" />
+            {dados.email && !emailOk && (
+              <small className="erro-campo-modal-perfil">Informe um e-mail válido.</small>
+            )}
+          </label>
+          <label>
+            <span>Telefone</span>
+            <input name="telefone" value={dados.telefone} onChange={alterar} inputMode="tel" autoComplete="tel" />
+            {dados.telefone && !telefoneOk && (
+              <small className="erro-campo-modal-perfil">Informe um telefone com DDD.</small>
+            )}
+          </label>
+          <label>
+            <span>CPF</span>
+            <input value={mascaraCpfParcial(usuario?.cpf || '')} readOnly />
+            <small>O CPF não pode ser alterado.</small>
+          </label>
+          {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
+          {mensagem && <p className="mensagem-modal-perfil sucesso" role="status">{mensagem}</p>}
+          <footer>
+            <button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button>
+            <button className="botao botao-principal" type="submit" disabled={!podeSalvar}>
+              {textoSalvar}
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
+  )
 }

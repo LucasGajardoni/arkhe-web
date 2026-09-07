@@ -10,10 +10,14 @@ export default function CadastroHeader({ voltarParaHome, textoAviso = 'CADASTRO 
             <img src={logo} alt="" />
             <span>Banco Arkhé</span>
           </button>
-          <button className="voltar-inicio" type="button" onClick={voltarParaHome}>← Voltar para o início</button>
+          <button className="voltar-inicio" type="button" onClick={voltarParaHome}>
+            ← Voltar para o início
+          </button>
         </div>
       </header>
-      <div className="aviso-cadastro">AMBIENTE ACADÊMICO <span>•</span> {textoAviso}</div>
+      <div className="aviso-cadastro">
+        AMBIENTE ACADÊMICO <span>•</span> {textoAviso}
+      </div>
     </>
   )
 }

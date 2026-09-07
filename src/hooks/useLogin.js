@@ -1,88 +1,126 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { realizarLogin, solicitarCodigoRecuperacao, trocarSenha, verificarCodigoRecuperacao } from '../services/authService.js'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { realizarLogin } from '../services/authService.js'
 import { criarSessaoVerificacao } from '../services/facialService.js'
-import { mascaraCnpj, mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
-
-const dadosIniciaisRecuperacao = { email: '', codigo: '', novaSenha: '', confirmarSenha: '' }
+import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
+import { cpfValido, pinValido } from '../utils/validadores.js'
+import { useSessao } from './useSessao.js'
 
 export function useLogin() {
+  const location = useLocation()
   const navigate = useNavigate()
+  const { iniciarSessao } = useSessao()
+  const estadoNavegacao = location.state || {}
+  const abrindoOutraConta = estadoNavegacao.abrindoOutraConta === true
+  const cpfInicial = mascaraCpf(estadoNavegacao.cpfInicial || '')
+
   const [tipoConta, setTipoConta] = useState('')
   const [etapa, setEtapa] = useState(0)
-  const [loginPF, setLoginPF] = useState({ cpf: '', senha: '' })
-  const [loginPJ, setLoginPJ] = useState({ cnpj: '', senha: '', cpfResponsavel: '' })
-  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [credenciais, setCredenciais] = useState({ cpf: cpfInicial, pin: '' })
+  const [credenciaisPendentes, setCredenciaisPendentes] = useState(null)
+  const [mostrarPin, setMostrarPin] = useState(false)
   const [processando, setProcessando] = useState(false)
-  const [recuperandoSenha, setRecuperandoSenha] = useState(false)
-  const [etapaRecuperacao, setEtapaRecuperacao] = useState('email')
-  const [dadosRecuperacao, setDadosRecuperacao] = useState(dadosIniciaisRecuperacao)
-  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false)
-  const [mensagemRecuperacao, setMensagemRecuperacao] = useState('')
-  const [processandoRecuperacao, setProcessandoRecuperacao] = useState(false)
-  const [mensagemDemonstracao, setMensagemDemonstracao] = useState('')
   const [mensagemErro, setMensagemErro] = useState('')
   const [sessaoFacial, setSessaoFacial] = useState(null)
 
-  const pessoaFisica = tipoConta === 'PF'
-  const dadosLogin = pessoaFisica ? loginPF : loginPJ
-  const etapaFacial = pessoaFisica ? 2 : 3
-  const etapaFinal = pessoaFisica ? 3 : 4
+  const credenciaisValidas = cpfValido(credenciais.cpf) && pinValido(credenciais.pin)
 
-  function alterarPF(evento) {
+  function alterarCredencial(evento) {
     const { name, value } = evento.target
-    setLoginPF((dados) => ({ ...dados, [name]: name === 'cpf' ? mascaraCpf(value) : value }))
+    let novoValor = value
+
+    if (name === 'cpf') novoValor = mascaraCpf(value)
+    if (name === 'pin') novoValor = somenteNumeros(value).slice(0, 6)
+
+    setCredenciais((dados) => ({ ...dados, [name]: novoValor }))
+    setMensagemErro('')
   }
 
-  function alterarPJ(evento) {
-    const { name, value } = evento.target
-    const valor = name === 'cnpj' ? mascaraCnpj(value) : name === 'cpfResponsavel' ? mascaraCpf(value) : value
-    setLoginPJ((dados) => ({ ...dados, [name]: valor }))
-  }
-
-  function alterarRecuperacao(evento) {
-    const { name, value } = evento.target
-    setDadosRecuperacao((dados) => ({ ...dados, [name]: name === 'codigo' ? somenteNumeros(value).slice(0, 6) : value }))
-    setMensagemRecuperacao('')
+  function escolherTipoConta(tipo) {
+    setTipoConta(tipo)
+    setMensagemErro('')
   }
 
   function voltarEtapa() {
-    if (etapa === 0) return navigate('/')
-    setEtapa((atual) => atual - 1)
+    setMensagemErro('')
+
+    if (etapa === 0) {
+      let destino = '/'
+      if (abrindoOutraConta) destino = '/cadastro'
+      navigate(destino)
+      return
+    }
+
+    if (etapa === 2) {
+      setSessaoFacial(null)
+      setCredenciaisPendentes(null)
+    }
+
+    setEtapa((atual) => Math.max(0, atual - 1))
   }
 
   function alterarTipoConta() {
     setTipoConta('')
     setEtapa(0)
-    setLoginPF({ cpf: '', senha: '' })
-    setLoginPJ({ cnpj: '', senha: '', cpfResponsavel: '' })
-    setMostrarSenha(false)
+    setCredenciais((dados) => {
+      let cpf = ''
+      if (abrindoOutraConta) cpf = dados.cpf
+      return { cpf, pin: '' }
+    })
+    setCredenciaisPendentes(null)
+    setMostrarPin(false)
     setMensagemErro('')
     setSessaoFacial(null)
   }
 
-  async function autenticar(cpf, senha, cadastroFacial = false) {
+  function concluirAcesso(resultado, dadosUsados) {
+    iniciarSessao(resultado, {
+      cpf: dadosUsados.cpf,
+      tipoConta: dadosUsados.tipoConta,
+    })
+
+    if (abrindoOutraConta) {
+      let novaConta = 'PF'
+      if (dadosUsados.tipoConta === 'PF') novaConta = 'PJ'
+      navigate(`/cadastro/${novaConta.toLowerCase()}`, {
+        replace: true,
+        state: {
+          cpfVerificado: dadosUsados.cpf,
+          clienteExistente: true,
+          tipoContaAutenticada: dadosUsados.tipoConta,
+        },
+      })
+      return
+    }
+
+    navigate('/dashboard', { replace: true })
+  }
+
+  async function autenticar(dadosUsados, cadastroFacial) {
     setProcessando(true)
     setMensagemErro('')
+
     try {
-      const resultado = await realizarLogin({ cpf, senha, cadastroFacial })
-      if (!cadastroFacial && resultado.reconhecimento_facial_pendente) {
-        setSessaoFacial(await criarSessaoVerificacao(cpf))
-        setEtapa(etapaFacial)
+      const resultado = await realizarLogin({
+        cpf: dadosUsados.cpf,
+        pin: dadosUsados.pin,
+        tipoConta: dadosUsados.tipoConta,
+        cadastroFacial,
+      })
+
+      if (!cadastroFacial && resultado.reconhecimento_facial_pendente === true) {
+        setSessaoFacial(await criarSessaoVerificacao(dadosUsados.cpf))
+        setEtapa(2)
         return
       }
-      localStorage.setItem('usuario', JSON.stringify(resultado.usuario))
-      if (resultado.token) localStorage.setItem('token', resultado.token)
-      if (pessoaFisica) {
-        navigate('/dashboard', { replace: true })
-        return
-      }
-      setEtapa(etapaFinal)
+
+      concluirAcesso(resultado, dadosUsados)
     } catch (erro) {
-      if (erro.status === 401) {
+      if (erro.status === 401 || erro.status === 403) {
         setSessaoFacial(null)
         setEtapa(1)
       }
+
       setMensagemErro(erro.message || 'Não foi possível conectar ao servidor.')
     } finally {
       setProcessando(false)
@@ -90,62 +128,42 @@ export function useLogin() {
   }
 
   function continuarCredenciais() {
-    autenticar(pessoaFisica ? loginPF.cpf : loginPJ.cpfResponsavel, dadosLogin.senha)
+    if (!credenciaisValidas || processando) return
+
+    const dadosUsados = Object.freeze({
+      cpf: somenteNumeros(credenciais.cpf),
+      pin: credenciais.pin,
+      tipoConta,
+    })
+
+    setCredenciaisPendentes(dadosUsados)
+    autenticar(dadosUsados, false)
   }
 
   function concluirReconhecimentoFacial() {
-    return autenticar(pessoaFisica ? loginPF.cpf : loginPJ.cpfResponsavel, dadosLogin.senha, true)
+    if (!credenciaisPendentes || processando) return Promise.resolve()
+    return autenticar(credenciaisPendentes, true)
   }
 
-  async function solicitarRecuperacao(evento) {
-    evento.preventDefault()
-    setProcessandoRecuperacao(true)
-    setMensagemRecuperacao('')
-    try {
-      if (etapaRecuperacao === 'email') {
-        const resultado = await solicitarCodigoRecuperacao(dadosRecuperacao.email)
-        setEtapaRecuperacao('codigo')
-        setMensagemRecuperacao(resultado.mensagem)
-      } else if (etapaRecuperacao === 'codigo') {
-        const resultado = await verificarCodigoRecuperacao(dadosRecuperacao)
-        setEtapaRecuperacao('senha')
-        setMensagemRecuperacao(resultado.mensagem)
-      } else {
-        const resultado = await trocarSenha({
-          email: dadosRecuperacao.email,
-          codigo: dadosRecuperacao.codigo,
-          novaSenha: dadosRecuperacao.novaSenha,
-        })
-        setEtapaRecuperacao('sucesso')
-        setMensagemRecuperacao(resultado.mensagem)
-      }
-    } catch (erro) {
-      setMensagemRecuperacao(erro.message || 'Não foi possível conectar ao servidor.')
-    } finally {
-      setProcessandoRecuperacao(false)
-    }
+  return {
+    navigate,
+    abrindoOutraConta,
+    tipoConta,
+    etapa,
+    credenciais,
+    credenciaisValidas,
+    mostrarPin,
+    processando,
+    mensagemErro,
+    sessaoFacial,
+    setEtapa,
+    setMostrarPin,
+    setMensagemErro,
+    escolherTipoConta,
+    alterarCredencial,
+    voltarEtapa,
+    alterarTipoConta,
+    continuarCredenciais,
+    concluirReconhecimentoFacial,
   }
-
-  async function reenviarCodigo() {
-    setProcessandoRecuperacao(true)
-    setMensagemRecuperacao('')
-    try {
-      const resultado = await solicitarCodigoRecuperacao(dadosRecuperacao.email)
-      setMensagemRecuperacao(resultado.mensagem)
-    } catch (erro) {
-      setMensagemRecuperacao(erro.message || 'Não foi possível reenviar o código.')
-    } finally {
-      setProcessandoRecuperacao(false)
-    }
-  }
-
-  function fecharRecuperacao() {
-    setRecuperandoSenha(false)
-    setEtapaRecuperacao('email')
-    setDadosRecuperacao(dadosIniciaisRecuperacao)
-    setMensagemRecuperacao('')
-    setMostrarNovaSenha(false)
-  }
-
-  return { navigate, tipoConta, setTipoConta, etapa, setEtapa, pessoaFisica, etapaFacial, etapaFinal, loginPF, loginPJ, dadosLogin, alterarPF, alterarPJ, mostrarSenha, setMostrarSenha, processando, recuperandoSenha, setRecuperandoSenha, etapaRecuperacao, dadosRecuperacao, alterarRecuperacao, mostrarNovaSenha, setMostrarNovaSenha, mensagemRecuperacao, processandoRecuperacao, mensagemDemonstracao, setMensagemDemonstracao, mensagemErro, setMensagemErro, sessaoFacial, voltarEtapa, alterarTipoConta, continuarCredenciais, concluirReconhecimentoFacial, solicitarRecuperacao, reenviarCodigo, fecharRecuperacao }
 }

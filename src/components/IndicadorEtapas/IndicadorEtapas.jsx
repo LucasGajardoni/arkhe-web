@@ -8,12 +8,24 @@ export default function IndicadorEtapas({ etapas, etapaAtual }) {
         <span>{etapas[etapaAtual]}</span>
       </div>
       <ol className="lista-etapas">
-        {etapas.map((etapa, indice) => (
-          <li className={indice === etapaAtual ? 'etapa-ativa' : indice < etapaAtual ? 'etapa-concluida' : ''} key={etapa}>
-            <span>{indice < etapaAtual ? '✓' : indice + 1}</span>
-            <small>{etapa}</small>
-          </li>
-        ))}
+        {etapas.map((etapa, indice) => {
+          let classeEtapa = ''
+          let numeroEtapa = indice + 1
+
+          if (indice === etapaAtual) {
+            classeEtapa = 'etapa-ativa'
+          } else if (indice < etapaAtual) {
+            classeEtapa = 'etapa-concluida'
+            numeroEtapa = '✓'
+          }
+
+          return (
+            <li className={classeEtapa} key={etapa}>
+              <span>{numeroEtapa}</span>
+              <small>{etapa}</small>
+            </li>
+          )
+        })}
       </ol>
     </div>
   )

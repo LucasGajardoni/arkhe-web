@@ -22,7 +22,8 @@ async function requisicaoFacial(caminho, dados, mensagemPadrao) {
 
   if (!resposta.ok) {
     const detalhe = resultado.detail?.message || resultado.detail
-    const mensagem = typeof detalhe === 'string' ? detalhe : `${mensagemPadrao} (erro ${resposta.status}).`
+    let mensagem = `${mensagemPadrao} (erro ${resposta.status}).`
+    if (typeof detalhe === 'string') mensagem = detalhe
     const erro = new Error(mensagem)
     erro.status = resposta.status
     erro.dados = resultado
@@ -77,7 +78,6 @@ export function carregarSdkFacial() {
 
 export function criarScannerFacial(modo, opcoes) {
   const configuracao = { ...opcoes, baseUrl: FACE_API_URL }
-  return modo === 'cadastro'
-    ? window.FaceIdentity.enroll(configuracao)
-    : window.FaceIdentity.verify(configuracao)
+  if (modo === 'cadastro') return window.FaceIdentity.enroll(configuracao)
+  return window.FaceIdentity.verify(configuracao)
 }
