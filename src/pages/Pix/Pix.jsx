@@ -24,7 +24,7 @@ const rotulos = {
 export default function Pix() {
   const navigate = useNavigate()
   const { perfil, atualizarPerfil, limparSessao } = useSessao()
-  const usuario = perfil || { nome: 'Cliente', email: '', telefone: '', cpf: '', cnpj: '', tipoConta: '' }
+  const usuario = perfil
   const pix = usePix(usuario)
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [avisoPagamento, setAvisoPagamento] = useState(false)

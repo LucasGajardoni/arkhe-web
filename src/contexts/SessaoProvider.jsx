@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SessaoContext from './SessaoContext.js'
+import { obterSessao } from '../services/authService.js'
 
 function tipoContaPorExtenso(valor, fallback = '') {
   if (valor === 0 || valor === '0' || valor === 'PF') return 'PF'
@@ -24,6 +25,28 @@ function montarPerfilVisual(resultado = {}, fallback = {}) {
 
 export default function SessaoProvider({ children }) {
   const [perfil, setPerfil] = useState(null)
+  const [verificandoSessao, setVerificandoSessao] = useState(true)
+
+  useEffect(() => {
+    let ativo = true
+
+    async function restaurarSessao() {
+      try {
+        const resultado = await obterSessao()
+        if (ativo) setPerfil(montarPerfilVisual(resultado))
+      } catch {
+        if (ativo) setPerfil(null)
+      } finally {
+        if (ativo) setVerificandoSessao(false)
+      }
+    }
+
+    restaurarSessao()
+
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   function iniciarSessao(resultado, fallback) {
     setPerfil(montarPerfilVisual(resultado, fallback))
@@ -51,7 +74,14 @@ export default function SessaoProvider({ children }) {
 
   return (
     <SessaoContext.Provider
-      value={{ perfil, iniciarSessao, atualizarPerfil, selecionarConta, limparSessao }}
+      value={{
+        perfil,
+        verificandoSessao,
+        iniciarSessao,
+        atualizarPerfil,
+        selecionarConta,
+        limparSessao,
+      }}
     >
       {children}
     </SessaoContext.Provider>

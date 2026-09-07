@@ -6,6 +6,7 @@ import EscolherConta from './pages/EscolherConta/EscolherConta.jsx'
 import Dashboard from './pages/Dashboard/Dashboard.jsx'
 import Pix from './pages/Pix/Pix.jsx'
 import SessaoProvider from './contexts/SessaoProvider.jsx'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 
 export default function App() {
   return (
@@ -17,8 +18,10 @@ export default function App() {
           <Route path="/cadastro" element={<EscolherConta />} />
           <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
           <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/pix" element={<Pix />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/pix" element={<Pix />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

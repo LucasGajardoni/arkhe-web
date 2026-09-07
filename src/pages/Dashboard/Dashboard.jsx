@@ -36,7 +36,7 @@ export default function Dashboard() {
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
-  const usuario = perfil || { nome: 'Cliente', email: '', telefone: '', cpf: '', tipoConta: '' }
+  const usuario = perfil
 
   async function sair() {
     if (saindo) return
@@ -55,7 +55,7 @@ export default function Dashboard() {
     }
   }
 
-  let primeiroNome = 'Cliente'
+  let primeiroNome = ''
   if (usuario.nome) primeiroNome = usuario.nome.split(' ')[0]
 
   let textoSaldo = 'Ocultar'

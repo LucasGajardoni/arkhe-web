@@ -109,6 +109,21 @@ export function realizarLogin({ cpf, pin, tipoConta, cadastroFacial = false }) {
   )
 }
 
+export async function obterSessao() {
+  const resposta = await requisitar('/sessao', {
+    method: 'GET',
+    credentials: 'include',
+  })
+
+  const resultado = await validarResposta(resposta, 'Não foi possível verificar sua sessão.')
+
+  if (!resultado.usuario || !resultado.conta) {
+    throw new ErroApi('O servidor retornou uma sessão inválida.', 0, resultado)
+  }
+
+  return resultado
+}
+
 function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
   const empresarial = numeroTipoConta(tipoConta) === 1
   let dados = dadosPF
