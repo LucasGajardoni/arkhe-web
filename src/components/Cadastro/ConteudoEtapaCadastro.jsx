@@ -21,6 +21,7 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
     verificarEmailDisponivel,
     consultandoCep,
     mensagemCep,
+    pinSeguroCadastro,
     mostrarPin,
     setMostrarPin,
     setEtapaAtual,
@@ -28,6 +29,8 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
     enviando,
     mensagemErro,
     sessaoFacial,
+    modoFacial,
+    mensagemFacial,
     salvarNovoUsuario,
     concluirCadastroFacial,
     setMensagemErro,
@@ -90,6 +93,7 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
         dadosPF={dadosPF}
         dadosPJ={dadosPJ}
         dadosAtuais={dadosAtuais}
+        pinSeguroCadastro={pinSeguroCadastro}
         alterar={alterarDados}
         mostrarPin={mostrarPin}
         alternarPin={() => setMostrarPin(!mostrarPin)}
@@ -134,12 +138,15 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
 
   if (etapaAtual === etapaFacial && sessaoFacial) {
     return (
-      <ReconhecimentoFacial
-        modo="cadastro"
-        sessao={sessaoFacial}
-        aoConcluir={concluirCadastroFacial}
-        aoErro={setMensagemErro}
-      />
+      <>
+        <p className="aviso-simulacao" role="status">{mensagemFacial}</p>
+        <ReconhecimentoFacial
+          modo={modoFacial}
+          sessao={sessaoFacial}
+          aoConcluir={concluirCadastroFacial}
+          aoErro={setMensagemErro}
+        />
+      </>
     )
   }
 

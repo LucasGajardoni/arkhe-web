@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adicionarConta, cadastrarUsuario } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
-import { criarSessaoCadastro } from '../services/facialService.js'
+import { prepararSessaoFacialCadastro } from '../services/facialService.js'
 import { useSessao } from './useSessao.js'
 import {
   mascaraCep,
@@ -18,6 +18,7 @@ import {
   emailValido,
   maiorDeIdade,
   nomeValido,
+  pinSeguro,
   pinValido,
 } from '../utils/validadores.js'
 
@@ -135,6 +136,8 @@ export function useCadastro(tipoConta, fluxo = {}) {
   const [mostrarPin, setMostrarPin] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [sessaoFacial, setSessaoFacial] = useState(null)
+  const [modoFacial, setModoFacial] = useState('cadastro')
+  const [mensagemFacial, setMensagemFacial] = useState('')
   const [facialConcluido, setFacialConcluido] = useState(false)
 
   const etapa = configuracaoEtapas[etapaAtual]
@@ -151,6 +154,28 @@ export function useCadastro(tipoConta, fluxo = {}) {
     setDadosAtuais = setDadosPJ
     emailCadastro = dadosPJ.emailEmpresarial
   }
+
+  let dadosValidacaoPin = {
+    cpf: dadosPF.cpf,
+    dataNascimento: dadosPF.dataNascimento,
+    telefone: dadosPF.telefone,
+    cnpj: '',
+    cep: dadosPF.cep,
+    numero: dadosPF.numero,
+  }
+
+  if (empresarial) {
+    dadosValidacaoPin = {
+      cpf: dadosPJ.cpfResponsavel,
+      dataNascimento: dadosPJ.dataNascimentoResponsavel,
+      telefone: dadosPJ.telefoneEmpresarial,
+      cnpj: dadosPJ.cnpj,
+      cep: dadosPJ.cep,
+      numero: dadosPJ.numero,
+    }
+  }
+
+  const pinSeguroCadastro = pinSeguro(dadosAtuais.pin, dadosValidacaoPin)
 
   async function consultarCep(cep) {
     setConsultandoCep(true)
@@ -255,7 +280,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
     }
 
     if (etapaId === 'acesso') {
-      const pinCorreto = pinValido(dadosAtuais.pin)
+      const pinCorreto = pinSeguroCadastro
         && dadosAtuais.pin === dadosAtuais.confirmarPin
 
       if (clienteExistente) return pinCorreto
@@ -306,6 +331,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
 
     if (etapaId === 'acesso') {
       if (!pinValido(dadosAtuais.pin)) return 'O PIN deve possuir exatamente 6 dígitos.'
+      if (!pinSeguroCadastro) return 'O PIN não pode aparecer em nenhum dado numérico do cadastro.'
       if (dadosAtuais.pin !== dadosAtuais.confirmarPin) return 'Os PINs informados precisam ser iguais.'
       if (!clienteExistente) return 'Aceite todos os consentimentos para continuar.'
     }
@@ -363,6 +389,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
         const indiceContato = configuracaoEtapas.findIndex((item) => item.id === 'contato')
         setErroEmailCadastro('Este e-mail já está cadastrado.')
         setSessaoFacial(null)
+        setMensagemFacial('')
         setFacialConcluido(false)
         setEtapaAtual(indiceContato)
         window.scrollTo(0, 0)
@@ -417,6 +444,8 @@ export function useCadastro(tipoConta, fluxo = {}) {
         return
       }
 
+      setMensagemFacial('Consultando seu cadastro facial...')
+
       let dadosFaciais = {
         cpf: dadosPF.cpf,
         nome: dadosPF.nome,
@@ -433,10 +462,13 @@ export function useCadastro(tipoConta, fluxo = {}) {
         }
       }
 
-      const sessao = await criarSessaoCadastro(dadosFaciais)
-      setSessaoFacial(sessao)
+      const preparacaoFacial = await prepararSessaoFacialCadastro(dadosFaciais)
+      setModoFacial(preparacaoFacial.modo)
+      setMensagemFacial(preparacaoFacial.mensagem)
+      setSessaoFacial(preparacaoFacial.sessao)
       setEtapaAtual(etapaFacial)
     } catch (erro) {
+      setMensagemFacial('')
       setMensagemErro(erro.message || 'Não foi possível conectar à API facial. Nenhum usuário foi salvo.')
     } finally {
       setEnviando(false)
@@ -471,10 +503,13 @@ export function useCadastro(tipoConta, fluxo = {}) {
     verificarEmailDisponivel,
     consultandoCep,
     mensagemCep,
+    pinSeguroCadastro,
     mostrarPin,
     setMostrarPin,
     enviando,
     sessaoFacial,
+    modoFacial,
+    mensagemFacial,
     facialConcluido,
     validarEtapa,
     avancar,

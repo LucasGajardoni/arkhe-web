@@ -1,4 +1,5 @@
 import Campo from './CampoFormulario.jsx'
+import { pinValido } from '../../utils/validadores.js'
 
 export default function EtapaAcesso({
   empresarial,
@@ -6,6 +7,7 @@ export default function EtapaAcesso({
   dadosPF,
   dadosPJ,
   dadosAtuais,
+  pinSeguroCadastro,
   alterar,
   mostrarPin,
   alternarPin,
@@ -13,6 +15,7 @@ export default function EtapaAcesso({
   let tipoCampoPin = 'password'
   let textoBotaoPin = 'Mostrar PINs'
   let erroConfirmacao = ''
+  let erroPin = ''
 
   if (mostrarPin) {
     tipoCampoPin = 'text'
@@ -21,6 +24,10 @@ export default function EtapaAcesso({
 
   if (dadosAtuais.confirmarPin && dadosAtuais.pin !== dadosAtuais.confirmarPin) {
     erroConfirmacao = 'Os PINs não são iguais.'
+  }
+
+  if (pinValido(dadosAtuais.pin) && !pinSeguroCadastro) {
+    erroPin = 'Esse PIN aparece em um dos seus dados. Escolha outro.'
   }
 
   let consentimentoDados = (
@@ -67,6 +74,7 @@ export default function EtapaAcesso({
           autocomplete="new-password"
           inputMode="numeric"
           maxLength={6}
+          erro={erroPin}
         />
         <Campo
           nome="confirmarPin"
@@ -81,7 +89,7 @@ export default function EtapaAcesso({
         />
       </div>
       <p className="aviso-simulacao">
-        O PIN deve ter exatamente 6 dígitos. Zeros no início também são válidos.
+        O PIN deve ter 6 dígitos e não pode aparecer no CPF, nascimento, telefone, CNPJ, CEP ou número do endereço.
       </p>
       <button className="mostrar-pin" type="button" onClick={alternarPin}>
         {textoBotaoPin}
@@ -95,7 +103,7 @@ export default function EtapaAcesso({
           {consentimentoDados}
           <label>
             <input name="aceitarBiometria" type="checkbox" checked={dadosAtuais.aceitarBiometria} onChange={alterar} />
-            {' '}Autorizo o cadastro e o uso do meu rosto para autenticação.
+            {' '}Autorizo o cadastro ou a validação do meu rosto para autenticação.
           </label>
         </div>
       )}

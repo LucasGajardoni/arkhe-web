@@ -67,3 +67,31 @@ export function emailValido(email) {
 export function pinValido(pin) {
   return /^\d{6}$/.test(String(pin || ''))
 }
+
+export function pinSeguro(pin, dados = {}) {
+  const pinLimpo = somenteNumeros(pin)
+  if (!pinValido(pinLimpo)) return false
+
+  const camposNumericos = [
+    dados.cpf,
+    dados.cnpj,
+    dados.telefone,
+    dados.cep,
+    dados.numero,
+  ]
+
+  const partesData = String(dados.dataNascimento || '').split('-')
+  if (partesData.length === 3) {
+    const [ano, mes, dia] = partesData
+    camposNumericos.push(`${ano}${mes}${dia}`)
+    camposNumericos.push(`${dia}${mes}${ano}`)
+    camposNumericos.push(`${dia}${mes}${ano.slice(-2)}`)
+  }
+
+  for (const campo of camposNumericos) {
+    const numeroDoCampo = somenteNumeros(campo)
+    if (numeroDoCampo.includes(pinLimpo)) return false
+  }
+
+  return true
+}

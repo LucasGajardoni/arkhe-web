@@ -13,11 +13,14 @@ export default function Cadastro({ tipoConta }) {
     clienteExistente,
     fluxoVerificado,
     etapaAtual,
+    etapaId,
     etapas,
     titulos,
     etapaRevisao,
     mensagemErro,
     sessaoFacial,
+    modoFacial,
+    mensagemFacial,
     enviando,
     validarEtapa,
     avancar,
@@ -28,6 +31,11 @@ export default function Cadastro({ tipoConta }) {
   if (!fluxoVerificado) return <Navigate to="/cadastro" replace />
 
   let descricaoEtapa = 'Confira os dados e continue quando estiver pronto.'
+  let tituloEtapa = titulos[etapaAtual]
+
+  if (etapaId === 'facial' && modoFacial === 'login') {
+    tituloEtapa = 'Confirme sua identidade'
+  }
   if (etapaAtual === 0 && clienteExistente) {
     descricaoEtapa = 'Seu cadastro já foi confirmado. Informe apenas os dados da nova conta.'
   } else if (etapaAtual === 0) {
@@ -86,10 +94,13 @@ export default function Cadastro({ tipoConta }) {
           <section className="cartao-formulario">
             <div className="titulo-formulario">
               <p>ETAPA {etapaAtual + 1}</p>
-              <h1>{titulos[etapaAtual]}</h1>
+              <h1>{tituloEtapa}</h1>
               <span>{descricaoEtapa}</span>
             </div>
             <ConteudoEtapaCadastro cadastro={cadastro} />
+            {mensagemFacial && enviando && etapaAtual === etapaRevisao && (
+              <p className="aviso-simulacao" role="status">{mensagemFacial}</p>
+            )}
             {mensagemErro && !sessaoFacial && <p className="erro-geral" role="alert">{mensagemErro}</p>}
             {acoesFormulario}
           </section>

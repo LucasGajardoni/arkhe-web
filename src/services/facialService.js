@@ -33,10 +33,10 @@ async function requisicaoFacial(caminho, dados, mensagemPadrao) {
   return resultado
 }
 
-export function criarSessaoVerificacao(cpf) {
+export function criarSessaoVerificacao(cpf, finalidade = 'login') {
   return requisicaoFacial('/v1/verifications', {
     cpf: somenteNumeros(cpf),
-    purpose: 'login',
+    purpose: finalidade,
     ttl_minutes: 10,
   }, 'Não foi possível iniciar o reconhecimento facial')
 }
@@ -54,6 +54,41 @@ export function criarSessaoCadastro({ cpf, nome, email, telefone }) {
     },
     ttl_minutes: 15,
   }, 'Não foi possível iniciar o cadastro facial')
+}
+
+function cpfSemCadastroFacial(erro) {
+  if (!erro) return false
+  if (erro.status === 404) return true
+
+  const mensagem = String(erro.message || '').toLowerCase()
+  if (mensagem.includes('identity not found')) return true
+  if (mensagem.includes('identidade não encontrada')) return true
+  if (mensagem.includes('não possui biometria')) return true
+  if (mensagem.includes('biometria não cadastrada')) return true
+  if (mensagem.includes('no biometric template')) return true
+  if (mensagem.includes('not enrolled')) return true
+
+  return false
+}
+
+export async function prepararSessaoFacialCadastro(dados) {
+  try {
+    const sessao = await criarSessaoVerificacao(dados.cpf, 'cadastro_conta')
+    return {
+      modo: 'login',
+      sessao,
+      mensagem: 'Seu CPF já possui cadastro facial. Vamos validar que você é você mesmo.',
+    }
+  } catch (erro) {
+    if (!cpfSemCadastroFacial(erro)) throw erro
+
+    const sessao = await criarSessaoCadastro(dados)
+    return {
+      modo: 'cadastro',
+      sessao,
+      mensagem: 'Seu CPF ainda não possui cadastro facial. Vamos cadastrar você no sistema.',
+    }
+  }
 }
 
 export function carregarSdkFacial() {
