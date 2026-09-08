@@ -109,6 +109,38 @@ export function realizarLogin({ cpf, pin, tipoConta, cadastroFacial = false }) {
   )
 }
 
+export function solicitarRecuperacaoPin(email) {
+  return enviarJson(
+    '/esqueci_pin',
+    { email: String(email || '').trim().toLowerCase() },
+    'Não foi possível enviar o código de recuperação.',
+  )
+}
+
+export function verificarCodigoRecuperacaoPin({ email, codigo }) {
+  return enviarJson(
+    '/verificar_codigo',
+    {
+      email: String(email || '').trim().toLowerCase(),
+      codigo: somenteNumeros(codigo).slice(0, 6),
+    },
+    'Não foi possível validar o código de recuperação.',
+  )
+}
+
+export function trocarPin({ email, codigo, tipoConta, novoPin }) {
+  return enviarJson(
+    '/trocar_pin',
+    {
+      email: String(email || '').trim().toLowerCase(),
+      codigo: somenteNumeros(codigo).slice(0, 6),
+      tipo_conta: numeroTipoConta(tipoConta),
+      novo_pin: prepararPin(novoPin),
+    },
+    'Não foi possível alterar o PIN.',
+  )
+}
+
 export async function obterSessao() {
   const resposta = await requisitar('/sessao', {
     method: 'GET',

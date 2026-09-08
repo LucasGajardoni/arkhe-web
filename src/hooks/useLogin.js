@@ -21,7 +21,9 @@ export function useLogin() {
   const [mostrarPin, setMostrarPin] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [mensagemErro, setMensagemErro] = useState('')
+  const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [sessaoFacial, setSessaoFacial] = useState(null)
+  const [recuperandoPin, setRecuperandoPin] = useState(false)
 
   const credenciaisValidas = cpfValido(credenciais.cpf) && pinValido(credenciais.pin)
 
@@ -34,15 +36,22 @@ export function useLogin() {
 
     setCredenciais((dados) => ({ ...dados, [name]: novoValor }))
     setMensagemErro('')
+    setMensagemSucesso('')
   }
 
   function escolherTipoConta(tipo) {
     setTipoConta(tipo)
     setMensagemErro('')
+    setMensagemSucesso('')
   }
 
   function voltarEtapa() {
     setMensagemErro('')
+
+    if (recuperandoPin) {
+      setRecuperandoPin(false)
+      return
+    }
 
     if (etapa === 0) {
       let destino = '/'
@@ -59,6 +68,24 @@ export function useLogin() {
     setEtapa((atual) => Math.max(0, atual - 1))
   }
 
+  function abrirRecuperacaoPin() {
+    setMensagemErro('')
+    setMensagemSucesso('')
+    setRecuperandoPin(true)
+  }
+
+  function fecharRecuperacaoPin() {
+    setRecuperandoPin(false)
+  }
+
+  function concluirRecuperacaoPin(mensagem) {
+    setRecuperandoPin(false)
+    setCredenciais((dados) => ({ ...dados, pin: '' }))
+    setMostrarPin(false)
+    setMensagemErro('')
+    setMensagemSucesso(mensagem || 'PIN alterado com sucesso.')
+  }
+
   function alterarTipoConta() {
     setTipoConta('')
     setEtapa(0)
@@ -70,6 +97,7 @@ export function useLogin() {
     setCredenciaisPendentes(null)
     setMostrarPin(false)
     setMensagemErro('')
+    setMensagemSucesso('')
     setSessaoFacial(null)
   }
 
@@ -155,7 +183,9 @@ export function useLogin() {
     mostrarPin,
     processando,
     mensagemErro,
+    mensagemSucesso,
     sessaoFacial,
+    recuperandoPin,
     setEtapa,
     setMostrarPin,
     setMensagemErro,
@@ -163,6 +193,9 @@ export function useLogin() {
     alterarCredencial,
     voltarEtapa,
     alterarTipoConta,
+    abrirRecuperacaoPin,
+    fecharRecuperacaoPin,
+    concluirRecuperacaoPin,
     continuarCredenciais,
     concluirReconhecimentoFacial,
   }

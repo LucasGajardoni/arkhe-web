@@ -1,8 +1,18 @@
 import CredenciaisLogin from './CredenciaisLogin.jsx'
 import EscolhaTipoConta from './EscolhaTipoConta.jsx'
+import RecuperacaoPin from './RecuperacaoPin.jsx'
 import ReconhecimentoLogin from './ReconhecimentoLogin.jsx'
 
 export default function ConteudoLogin({ login }) {
+  if (login.recuperandoPin) {
+    return (
+      <RecuperacaoPin
+        aoCancelar={login.fecharRecuperacaoPin}
+        aoConcluir={login.concluirRecuperacaoPin}
+      />
+    )
+  }
+
   if (login.etapa === 1) return <CredenciaisLogin login={login} />
 
   if (login.etapa === 2) {

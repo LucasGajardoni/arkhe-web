@@ -8,11 +8,13 @@ export default function CredenciaisLogin({ login }) {
     mostrarPin,
     setMostrarPin,
     mensagemErro,
+    mensagemSucesso,
     sessaoFacial,
     processando,
     alterarTipoConta,
     voltarEtapa,
     continuarCredenciais,
+    abrirRecuperacaoPin,
     navigate,
   } = login
 
@@ -72,8 +74,14 @@ export default function CredenciaisLogin({ login }) {
           </button>
         </div>
       </label>
-      <p className="ajuda-pin-login">O PIN possui exatamente 6 dígitos e é específico desta conta.</p>
+      <div className="linha-ajuda-pin-login">
+        <p className="ajuda-pin-login">O PIN possui exatamente 6 dígitos e é específico desta conta.</p>
+        <button className="esqueci-pin-login" type="button" onClick={abrirRecuperacaoPin}>
+          Esqueci meu PIN
+        </button>
+      </div>
       {mensagemErro && !sessaoFacial && <p className="mensagem-login" role="alert">{mensagemErro}</p>}
+      {mensagemSucesso && <p className="mensagem-login" role="status">{mensagemSucesso}</p>}
       <div className="acoes-login">
         <button className="botao botao-secundario" type="button" onClick={voltarEtapa}>
           Voltar
