@@ -62,3 +62,5 @@
 .lista-dashboard article strong { font-size: 13px; }
 .lista-dashboard article small { font-size: 10px; }
 .lista-dashboard article b { font-size: 12px; }
+.estado-movimentacoes-dashboard { padding: 34px 10px; color: #8a8374; font-size: 11px; text-align: center; }
+.estado-movimentacoes-dashboard.erro { color: #8c2626; }

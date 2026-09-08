@@ -6,6 +6,8 @@ import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import ModalChavePix from '../../components/Pix/ModalChavePix.jsx'
 import ModalExcluirChave from '../../components/Pix/ModalExcluirChave.jsx'
+import ModalPagamentoPix from '../../components/Pix/ModalPagamentoPix.jsx'
+import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { usePix } from '../../hooks/usePix.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
@@ -27,10 +29,11 @@ export default function Pix() {
   const usuario = perfil
   const pix = usePix(usuario)
   const [perfilAberto, setPerfilAberto] = useState(false)
-  const [avisoPagamento, setAvisoPagamento] = useState(false)
+  const [pagamentoAberto, setPagamentoAberto] = useState(false)
   const [chaveCopiada, setChaveCopiada] = useState('')
   const [saindo, setSaindo] = useState(false)
   const secaoChaves = useRef(null)
+  const movimentacoes = useMovimentacoes()
 
   async function sair() {
     if (saindo) return
@@ -195,7 +198,7 @@ export default function Pix() {
 
         <div className="conteudo-dashboard-largo corpo-pix">
           <section className="acoes-pix" aria-label="Ações Pix">
-            <button type="button" onClick={() => setAvisoPagamento(true)}>
+            <button type="button" onClick={() => setPagamentoAberto(true)}>
               <span><Icone nome="setaCima" /></span>
               <div>
                 <strong>Pagar</strong>
@@ -220,17 +223,6 @@ export default function Pix() {
               <Icone nome="seta" tamanho={17} />
             </button>
           </section>
-
-          {avisoPagamento && (
-            <div className="aviso-pix" role="status">
-              <span>i</span>
-              <p>
-                <strong>Pagamento Pix em preparação</strong>
-                Essa função será liberada quando a rota de pagamentos estiver disponível no sistema.
-              </p>
-              <button type="button" onClick={() => setAvisoPagamento(false)}>×</button>
-            </div>
-          )}
 
           {pix.mensagem && (
             <div className="mensagem-pix sucesso" role="status">
@@ -266,6 +258,9 @@ export default function Pix() {
       {modalPerfil}
       {modalCadastro}
       {modalExclusao}
+      {pagamentoAberto && (
+        <ModalPagamentoPix usuario={usuario} fechar={() => setPagamentoAberto(false)} aoConcluir={movimentacoes.carregar} />
+      )}
     </div>
   )
 }

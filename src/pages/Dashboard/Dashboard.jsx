@@ -5,6 +5,7 @@ import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
+import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { encerrarSessao } from '../../services/authService.js'
 import './Dashboard.css'
 
@@ -12,11 +13,6 @@ const atalhos = [
   ['pix', 'Pix'],
   ['cartao', 'Cartões'],
   ['extrato', 'Extrato'],
-]
-
-const movimentacoes = [
-  ['pix', 'Pix recebido', 'Marina Oliveira · Hoje, 10:42', '+ R$ 480,00', true],
-  ['cartao', 'Mercado Boa Safra', 'Cartão final 1121 · Ontem', '- R$ 186,40'],
 ]
 
 const barrasPanorama = [
@@ -37,6 +33,8 @@ export default function Dashboard() {
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
   const usuario = perfil
+  const movimentacoes = useMovimentacoes()
+  const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
   async function sair() {
     if (saindo) return
@@ -59,7 +57,7 @@ export default function Dashboard() {
   if (usuario.nome) primeiroNome = usuario.nome.split(' ')[0]
 
   let textoSaldo = 'Ocultar'
-  let valorSaldo = 'R$ 24.850,00'
+  let valorSaldo = movimentacoes.carregando ? 'Carregando...' : moeda.format(movimentacoes.saldo)
   if (!saldoVisivel) {
     textoSaldo = 'Mostrar'
     valorSaldo = 'R$ •••••'
@@ -106,12 +104,12 @@ export default function Dashboard() {
               <div className="saldo-dashboard-rodape">
                 <div>
                   <small>Entradas no mês</small>
-                  <b>+ R$ 8.420,00</b>
+                  <b>+ {moeda.format(movimentacoes.entradas)}</b>
                 </div>
                 <i />
                 <div>
                   <small>Saídas no mês</small>
-                  <b>- R$ 3.760,00</b>
+                  <b>- {moeda.format(movimentacoes.saidas)}</b>
                 </div>
               </div>
             </div>
@@ -144,18 +142,18 @@ export default function Dashboard() {
                 <button type="button">Ver tudo <Icone nome="seta" tamanho={15} /></button>
               </div>
               <div className="lista-dashboard">
-                {movimentacoes.map(([icone, titulo, detalhe, valor, entrada]) => {
-                  let classeValor = ''
-                  if (entrada) classeValor = 'entrada'
-
+                {movimentacoes.carregando && <p className="estado-movimentacoes-dashboard">Buscando movimentações...</p>}
+                {!movimentacoes.carregando && movimentacoes.erro && <p className="estado-movimentacoes-dashboard erro" role="alert">{movimentacoes.erro}</p>}
+                {!movimentacoes.carregando && !movimentacoes.erro && movimentacoes.ordenadas.length === 0 && <p className="estado-movimentacoes-dashboard">Você ainda não possui movimentações.</p>}
+                {!movimentacoes.carregando && !movimentacoes.erro && movimentacoes.ordenadas.map((item) => {
+                  const entrada = item.tipo === 'entrada'
+                  const data = new Date(item.data_movimentacao)
+                  const detalhe = Number.isNaN(data.getTime()) ? 'Data não informada' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(data)
                   return (
-                    <article key={titulo + detalhe}>
-                      <span><Icone nome={icone} /></span>
-                      <div>
-                        <strong>{titulo}</strong>
-                        <small>{detalhe}</small>
-                      </div>
-                      <b className={classeValor}>{valor}</b>
+                    <article key={item.id_movimentacao}>
+                      <span><Icone nome="pix" /></span>
+                      <div><strong>{entrada ? 'Pix recebido' : 'Pix enviado'}</strong><small>{detalhe}</small></div>
+                      <b className={entrada ? 'entrada' : ''}>{entrada ? '+' : '-'} {moeda.format(Number(item.valor) || 0)}</b>
                     </article>
                   )
                 })}
