@@ -21,3 +21,5 @@
   border-color: #137a74;
   background: #edf7f3;
 }
+
+.busca-destinatario-pix,.destinatario-pix{display:flex;align-items:center;gap:12px;margin-top:16px;padding:14px;border-radius:11px;background:#edf7f3}.busca-destinatario-pix .carregando-pix{width:20px;height:20px;margin:0}.busca-destinatario-pix p{color:#657d79;font-size:10px}.destinatario-pix>span{display:grid;width:40px;height:40px;flex:0 0 auto;place-items:center;border-radius:50%;color:#fff;background:#0d4d4d;font-size:13px;font-weight:800}.destinatario-pix>div{display:flex;min-width:0;flex-direction:column}.destinatario-pix small{color:#137a74;font-size:8px;font-weight:800;letter-spacing:.8px}.destinatario-pix strong{overflow:hidden;color:#183735;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.destinatario-pix p{color:#657d79;font-size:9px}.erro-busca-destinatario{margin-top:12px;padding:11px;border-radius:9px;color:#8c2626;background:#fff0f0;font-size:9px;font-weight:700}

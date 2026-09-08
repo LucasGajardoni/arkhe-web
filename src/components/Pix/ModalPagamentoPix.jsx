@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { realizarPix } from '../../services/pixService.js'
+import { buscarContasUsuario, realizarPix } from '../../services/pixService.js'
 import { mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import './ModalPagamentoPix.css'
 
@@ -27,6 +27,22 @@ function limparChave(tipo, valor) {
   return ['cpf', 'cnpj', 'telefone'].includes(tipo) ? somenteNumeros(valor) : String(valor || '').trim()
 }
 
+function chaveCompleta(tipo, valor) {
+  const limpa = limparChave(tipo, valor)
+  if (tipo === 'cpf') return limpa.length === 11
+  if (tipo === 'cnpj') return limpa.length === 14
+  if (tipo === 'telefone') return limpa.length === 10 || limpa.length === 11
+  if (tipo === 'email') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpa)
+  return limpa.length >= 8
+}
+
+function contaDaChave(contas, tipo, chave) {
+  const procurada = limparChave(tipo, chave).toLowerCase()
+  return contas.find((conta) => conta.chaves_pix?.some((item) => (
+    item.tipo === tipo && limparChave(tipo, item.valor).toLowerCase() === procurada
+  ))) || null
+}
+
 export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [etapa, setEtapa] = useState('chave')
   const [chave, setChave] = useState('')
@@ -34,6 +50,9 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [centavos, setCentavos] = useState(0)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
+  const [destinatario, setDestinatario] = useState(null)
+  const [buscandoDestinatario, setBuscandoDestinatario] = useState(false)
+  const [erroBusca, setErroBusca] = useState('')
 
   useEffect(() => {
     function fecharComEsc(evento) {
@@ -46,6 +65,32 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
       document.body.style.overflow = ''
     }
   }, [fechar, processando])
+
+  useEffect(() => {
+    if (!chaveCompleta(tipoChave, chave)) return undefined
+    let ativo = true
+    const temporizador = setTimeout(async () => {
+      setBuscandoDestinatario(true)
+      try {
+        const resposta = await buscarContasUsuario(limparChave(tipoChave, chave))
+        if (!ativo) return
+        const conta = contaDaChave(Array.isArray(resposta.contas) ? resposta.contas : [], tipoChave, chave)
+        setDestinatario(conta)
+        setErroBusca(conta ? '' : 'Nenhuma conta encontrada para esta chave Pix.')
+      } catch (falha) {
+        if (ativo) {
+          setDestinatario(null)
+          setErroBusca(falha.message)
+        }
+      } finally {
+        if (ativo) setBuscandoDestinatario(false)
+      }
+    }, 550)
+    return () => {
+      ativo = false
+      clearTimeout(temporizador)
+    }
+  }, [chave, tipoChave])
 
   function fecharAoClicarFora(evento) {
     if (evento.target === evento.currentTarget && !processando) fechar()
@@ -63,11 +108,16 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setTipoChave(tipo)
     setChave(formatarChave(tipo, valor))
     setErro('')
+    setDestinatario(null)
+    setErroBusca('')
+    setBuscandoDestinatario(false)
   }
 
   function selecionarTipo(tipo) {
     setTipoChave(tipo)
     setChave(formatarChave(tipo, chave))
+    setDestinatario(null)
+    setErroBusca('')
   }
 
   async function enviar() {
@@ -88,7 +138,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   let conteudo
   if (etapa === 'chave') {
     conteudo = (
-      <form onSubmit={(evento) => { evento.preventDefault(); if (chave.trim()) setEtapa('valor') }}>
+      <form onSubmit={(evento) => { evento.preventDefault(); if (destinatario) setEtapa('valor') }}>
         <label className="campo-chave-pix">
           <span>Chave Pix do destinatário</span>
           <input autoFocus value={chave} onChange={alterarChave} placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" />
@@ -97,9 +147,17 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <div className="tipos-chave-pagamento" aria-label="Tipo da chave Pix">
           {tiposChave.map(([tipo, rotulo]) => <button className={tipoChave === tipo ? 'ativo' : ''} type="button" key={tipo} onClick={() => selecionarTipo(tipo)}>{rotulo}</button>)}
         </div>
+        {buscandoDestinatario && <div className="busca-destinatario-pix"><span className="carregando-pix" /><p>Buscando destinatário...</p></div>}
+        {!buscandoDestinatario && destinatario && (
+          <div className="destinatario-pix" role="status">
+            <span>{(destinatario.nome_fantasia || destinatario.nome || 'D').slice(0, 1).toUpperCase()}</span>
+            <div><small>DESTINATÁRIO ENCONTRADO</small><strong>{destinatario.nome_fantasia || destinatario.nome}</strong><p>{destinatario.banco || 'Banco não informado'} · Agência {destinatario.agencia}</p></div>
+          </div>
+        )}
+        {!buscandoDestinatario && erroBusca && <p className="erro-busca-destinatario" role="alert">{erroBusca}</p>}
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button>
-          <button className="botao botao-principal" type="submit" disabled={!chave.trim()}>Continuar</button>
+          <button className="botao botao-principal" type="submit" disabled={!destinatario || buscandoDestinatario}>Continuar</button>
         </footer>
       </form>
     )
@@ -122,6 +180,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
       <div className="confirmacao-pagamento-pix">
         <dl>
           <div><dt>Chave Pix</dt><dd>{chave}</dd></div>
+          {destinatario && <div><dt>Destinatário</dt><dd>{destinatario.nome_fantasia || destinatario.nome}</dd></div>}
           <div><dt>Valor</dt><dd>{moeda.format(centavos / 100)}</dd></div>
           {usuario?.tipoConta && <div><dt>Conta de origem</dt><dd>Conta {usuario.tipoConta}</dd></div>}
         </dl>

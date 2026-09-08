@@ -65,3 +65,10 @@ export function realizarPix(tipoChave, chavePix, valor) {
     }),
   })
 }
+
+export function buscarContasUsuario(busca) {
+  return requisitarPix('/buscar_contas_usuario', {
+    method: 'POST',
+    body: JSON.stringify({ busca }),
+  })
+}

@@ -8,10 +8,12 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
   const iniciais = usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'
   let classeInicio = ''
   let classePix = ''
+  let classeExtrato = ''
   let rotuloConta = 'Conta Arkhé'
 
   if (secao === 'inicio') classeInicio = 'ativo'
   if (secao === 'pix') classePix = 'ativo'
+  if (secao === 'extrato') classeExtrato = 'ativo'
   if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
   if (usuario?.tipoConta === 'PJ') rotuloConta = 'Conta empresarial'
 
@@ -29,6 +31,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           <button className={classePix} type="button" onClick={() => navigate('/dashboard/pix')}>
             Pix
           </button>
+          <button className={classeExtrato} type="button" onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
           <button type="button">Cartões</button>
           <button type="button">Planejamento</button>
         </nav>

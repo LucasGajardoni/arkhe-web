@@ -5,9 +5,11 @@ export default function NavegacaoMobile({ secao = 'inicio' }) {
   const navigate = useNavigate()
   let classeInicio = ''
   let classePix = ''
+  let classeExtrato = ''
 
   if (secao === 'inicio') classeInicio = 'ativo'
   if (secao === 'pix') classePix = 'ativo'
+  if (secao === 'extrato') classeExtrato = 'ativo'
 
   return (
     <nav className="navegacao-mobile-dashboard">
@@ -19,9 +21,9 @@ export default function NavegacaoMobile({ secao = 'inicio' }) {
         <Icone nome="pix" />
         <span>Pix</span>
       </button>
-      <button type="button">
-        <Icone nome="cartao" />
-        <span>Cartões</span>
+      <button className={classeExtrato} type="button" onClick={() => navigate('/dashboard/extrato')}>
+        <Icone nome="extrato" />
+        <span>Extrato</span>
       </button>
     </nav>
   )

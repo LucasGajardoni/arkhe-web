@@ -121,6 +121,7 @@ export default function Dashboard() {
             {atalhos.map(([icone, texto]) => {
               let abrirAtalho
               if (icone === 'pix') abrirAtalho = () => navigate('/dashboard/pix')
+              if (icone === 'extrato') abrirAtalho = () => navigate('/dashboard/extrato')
 
               return (
                 <button type="button" key={texto} onClick={abrirAtalho}>
@@ -139,16 +140,16 @@ export default function Dashboard() {
                   <p>CONTA</p>
                   <h2>Movimentações recentes</h2>
                 </div>
-                <button type="button">Ver tudo <Icone nome="seta" tamanho={15} /></button>
+                <button type="button" onClick={() => navigate('/dashboard/extrato')}>Ver tudo <Icone nome="seta" tamanho={15} /></button>
               </div>
               <div className="lista-dashboard">
                 {movimentacoes.carregando && <p className="estado-movimentacoes-dashboard">Buscando movimentações...</p>}
                 {!movimentacoes.carregando && movimentacoes.erro && <p className="estado-movimentacoes-dashboard erro" role="alert">{movimentacoes.erro}</p>}
                 {!movimentacoes.carregando && !movimentacoes.erro && movimentacoes.ordenadas.length === 0 && <p className="estado-movimentacoes-dashboard">Você ainda não possui movimentações.</p>}
-                {!movimentacoes.carregando && !movimentacoes.erro && movimentacoes.ordenadas.map((item) => {
+                {!movimentacoes.carregando && !movimentacoes.erro && movimentacoes.ordenadas.slice(0, 5).map((item) => {
                   const entrada = item.tipo === 'entrada'
                   const data = new Date(item.data_movimentacao)
-                  const detalhe = Number.isNaN(data.getTime()) ? 'Data não informada' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(data)
+                  const detalhe = Number.isNaN(data.getTime()) ? 'Data não informada' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(data)
                   return (
                     <article key={item.id_movimentacao}>
                       <span><Icone nome="pix" /></span>
