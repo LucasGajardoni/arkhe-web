@@ -55,10 +55,11 @@ export function excluirChavePix(idChavePix, tipo) {
   })
 }
 
-export function realizarPix(chavePix, valor) {
+export function realizarPix(tipoChave, chavePix, valor) {
   return requisitarPix('/adicionar_pix', {
     method: 'POST',
     body: JSON.stringify({
+      tipo_chave: tipoChave,
       chave_pix: String(chavePix || '').trim(),
       valor,
     }),

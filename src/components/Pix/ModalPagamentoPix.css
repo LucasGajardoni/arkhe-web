@@ -1,0 +1,23 @@
+.tipos-chave-pagamento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.tipos-chave-pagamento button {
+  padding: 7px 10px;
+  border: 1px solid #e5e2da;
+  border-radius: 8px;
+  color: #6f685a;
+  background: #fff;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tipos-chave-pagamento button.ativo {
+  color: #0d4d4d;
+  border-color: #137a74;
+  background: #edf7f3;
+}

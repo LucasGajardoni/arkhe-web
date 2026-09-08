@@ -1,11 +1,36 @@
 import { useEffect, useState } from 'react'
 import { realizarPix } from '../../services/pixService.js'
+import { mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
+import './ModalPagamentoPix.css'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const tiposChave = [['email', 'E-mail'], ['cpf', 'CPF'], ['cnpj', 'CNPJ'], ['telefone', 'Telefone'], ['aleatoria', 'Aleatória']]
+
+function detectarTipo(valor, atual) {
+  const texto = String(valor || '').trim()
+  if (texto.includes('@')) return 'email'
+  if (/^[+()\d.\s-]+$/.test(texto)) {
+    if (texto.startsWith('+') || atual === 'telefone') return 'telefone'
+    return somenteNumeros(texto).length > 11 ? 'cnpj' : 'cpf'
+  }
+  return 'aleatoria'
+}
+
+function formatarChave(tipo, valor) {
+  if (tipo === 'cpf') return mascaraCpf(valor)
+  if (tipo === 'cnpj') return mascaraCnpj(valor)
+  if (tipo === 'telefone') return mascaraTelefone(valor)
+  return String(valor || '')
+}
+
+function limparChave(tipo, valor) {
+  return ['cpf', 'cnpj', 'telefone'].includes(tipo) ? somenteNumeros(valor) : String(valor || '').trim()
+}
 
 export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [etapa, setEtapa] = useState('chave')
   const [chave, setChave] = useState('')
+  const [tipoChave, setTipoChave] = useState('cpf')
   const [centavos, setCentavos] = useState(0)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
@@ -32,12 +57,25 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setErro('')
   }
 
+  function alterarChave(evento) {
+    const valor = evento.target.value
+    const tipo = detectarTipo(valor, tipoChave)
+    setTipoChave(tipo)
+    setChave(formatarChave(tipo, valor))
+    setErro('')
+  }
+
+  function selecionarTipo(tipo) {
+    setTipoChave(tipo)
+    setChave(formatarChave(tipo, chave))
+  }
+
   async function enviar() {
     if (processando || centavos <= 0 || !chave.trim()) return
     setProcessando(true)
     setErro('')
     try {
-      await realizarPix(chave, centavos / 100)
+      await realizarPix(tipoChave, limparChave(tipoChave, chave), centavos / 100)
       await aoConcluir()
       setEtapa('sucesso')
     } catch (falha) {
@@ -53,8 +91,12 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
       <form onSubmit={(evento) => { evento.preventDefault(); if (chave.trim()) setEtapa('valor') }}>
         <label className="campo-chave-pix">
           <span>Chave Pix do destinatário</span>
-          <input autoFocus value={chave} onChange={(evento) => setChave(evento.target.value)} placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" />
+          <input autoFocus value={chave} onChange={alterarChave} placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória" />
+          <small>Tipo identificado: {tiposChave.find(([tipo]) => tipo === tipoChave)?.[1]}</small>
         </label>
+        <div className="tipos-chave-pagamento" aria-label="Tipo da chave Pix">
+          {tiposChave.map(([tipo, rotulo]) => <button className={tipoChave === tipo ? 'ativo' : ''} type="button" key={tipo} onClick={() => selecionarTipo(tipo)}>{rotulo}</button>)}
+        </div>
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button>
           <button className="botao botao-principal" type="submit" disabled={!chave.trim()}>Continuar</button>
