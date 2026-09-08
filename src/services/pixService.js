@@ -1,7 +1,11 @@
 import { API_URL } from '../config/api.js'
 import { ErroApi } from './authService.js'
 
-async function requisitarPix(caminho, opcoes = {}) {
+async function requisitarPix(
+  caminho,
+  opcoes = {},
+  mensagemPadrao = 'Não foi possível concluir a operação.',
+) {
   let resposta
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
@@ -19,8 +23,8 @@ async function requisitarPix(caminho, opcoes = {}) {
   if (!resposta.ok) {
     const naoAutenticado = resposta.status === 401
       || (resposta.status === 403 && /não logado|sessão expirada/i.test(resultado.mensagem || ''))
-    let mensagem = resultado.mensagem || 'Não foi possível concluir a operação Pix.'
-    if (naoAutenticado) mensagem = 'Sua sessão expirou. Entre novamente para acessar o Pix.'
+    let mensagem = resultado.mensagem || mensagemPadrao
+    if (naoAutenticado) mensagem = 'Sua sessão expirou. Entre novamente para continuar.'
     throw new ErroApi(mensagem, resposta.status, resultado)
   }
 
@@ -81,4 +85,15 @@ export function buscarContasUsuario(busca) {
     method: 'POST',
     body: JSON.stringify({ busca }),
   })
+}
+
+export function adicionarCobranca(idPagador, valor, dataVencimento) {
+  return requisitarPix('/adicionar_cobranca', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_pagador: idPagador,
+      valor,
+      data_vencimento: dataVencimento,
+    }),
+  }, 'Não foi possível emitir o boleto.')
 }

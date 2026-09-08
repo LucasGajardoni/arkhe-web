@@ -20,6 +20,13 @@ function montarPerfilVisual(resultado = {}, fallback = {}) {
     cpf: usuario.cpf || resultado.cpf || fallback.cpf || '',
     cnpj: conta.cnpj || resultado.cnpj || fallback.cnpj || '',
     tipoConta: tipoContaPorExtenso(tipoRecebido, fallback.tipoConta || ''),
+    idConta: conta.id_conta ?? resultado.id_conta ?? fallback.idConta ?? null,
+    banco: conta.banco || resultado.banco || fallback.banco || '',
+    agencia: conta.agencia || resultado.agencia || fallback.agencia || '',
+    numeroConta: conta.numero_conta
+      || resultado.numero_conta
+      || fallback.numeroConta
+      || '',
   }
 }
 
@@ -65,6 +72,10 @@ export default function SessaoProvider({ children }) {
       ...(atual || { nome: 'Cliente' }),
       tipoConta: tipoSelecionado,
       cnpj,
+      idConta: dadosConta.id_conta ?? null,
+      banco: dadosConta.banco || '',
+      agencia: dadosConta.agencia || '',
+      numeroConta: dadosConta.numero_conta || '',
     }))
   }
 

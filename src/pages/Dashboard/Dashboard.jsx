@@ -4,6 +4,7 @@ import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.js
 import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
+import ModalEmissaoBoleto from '../../components/Boleto/ModalEmissaoBoleto.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { encerrarSessao } from '../../services/authService.js'
@@ -30,9 +31,14 @@ export default function Dashboard() {
   const { perfil, atualizarPerfil, limparSessao } = useSessao()
   const [saldoVisivel, setSaldoVisivel] = useState(true)
   const [perfilAberto, setPerfilAberto] = useState(false)
+  const [boletoAberto, setBoletoAberto] = useState(false)
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
   const usuario = perfil
+  const podeEmitirBoleto = usuario.tipoConta === 'PJ'
+  const atalhosVisiveis = podeEmitirBoleto
+    ? [...atalhos, ['boleto', 'Emitir boleto']]
+    : atalhos
   const movimentacoes = useMovimentacoes()
   const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -117,11 +123,12 @@ export default function Dashboard() {
         </section>
 
         <div className="conteudo-dashboard-largo corpo-dashboard">
-          <section className="atalhos-dashboard">
-            {atalhos.map(([icone, texto]) => {
+          <section className={`atalhos-dashboard${podeEmitirBoleto ? ' quatro-atalhos' : ''}`}>
+            {atalhosVisiveis.map(([icone, texto]) => {
               let abrirAtalho
               if (icone === 'pix') abrirAtalho = () => navigate('/dashboard/pix')
               if (icone === 'extrato') abrirAtalho = () => navigate('/dashboard/extrato')
+              if (icone === 'boleto') abrirAtalho = () => setBoletoAberto(true)
 
               return (
                 <button type="button" key={texto} onClick={abrirAtalho}>
@@ -238,6 +245,9 @@ export default function Dashboard() {
 
       <NavegacaoMobile />
       {modalPerfil}
+      {podeEmitirBoleto && boletoAberto && (
+        <ModalEmissaoBoleto usuario={usuario} fechar={() => setBoletoAberto(false)} />
+      )}
     </div>
   )
 }

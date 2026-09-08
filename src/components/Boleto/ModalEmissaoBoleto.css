@@ -1,0 +1,418 @@
+.modal-boleto {
+  width: min(720px, 100%);
+}
+
+.conteudo-boleto {
+  padding: 25px 30px 30px;
+}
+
+.formulario-busca-boleto {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.formulario-busca-boleto label,
+.campos-boleto label {
+  display: flex;
+  gap: 7px;
+  flex-direction: column;
+}
+
+.formulario-busca-boleto label > span,
+.campos-boleto label > span {
+  color: #1c1c17;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.formulario-busca-boleto input,
+.campos-boleto input,
+.codigo-boleto input {
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid #e5e2da;
+  border-radius: 10px;
+  outline: 0;
+  color: #1c1c17;
+  background: #fff;
+  font-size: 14px;
+}
+
+.formulario-busca-boleto input:focus,
+.campos-boleto input:focus,
+.codigo-boleto input:focus {
+  border-color: #137a74;
+  box-shadow: 0 0 0 3px rgba(19, 122, 116, .09);
+}
+
+.formulario-busca-boleto .botao {
+  min-height: 48px;
+  font-size: 11px;
+}
+
+.modal-boleto button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.conteudo-boleto > .mensagem-modal-perfil {
+  margin-top: 14px;
+}
+
+.carregando-boleto {
+  display: flex;
+  min-height: 105px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #657d79;
+  font-size: 10px;
+}
+
+.spinner-boleto {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #d9e5e2;
+  border-top-color: #137a74;
+  border-radius: 50%;
+  animation: girar-boleto .8s linear infinite;
+}
+
+@keyframes girar-boleto {
+  to { transform: rotate(360deg); }
+}
+
+.estado-vazio-boleto {
+  margin-top: 16px;
+  padding: 22px;
+  border-radius: 11px;
+  color: #8a8374;
+  background: #f6f3ea;
+  font-size: 10px;
+  text-align: center;
+}
+
+.resultados-boleto {
+  margin-top: 20px;
+}
+
+.resultados-boleto > p {
+  margin-bottom: 9px;
+  color: #137a74;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.resultados-boleto > div {
+  display: grid;
+  max-height: 300px;
+  overflow-y: auto;
+  gap: 9px;
+  padding-right: 4px;
+}
+
+.resultados-boleto button {
+  display: grid;
+  position: relative;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #e5e2da;
+  border-radius: 12px;
+  color: #183735;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.resultados-boleto button:hover:not(:disabled) {
+  border-color: #137a74;
+  background: #fbfdfc;
+}
+
+.avatar-conta-boleto,
+.pagador-selecionado-boleto > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #0d4d4d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.identificacao-conta-boleto {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.identificacao-conta-boleto strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identificacao-conta-boleto small {
+  color: #746e62;
+  font-size: 9px;
+}
+
+.tipo-conta-boleto {
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: #0d4d4d;
+  background: #edf7f3;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.resultados-boleto button em {
+  grid-column: 2 / -1;
+  color: #8a8374;
+  font-size: 8px;
+  font-style: normal;
+}
+
+.conteudo-boleto > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.conteudo-boleto > footer .botao {
+  min-height: 44px;
+  font-size: 11px;
+}
+
+.pagador-selecionado-boleto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 11px;
+  background: #edf7f3;
+}
+
+.pagador-selecionado-boleto > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.pagador-selecionado-boleto small {
+  color: #137a74;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.pagador-selecionado-boleto strong {
+  color: #183735;
+  font-size: 12px;
+}
+
+.pagador-selecionado-boleto p {
+  color: #657d79;
+  font-size: 9px;
+}
+
+.campos-boleto {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 21px;
+}
+
+.campos-boleto label small {
+  color: #8a8374;
+  font-size: 8px;
+}
+
+.revisao-boleto dl {
+  display: grid;
+  gap: 9px;
+}
+
+.revisao-boleto dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  background: #f6f3ea;
+}
+
+.revisao-boleto dt {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.revisao-boleto dd {
+  overflow-wrap: anywhere;
+  color: #183735;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.sucesso-boleto {
+  display: flex;
+  align-items: center;
+  padding: 30px;
+  flex-direction: column;
+  text-align: center;
+}
+
+.sucesso-boleto > span {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #137a74;
+  font-size: 25px;
+}
+
+.sucesso-boleto h3 {
+  margin-top: 13px;
+  color: #183735;
+  font-size: 19px;
+}
+
+.sucesso-boleto > p {
+  color: #8a8374;
+  font-size: 10px;
+}
+
+.sucesso-boleto > strong {
+  margin-top: 7px;
+  color: #137a74;
+  font-size: 25px;
+}
+
+.sucesso-boleto > small {
+  color: #657d79;
+  font-size: 9px;
+}
+
+.codigo-boleto {
+  width: min(470px, 100%);
+  margin: 23px 0 4px;
+  padding: 15px;
+  border-radius: 12px;
+  background: #f6f3ea;
+  text-align: left;
+}
+
+.codigo-boleto label {
+  display: block;
+  margin-bottom: 7px;
+  color: #183735;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.codigo-boleto > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.codigo-boleto input {
+  min-width: 0;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.codigo-boleto button {
+  padding: 0 15px;
+  border-radius: 9px;
+  color: #fff;
+  background: #0d4d4d;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sucesso-boleto > .mensagem-modal-perfil {
+  width: min(470px, 100%);
+  margin-top: 10px;
+}
+
+.sucesso-boleto > .botao {
+  min-height: 44px;
+  margin-top: 20px;
+  font-size: 11px;
+}
+
+@media (max-width: 650px) {
+  .conteudo-boleto,
+  .sucesso-boleto {
+    padding: 22px 20px 26px;
+  }
+
+  .formulario-busca-boleto,
+  .campos-boleto {
+    grid-template-columns: 1fr;
+  }
+
+  .formulario-busca-boleto input,
+  .campos-boleto input,
+  .codigo-boleto input {
+    font-size: 16px;
+  }
+
+  .formulario-busca-boleto .botao {
+    width: 100%;
+  }
+
+  .resultados-boleto button {
+    grid-template-columns: 38px 1fr;
+  }
+
+  .avatar-conta-boleto {
+    width: 38px;
+    height: 38px;
+  }
+
+  .tipo-conta-boleto {
+    grid-column: 2;
+    width: max-content;
+  }
+
+  .conteudo-boleto > footer {
+    flex-direction: column-reverse;
+  }
+
+  .conteudo-boleto > footer .botao {
+    width: 100%;
+  }
+
+  .revisao-boleto dl > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .revisao-boleto dd {
+    text-align: left;
+  }
+
+  .codigo-boleto > div {
+    grid-template-columns: 1fr;
+  }
+
+  .codigo-boleto button {
+    min-height: 42px;
+  }
+}

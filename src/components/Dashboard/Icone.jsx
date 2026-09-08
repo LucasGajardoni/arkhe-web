@@ -34,6 +34,12 @@ const caminhos = {
       <path d="M9 8h6M9 12h6" />
     </>
   ),
+  boleto: (
+    <>
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </>
+  ),
   olho: (
     <>
       <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
