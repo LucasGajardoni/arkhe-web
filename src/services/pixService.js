@@ -48,10 +48,20 @@ export function adicionarChavePix(tipo, valor) {
   })
 }
 
-export function excluirChavePix(idChavePix, tipo) {
-  return requisitarPix(`/deletar_chave_pix/${idChavePix}`, {
-    method: 'DELETE',
-    body: JSON.stringify({ tipo }),
+export function excluirChavePix(tipo, valor) {
+  const campos = {
+    email: 'chave_pix_email',
+    telefone: 'chave_pix_telefone',
+    cpf: 'chave_pix_cpf',
+    aleatoria: 'chave_pix_aleatoria',
+    cnpj: 'chave_pix_cnpj',
+  }
+
+  return requisitarPix('/deletar_chave_pix', {
+    method: 'POST',
+    body: JSON.stringify({
+      [campos[tipo]]: valor,
+    }),
   })
 }
 

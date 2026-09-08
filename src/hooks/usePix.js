@@ -94,7 +94,7 @@ export function usePix(usuario) {
     setProcessando(true)
     setErro('')
     try {
-      const resposta = await excluirChavePix(chaveExclusao.id_chave_pix, chaveExclusao.tipo)
+      const resposta = await excluirChavePix(chaveExclusao.tipo,chaveExclusao.valor)
       setMensagem(resposta.mensagem || 'Chave Pix excluída com sucesso.')
       setChaveExclusao(null)
       await carregar()
