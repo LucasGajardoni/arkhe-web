@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { realizarLogin } from '../services/authService.js'
 import { criarSessaoVerificacao } from '../services/facialService.js'
 import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
+import { transicionarFormulario } from '../utils/transicaoFormulario.js'
 import { cpfValido, pinValido } from '../utils/validadores.js'
 import { useSessao } from './useSessao.js'
 
@@ -49,14 +50,14 @@ export function useLogin() {
     setMensagemErro('')
 
     if (recuperandoPin) {
-      setRecuperandoPin(false)
+      transicionarFormulario(() => setRecuperandoPin(false))
       return
     }
 
     if (etapa === 0) {
       let destino = '/'
       if (abrindoOutraConta) destino = '/cadastro'
-      navigate(destino)
+      transicionarFormulario(() => navigate(destino))
       return
     }
 
@@ -65,30 +66,38 @@ export function useLogin() {
       setCredenciaisPendentes(null)
     }
 
-    setEtapa((atual) => Math.max(0, atual - 1))
+    transicionarFormulario(() => setEtapa((atual) => Math.max(0, atual - 1)))
   }
 
   function abrirRecuperacaoPin() {
     setMensagemErro('')
     setMensagemSucesso('')
-    setRecuperandoPin(true)
+    transicionarFormulario(() => setRecuperandoPin(true))
   }
 
   function fecharRecuperacaoPin() {
-    setRecuperandoPin(false)
+    transicionarFormulario(() => setRecuperandoPin(false))
   }
 
   function concluirRecuperacaoPin(mensagem) {
-    setRecuperandoPin(false)
     setCredenciais((dados) => ({ ...dados, pin: '' }))
     setMostrarPin(false)
     setMensagemErro('')
     setMensagemSucesso(mensagem || 'PIN alterado com sucesso.')
+    setRecuperandoPin(false)
+  }
+
+  function avancarParaCredenciais() {
+    transicionarFormulario(() => setEtapa(1))
+  }
+
+  function irParaCadastro() {
+    transicionarFormulario(() => navigate('/cadastro'))
   }
 
   function alterarTipoConta() {
     setTipoConta('')
-    setEtapa(0)
+    transicionarFormulario(() => setEtapa(0))
     setCredenciais((dados) => {
       let cpf = ''
       if (abrindoOutraConta) cpf = dados.cpf
@@ -110,18 +119,20 @@ export function useLogin() {
     if (abrindoOutraConta) {
       let novaConta = 'PF'
       if (dadosUsados.tipoConta === 'PF') novaConta = 'PJ'
-      navigate(`/cadastro/${novaConta.toLowerCase()}`, {
-        replace: true,
-        state: {
-          cpfVerificado: dadosUsados.cpf,
-          clienteExistente: true,
-          tipoContaAutenticada: dadosUsados.tipoConta,
-        },
+      transicionarFormulario(() => {
+        navigate(`/cadastro/${novaConta.toLowerCase()}`, {
+          replace: true,
+          state: {
+            cpfVerificado: dadosUsados.cpf,
+            clienteExistente: true,
+            tipoContaAutenticada: dadosUsados.tipoConta,
+          },
+        })
       })
       return
     }
 
-    navigate('/dashboard', { replace: true })
+    transicionarFormulario(() => navigate('/dashboard', { replace: true }))
   }
 
   async function autenticar(dadosUsados, cadastroFacial) {
@@ -138,7 +149,7 @@ export function useLogin() {
 
       if (!cadastroFacial && resultado.reconhecimento_facial_pendente === true) {
         setSessaoFacial(await criarSessaoVerificacao(dadosUsados.cpf))
-        setEtapa(2)
+        transicionarFormulario(() => setEtapa(2))
         return
       }
 
@@ -146,7 +157,7 @@ export function useLogin() {
     } catch (erro) {
       if (erro.status === 401 || erro.status === 403) {
         setSessaoFacial(null)
-        setEtapa(1)
+        transicionarFormulario(() => setEtapa(1))
       }
 
       setMensagemErro(erro.message || 'Não foi possível conectar ao servidor.')
@@ -186,13 +197,14 @@ export function useLogin() {
     mensagemSucesso,
     sessaoFacial,
     recuperandoPin,
-    setEtapa,
     setMostrarPin,
     setMensagemErro,
     escolherTipoConta,
     alterarCredencial,
     voltarEtapa,
     alterarTipoConta,
+    avancarParaCredenciais,
+    irParaCadastro,
     abrirRecuperacaoPin,
     fecharRecuperacaoPin,
     concluirRecuperacaoPin,

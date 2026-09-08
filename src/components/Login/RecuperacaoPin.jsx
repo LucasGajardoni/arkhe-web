@@ -1,4 +1,5 @@
 import { useRecuperacaoPin } from '../../hooks/useRecuperacaoPin.js'
+import { pinValido } from '../../utils/validadores.js'
 
 function CabecalhoRecuperacao({ etapa, titulo, descricao }) {
   return (
@@ -19,8 +20,8 @@ function MensagensRecuperacao({ erro, mensagem }) {
   )
 }
 
-export default function RecuperacaoPin({ aoCancelar, aoConcluir }) {
-  const recuperacao = useRecuperacaoPin({ aoCancelar, aoConcluir })
+export default function RecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
+  const recuperacao = useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir })
 
   if (recuperacao.etapa === 0) {
     return (
@@ -98,39 +99,20 @@ export default function RecuperacaoPin({ aoCancelar, aoConcluir }) {
     )
   }
 
-  let classePessoaFisica = ''
-  let classePessoaJuridica = ''
-  if (recuperacao.tipoConta === 'PF') classePessoaFisica = 'selecionado'
-  if (recuperacao.tipoConta === 'PJ') classePessoaJuridica = 'selecionado'
-
   const pinsDiferentes = recuperacao.confirmarPin && !recuperacao.pinsIguais
+  const pinInseguro = pinValido(recuperacao.novoPin) && !recuperacao.pinSeguroRecuperacao
+  const nomeTipoConta = tipoConta === 'PJ' ? 'Conta Pessoa Jurídica' : 'Conta Pessoa Física'
 
   return (
     <form onSubmit={recuperacao.salvarNovoPin}>
       <CabecalhoRecuperacao
         etapa={recuperacao.etapa}
         titulo="Crie seu novo PIN"
-        descricao="Escolha a conta e defina um novo PIN de acesso."
+        descricao={`Defina um novo PIN de acesso para sua ${nomeTipoConta.toLowerCase()}.`}
       />
-      <div className="tipos-acesso tipos-recuperacao" aria-label="Tipo de conta">
-        <button
-          className={classePessoaFisica}
-          type="button"
-          aria-pressed={recuperacao.tipoConta === 'PF'}
-          onClick={() => recuperacao.escolherTipoConta('PF')}
-        >
-          <span>PF</span>
-          <strong>Conta Pessoa Física</strong>
-        </button>
-        <button
-          className={classePessoaJuridica}
-          type="button"
-          aria-pressed={recuperacao.tipoConta === 'PJ'}
-          onClick={() => recuperacao.escolherTipoConta('PJ')}
-        >
-          <span>PJ</span>
-          <strong>Conta Pessoa Jurídica</strong>
-        </button>
+      <div className="empresa-selecionada conta-recuperacao" aria-label="Conta que terá o PIN alterado">
+        <span>Conta selecionada</span>
+        <strong>{nomeTipoConta}</strong>
       </div>
       <div className="grade-pins-recuperacao">
         <label className="campo-login">
@@ -161,6 +143,9 @@ export default function RecuperacaoPin({ aoCancelar, aoConcluir }) {
         </label>
       </div>
       <p className="ajuda-pin-login">O PIN deve possuir exatamente 6 dígitos.</p>
+      {pinInseguro && (
+        <p className="erro-pin-recuperacao" role="alert">O PIN não pode aparecer no CPF informado.</p>
+      )}
       {pinsDiferentes && <p className="erro-pin-recuperacao" role="alert">Os PINs não são iguais.</p>}
       <button
         className="alternar-pins-recuperacao"
@@ -177,7 +162,7 @@ export default function RecuperacaoPin({ aoCancelar, aoConcluir }) {
         <button
           className="botao botao-principal"
           type="submit"
-          disabled={!recuperacao.tipoConta || !recuperacao.pinsCorretos || recuperacao.processando}
+          disabled={!recuperacao.pinsCorretos || recuperacao.processando}
         >
           {recuperacao.processando ? 'Alterando...' : 'Alterar PIN'}
         </button>

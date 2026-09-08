@@ -24,7 +24,7 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
     pinSeguroCadastro,
     mostrarPin,
     setMostrarPin,
-    setEtapaAtual,
+    editarEtapa,
     facialConcluido,
     enviando,
     mensagemErro,
@@ -109,7 +109,7 @@ export default function ConteudoEtapaCadastro({ cadastro }) {
         dadosPF={dadosPF}
         dadosPJ={dadosPJ}
         dadosAtuais={dadosAtuais}
-        editarEtapa={setEtapaAtual}
+        editarEtapa={editarEtapa}
       />
     )
   }

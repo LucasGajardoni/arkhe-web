@@ -213,4 +213,9 @@
   .modal-tipo-conta h2 {
     font-size: 24px;
   }
+
+  .formulario-cpf-conta input,
+  .formulario-cpf-conta select {
+    font-size: 16px;
+  }
 }

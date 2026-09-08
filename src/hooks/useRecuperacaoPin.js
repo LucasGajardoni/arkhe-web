@@ -5,13 +5,13 @@ import {
   verificarCodigoRecuperacaoPin,
 } from '../services/authService.js'
 import { somenteNumeros } from '../utils/formatadores.js'
-import { emailValido, pinValido } from '../utils/validadores.js'
+import { transicionarFormulario } from '../utils/transicaoFormulario.js'
+import { emailValido, pinSeguro } from '../utils/validadores.js'
 
-export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
+export function useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
   const [etapa, setEtapa] = useState(0)
   const [email, setEmail] = useState('')
   const [codigo, setCodigo] = useState('')
-  const [tipoConta, setTipoConta] = useState('')
   const [novoPin, setNovoPin] = useState('')
   const [confirmarPin, setConfirmarPin] = useState('')
   const [mostrarPins, setMostrarPins] = useState(false)
@@ -22,7 +22,8 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
   const emailCorreto = emailValido(email.trim())
   const codigoCorreto = /^\d{6}$/.test(codigo)
   const pinsIguais = novoPin === confirmarPin
-  const pinsCorretos = pinValido(novoPin) && pinsIguais
+  const pinSeguroRecuperacao = pinSeguro(novoPin, { cpf })
+  const pinsCorretos = pinSeguroRecuperacao && pinsIguais
 
   function informarErro(erro, mensagemPadrao) {
     setMensagemErro(erro.message || mensagemPadrao)
@@ -45,11 +46,6 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
     setMensagemErro('')
   }
 
-  function escolherTipoConta(tipo) {
-    setTipoConta(tipo)
-    setMensagemErro('')
-  }
-
   async function enviarCodigo(evento) {
     evento.preventDefault()
     if (!emailCorreto || processando) return
@@ -62,7 +58,7 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
       const resultado = await solicitarRecuperacaoPin(email)
       setCodigo('')
       setMensagemEtapa(resultado.mensagem || 'Código enviado com sucesso.')
-      setEtapa(1)
+      transicionarFormulario(() => setEtapa(1))
     } catch (erro) {
       informarErro(erro, 'Não foi possível enviar o código de recuperação.')
     } finally {
@@ -81,7 +77,7 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
     try {
       const resultado = await verificarCodigoRecuperacaoPin({ email, codigo })
       setMensagemEtapa(resultado.mensagem || 'Código validado com sucesso.')
-      setEtapa(2)
+      transicionarFormulario(() => setEtapa(2))
     } catch (erro) {
       informarErro(erro, 'Não foi possível validar o código de recuperação.')
     } finally {
@@ -103,7 +99,9 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
         tipoConta,
         novoPin,
       })
-      aoConcluir(resultado.mensagem || 'PIN alterado com sucesso.')
+      transicionarFormulario(() => {
+        aoConcluir(resultado.mensagem || 'PIN alterado com sucesso.')
+      })
     } catch (erro) {
       informarErro(erro, 'Não foi possível alterar o PIN.')
     } finally {
@@ -116,11 +114,11 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
     setMensagemEtapa('')
 
     if (etapa === 0) {
-      aoCancelar()
+      transicionarFormulario(aoCancelar)
       return
     }
 
-    setEtapa((atual) => atual - 1)
+    transicionarFormulario(() => setEtapa((atual) => atual - 1))
   }
 
   return {
@@ -137,12 +135,12 @@ export function useRecuperacaoPin({ aoCancelar, aoConcluir }) {
     emailCorreto,
     codigoCorreto,
     pinsIguais,
+    pinSeguroRecuperacao,
     pinsCorretos,
     setMostrarPins,
     alterarEmail,
     alterarCodigo,
     alterarPin,
-    escolherTipoConta,
     enviarCodigo,
     validarCodigo,
     salvarNovoPin,

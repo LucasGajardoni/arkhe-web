@@ -15,7 +15,7 @@ export default function CredenciaisLogin({ login }) {
     voltarEtapa,
     continuarCredenciais,
     abrirRecuperacaoPin,
-    navigate,
+    irParaCadastro,
   } = login
 
   const pessoaFisica = tipoConta === 'PF'
@@ -96,7 +96,7 @@ export default function CredenciaisLogin({ login }) {
         </button>
       </div>
       {!abrindoOutraConta && (
-        <button className="link-novo-cliente" type="button" onClick={() => navigate('/cadastro')}>
+        <button className="link-novo-cliente" type="button" onClick={irParaCadastro}>
           Ainda não sou cliente
         </button>
       )}

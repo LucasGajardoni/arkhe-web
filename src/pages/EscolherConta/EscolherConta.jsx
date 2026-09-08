@@ -4,6 +4,7 @@ import Home from '../Home/Home.jsx'
 import ModalTipoConta from '../../components/ModalTipoConta/ModalTipoConta.jsx'
 import { verificarUsuario } from '../../services/authService.js'
 import { mascaraCpf } from '../../utils/formatadores.js'
+import { transicionarFormulario } from '../../utils/transicaoFormulario.js'
 import { cpfValido } from '../../utils/validadores.js'
 
 export default function EscolherConta() {
@@ -31,11 +32,8 @@ export default function EscolherConta() {
 
     try {
       const resultado = await verificarUsuario(cpf)
-      if (resultado.usuario_existente === true) {
-        setEtapa('existente')
-      } else {
-        setEtapa('tipo')
-      }
+      const novaEtapa = resultado.usuario_existente === true ? 'existente' : 'tipo'
+      transicionarFormulario(() => setEtapa(novaEtapa))
     } catch (erro) {
       setMensagemErro(erro.message || 'Não foi possível verificar o CPF.')
     } finally {
@@ -44,26 +42,34 @@ export default function EscolherConta() {
   }
 
   function escolherTipo(tipoConta) {
-    navigate(`/cadastro/${tipoConta.toLowerCase()}`, {
-      state: { cpfVerificado: cpf, clienteExistente: false },
+    transicionarFormulario(() => {
+      navigate(`/cadastro/${tipoConta.toLowerCase()}`, {
+        state: { cpfVerificado: cpf, clienteExistente: false },
+      })
     })
   }
 
   function autenticarClienteExistente() {
-    navigate('/login', {
-      state: { abrindoOutraConta: true, cpfInicial: cpf },
+    transicionarFormulario(() => {
+      navigate('/login', {
+        state: { abrindoOutraConta: true, cpfInicial: cpf },
+      })
     })
+  }
+
+  function fechar() {
+    transicionarFormulario(() => navigate('/'))
   }
 
   function voltar() {
     setMensagemErro('')
 
     if (etapa === 'cpf') {
-      navigate('/')
+      fechar()
       return
     }
 
-    setEtapa('cpf')
+    transicionarFormulario(() => setEtapa('cpf'))
   }
 
   return (
@@ -74,7 +80,7 @@ export default function EscolherConta() {
         etapa={etapa}
         mensagemErro={mensagemErro}
         verificando={verificando}
-        fechar={() => navigate('/')}
+        fechar={fechar}
         voltar={voltar}
         alterarCpf={alterarCpf}
         continuarComCpf={continuarComCpf}

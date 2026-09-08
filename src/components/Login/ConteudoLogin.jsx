@@ -7,6 +7,8 @@ export default function ConteudoLogin({ login }) {
   if (login.recuperandoPin) {
     return (
       <RecuperacaoPin
+        cpf={login.credenciais.cpf}
+        tipoConta={login.tipoConta}
         aoCancelar={login.fecharRecuperacaoPin}
         aoConcluir={login.concluirRecuperacaoPin}
       />
@@ -32,7 +34,7 @@ export default function ConteudoLogin({ login }) {
       abrindoOutraConta={login.abrindoOutraConta}
       tipoConta={login.tipoConta}
       escolher={login.escolherTipoConta}
-      continuar={() => login.setEtapa(1)}
+      continuar={login.avancarParaCredenciais}
     />
   )
 }

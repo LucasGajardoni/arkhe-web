@@ -9,7 +9,7 @@ export default function Cadastro({ tipoConta }) {
   const location = useLocation()
   const cadastro = useCadastro(tipoConta, location.state || {})
   const {
-    navigate,
+    irParaInicio,
     clienteExistente,
     fluxoVerificado,
     etapaAtual,
@@ -87,7 +87,7 @@ export default function Cadastro({ tipoConta }) {
 
   return (
     <div className="pagina-cadastro">
-      <CadastroHeader voltarParaHome={() => navigate('/')} />
+      <CadastroHeader voltarParaHome={irParaInicio} />
       <main className="conteudo area-cadastro">
         <IndicadorEtapas etapas={etapas} etapaAtual={etapaAtual} />
         <div className="layout-cadastro">

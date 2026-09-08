@@ -11,6 +11,7 @@ import {
   mascaraTelefone,
   somenteNumeros,
 } from '../utils/formatadores.js'
+import { transicionarFormulario } from '../utils/transicaoFormulario.js'
 import {
   camposPreenchidos,
   cnpjValido,
@@ -356,20 +357,25 @@ export function useCadastro(tipoConta, fluxo = {}) {
     if (etapaId === 'contato' && !verificarEmailDisponivel()) return
 
     setMensagemErro('')
-    setEtapaAtual((atual) => atual + 1)
-    window.scrollTo(0, 0)
+    transicionarFormulario(() => setEtapaAtual((atual) => atual + 1))
   }
 
   function voltar() {
     setMensagemErro('')
 
     if (etapaAtual === 0) {
-      navigate('/cadastro')
+      transicionarFormulario(() => navigate('/cadastro'))
     } else {
-      setEtapaAtual((atual) => atual - 1)
+      transicionarFormulario(() => setEtapaAtual((atual) => atual - 1))
     }
+  }
 
-    window.scrollTo(0, 0)
+  function editarEtapa(indice) {
+    transicionarFormulario(() => setEtapaAtual(indice))
+  }
+
+  function irParaInicio() {
+    transicionarFormulario(() => navigate('/'))
   }
 
   async function salvarNovoUsuario() {
@@ -378,7 +384,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
 
     try {
       await cadastrarUsuario({ tipoConta, dadosPF, dadosPJ })
-      navigate('/login', { replace: true })
+      transicionarFormulario(() => navigate('/login', { replace: true }))
     } catch (erro) {
       const mensagem = erro.message
         || 'Biometria concluída, mas não foi possível conectar ao servidor. Tente novamente.'
@@ -391,8 +397,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
         setSessaoFacial(null)
         setMensagemFacial('')
         setFacialConcluido(false)
-        setEtapaAtual(indiceContato)
-        window.scrollTo(0, 0)
+        transicionarFormulario(() => setEtapaAtual(indiceContato))
         return
       }
 
@@ -416,9 +421,11 @@ export function useCadastro(tipoConta, fluxo = {}) {
         representante: cpfVerificado,
       })
       selecionarConta(tipoConta, { cnpj: dadosPJ.cnpj })
-      navigate('/dashboard', {
-        replace: true,
-        state: { tipoContaAtiva: tipoConta },
+      transicionarFormulario(() => {
+        navigate('/dashboard', {
+          replace: true,
+          state: { tipoContaAtiva: tipoConta },
+        })
       })
     } catch (erro) {
       setMensagemErro(erro.message || 'Não foi possível abrir a nova conta.')
@@ -439,8 +446,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
     try {
       if (!verificarEmailDisponivel()) {
         const indiceContato = configuracaoEtapas.findIndex((item) => item.id === 'contato')
-        setEtapaAtual(indiceContato)
-        window.scrollTo(0, 0)
+        transicionarFormulario(() => setEtapaAtual(indiceContato))
         return
       }
 
@@ -466,7 +472,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
       setModoFacial(preparacaoFacial.modo)
       setMensagemFacial(preparacaoFacial.mensagem)
       setSessaoFacial(preparacaoFacial.sessao)
-      setEtapaAtual(etapaFacial)
+      transicionarFormulario(() => setEtapaAtual(etapaFacial))
     } catch (erro) {
       setMensagemFacial('')
       setMensagemErro(erro.message || 'Não foi possível conectar à API facial. Nenhum usuário foi salvo.')
@@ -481,13 +487,13 @@ export function useCadastro(tipoConta, fluxo = {}) {
   }
 
   return {
-    navigate,
+    irParaInicio,
     empresarial,
     clienteExistente,
     fluxoVerificado,
     cpfVerificado,
     etapaAtual,
-    setEtapaAtual,
+    editarEtapa,
     etapaId,
     etapas,
     titulos,
