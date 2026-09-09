@@ -9,6 +9,7 @@ function dataValida(valor) {
 
 export function useMovimentacoes() {
   const [movimentacoes, setMovimentacoes] = useState([])
+  const [cobrancas, setCobrancas] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -18,6 +19,7 @@ export function useMovimentacoes() {
     try {
       const resposta = await buscarMovimentacoes()
       setMovimentacoes(Array.isArray(resposta.movimentacoes) ? resposta.movimentacoes : [])
+      setCobrancas(Array.isArray(resposta.cobrancas) ? resposta.cobrancas : [])
     } catch (falha) {
       setErro(falha.message)
     } finally {
@@ -30,7 +32,10 @@ export function useMovimentacoes() {
 
     buscarMovimentacoes()
       .then((resposta) => {
-        if (ativo) setMovimentacoes(Array.isArray(resposta.movimentacoes) ? resposta.movimentacoes : [])
+        if (ativo) {
+          setMovimentacoes(Array.isArray(resposta.movimentacoes) ? resposta.movimentacoes : [])
+          setCobrancas(Array.isArray(resposta.cobrancas) ? resposta.cobrancas : [])
+        }
       })
       .catch((falha) => {
         if (ativo) setErro(falha.message)
@@ -76,5 +81,5 @@ export function useMovimentacoes() {
     return { ordenadas, saldo, entradas, saidas, podeFiltrarMes }
   }, [movimentacoes])
 
-  return { movimentacoes, carregando, erro, carregar, ...resumo }
+  return { movimentacoes, cobrancas, carregando, erro, carregar, ...resumo }
 }

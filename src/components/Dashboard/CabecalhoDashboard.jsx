@@ -9,13 +9,19 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
   let classeInicio = ''
   let classePix = ''
   let classeExtrato = ''
+  let classeBoletos = ''
   let rotuloConta = 'Conta Arkhé'
+  let rotuloBoletos = 'DDA / Boletos'
 
   if (secao === 'inicio') classeInicio = 'ativo'
   if (secao === 'pix') classePix = 'ativo'
   if (secao === 'extrato') classeExtrato = 'ativo'
+  if (secao === 'boletos') classeBoletos = 'ativo'
   if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
-  if (usuario?.tipoConta === 'PJ') rotuloConta = 'Conta empresarial'
+  if (usuario?.tipoConta === 'PJ') {
+    rotuloConta = 'Conta empresarial'
+    rotuloBoletos = 'Boletos emitidos'
+  }
 
   return (
     <header className="cabecalho-dashboard">
@@ -32,6 +38,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
             Pix
           </button>
           <button className={classeExtrato} type="button" onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
+          <button className={classeBoletos} type="button" onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
           <button type="button">Cartões</button>
           <button type="button">Planejamento</button>
         </nav>

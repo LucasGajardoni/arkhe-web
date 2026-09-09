@@ -66,7 +66,7 @@ export default function Extrato() {
           })}</div>}
         </section>
       </main>
-      <NavegacaoMobile secao="extrato" />
+      <NavegacaoMobile secao="extrato" tipoConta={perfil.tipoConta} />
       {perfilAberto && <ModalPerfil usuario={perfil} fechar={() => setPerfilAberto(false)} aoAtualizar={atualizarPerfil} />}
     </div>
   )

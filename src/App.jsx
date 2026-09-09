@@ -6,6 +6,7 @@ import EscolherConta from './pages/EscolherConta/EscolherConta.jsx'
 import Dashboard from './pages/Dashboard/Dashboard.jsx'
 import Pix from './pages/Pix/Pix.jsx'
 import Extrato from './pages/Extrato/Extrato.jsx'
+import Boletos from './pages/Boletos/Boletos.jsx'
 import SessaoProvider from './contexts/SessaoProvider.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/pix" element={<Pix />} />
             <Route path="/dashboard/extrato" element={<Extrato />} />
+            <Route path="/dashboard/boletos" element={<Boletos />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

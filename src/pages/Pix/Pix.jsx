@@ -254,7 +254,7 @@ export default function Pix() {
         </div>
       </main>
 
-      <NavegacaoMobile secao="pix" />
+      <NavegacaoMobile secao="pix" tipoConta={usuario.tipoConta} />
       {modalPerfil}
       {modalCadastro}
       {modalExclusao}

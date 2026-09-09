@@ -243,7 +243,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <NavegacaoMobile />
+      <NavegacaoMobile tipoConta={usuario.tipoConta} />
       {modalPerfil}
       {podeEmitirBoleto && boletoAberto && (
         <ModalEmissaoBoleto usuario={usuario} fechar={() => setBoletoAberto(false)} />
