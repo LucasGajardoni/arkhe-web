@@ -41,6 +41,31 @@ export default function Dashboard() {
     : atalhos
   const movimentacoes = useMovimentacoes()
   const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+  const tipoCobrancaDashboard = podeEmitirBoleto ? 'receber' : 'pagar'
+  const cobrancasDashboard = movimentacoes.cobrancas.filter(
+    (item) => item.tipo === tipoCobrancaDashboard,
+  )
+  const cobrancasPagas = cobrancasDashboard.filter((item) => Number(item.status) === 1)
+  const cobrancasPendentes = cobrancasDashboard.filter((item) => Number(item.status) === 0)
+  const totalPagoBoletos = cobrancasPagas.reduce(
+    (total, item) => total + (Number(item.valor) || 0),
+    0,
+  )
+  const totalPendenteBoletos = cobrancasPendentes.reduce(
+    (total, item) => total + (Number(item.valor) || 0),
+    0,
+  )
+  const resumoBoletosDisponivel = !movimentacoes.carregando && !movimentacoes.erro
+  const valorIndisponivelBoletos = movimentacoes.carregando ? '...' : '—'
+  const quantidadeDestaqueBoletos = resumoBoletosDisponivel
+    ? (podeEmitirBoleto ? cobrancasDashboard.length : cobrancasPendentes.length)
+    : valorIndisponivelBoletos
+  const primeiroResumoBoletos = resumoBoletosDisponivel
+    ? moeda.format(podeEmitirBoleto ? totalPagoBoletos : totalPendenteBoletos)
+    : valorIndisponivelBoletos
+  const segundoResumoBoletos = resumoBoletosDisponivel
+    ? (podeEmitirBoleto ? moeda.format(totalPendenteBoletos) : cobrancasPagas.length)
+    : valorIndisponivelBoletos
 
   async function sair() {
     if (saindo) return
@@ -168,36 +193,40 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section className="cartao-dashboard">
-              <div className="titulo-bloco-dashboard titulo-cartao-dashboard">
+            <section className="boletos-dashboard">
+              <div className="titulo-bloco-dashboard titulo-boletos-dashboard">
                 <div>
-                  <p>CARTÃO ARKHÉ</p>
-                  <h2>Essencial</h2>
+                  <p>{podeEmitirBoleto ? 'COBRANÇAS' : 'PAGAMENTOS'}</p>
+                  <h2>{podeEmitirBoleto ? 'Boletos emitidos' : 'DDA e Boletos'}</h2>
                 </div>
-                <button type="button"><Icone nome="seta" tamanho={17} /></button>
+                <button type="button" onClick={() => navigate('/dashboard/boletos')} aria-label="Abrir boletos">
+                  <Icone nome="seta" tamanho={17} />
+                </button>
               </div>
-              <div className="cartao-visual-dashboard">
+
+              <div className="destaque-boletos-dashboard">
+                <span><Icone nome="boleto" tamanho={27} /></span>
                 <div>
-                  <span>ARKHÉ</span>
-                  <i>)))</i>
-                </div>
-                <b>••••&nbsp; ••••&nbsp; ••••&nbsp; 1121</b>
-                <small>{usuario.nome?.toUpperCase()}</small>
-              </div>
-              <div className="uso-cartao-dashboard">
-                <div>
-                  <span>Fatura atual</span>
-                  <strong>R$ 1.840,00</strong>
-                </div>
-                <div>
-                  <span>Melhor dia de compra</span>
-                  <strong>Dia 22</strong>
+                  <small>{podeEmitirBoleto ? 'Total de emissões' : 'Boletos pendentes'}</small>
+                  <strong>{quantidadeDestaqueBoletos}</strong>
                 </div>
               </div>
-              <div className="linha-limite-dashboard">
-                <i />
-                <span>23% do limite utilizado</span>
+
+              <div className="resumo-card-boletos-dashboard">
+                <div>
+                  <span>{podeEmitirBoleto ? 'Total recebido' : 'Total a pagar'}</span>
+                  <strong>{primeiroResumoBoletos}</strong>
+                </div>
+                <div>
+                  <span>{podeEmitirBoleto ? 'Total pendente' : 'Boletos pagos'}</span>
+                  <strong>{segundoResumoBoletos}</strong>
+                </div>
               </div>
+
+              <button className="abrir-boletos-dashboard" type="button" onClick={() => navigate('/dashboard/boletos')}>
+                {podeEmitirBoleto ? 'Acompanhar cobranças' : 'Ver DDA e boletos'}
+                <Icone nome="seta" tamanho={15} />
+              </button>
             </section>
 
             <section className="bloco-dashboard panorama-dashboard">
