@@ -251,6 +251,10 @@ export default function Boletos() {
           situacao={situacaoCobranca(boletoSelecionado)}
           fechar={() => setBoletoSelecionado(null)}
           atualizar={dados.carregar}
+          aoEscanear={() => {
+            setBoletoSelecionado(null)
+            setModoPagarBoleto('scanner')
+          }}
         />
       )}
 

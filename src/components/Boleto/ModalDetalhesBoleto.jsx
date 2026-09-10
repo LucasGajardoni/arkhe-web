@@ -24,6 +24,7 @@ export default function ModalDetalhesBoleto({
   situacao,
   fechar,
   atualizar,
+  aoEscanear,
 }) {
   const [etapa, setEtapa] = useState('detalhes')
   const [processando, setProcessando] = useState(false)
@@ -126,7 +127,7 @@ export default function ModalDetalhesBoleto({
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Fechar</button>
           {!contaPJ && !pago && (
-            <button className="botao botao-principal" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
+            <button className="botao botao-principal" type="button" onClick={aoEscanear}>Escanear para pagar</button>
           )}
         </footer>
       </div>
