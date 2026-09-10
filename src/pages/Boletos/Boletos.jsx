@@ -5,6 +5,7 @@ import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import ModalDetalhesBoleto from '../../components/Boleto/ModalDetalhesBoleto.jsx'
+import ModalPagarBoleto from '../../components/Boleto/ModalPagarBoleto.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
@@ -67,6 +68,7 @@ export default function Boletos() {
   const dados = useMovimentacoes()
   const [filtro, setFiltro] = useState('todos')
   const [boletoSelecionado, setBoletoSelecionado] = useState(null)
+  const [pagarBoletoAberto, setPagarBoletoAberto] = useState(false)
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
@@ -144,9 +146,14 @@ export default function Boletos() {
                 : 'Consulte e pague as cobranças vinculadas à sua conta.'}
             </span>
           </div>
-          <button type="button" onClick={dados.carregar} disabled={dados.carregando}>
-            {dados.carregando ? 'Atualizando...' : 'Atualizar'}
-          </button>
+          <div className="acoes-cabecalho-boletos">
+            <button className="atualizar" type="button" onClick={dados.carregar} disabled={dados.carregando}>
+              {dados.carregando ? 'Atualizando...' : 'Atualizar'}
+            </button>
+            <button className="pagar" type="button" onClick={() => setPagarBoletoAberto(true)}>
+              {contaPJ ? 'Pagar boleto' : 'Pagar boleto por código'}
+            </button>
+          </div>
         </header>
 
         {contaPJ ? (
@@ -240,6 +247,14 @@ export default function Boletos() {
           nomeRelacionado={nomeRelacionado(boletoSelecionado, contaPJ)}
           situacao={situacaoCobranca(boletoSelecionado)}
           fechar={() => setBoletoSelecionado(null)}
+          atualizar={dados.carregar}
+        />
+      )}
+
+      {pagarBoletoAberto && (
+        <ModalPagarBoleto
+          usuario={perfil}
+          fechar={() => setPagarBoletoAberto(false)}
           atualizar={dados.carregar}
         />
       )}

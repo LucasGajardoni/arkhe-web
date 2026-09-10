@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { pagarCobranca } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
+import AcoesBoletoPdf from './AcoesBoletoPdf.jsx'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -117,6 +118,8 @@ export default function ModalDetalhesBoleto({
         {!boleto.codigo_pagamento && contaPJ && (
           <p className="dado-indisponivel-boleto">Código de pagamento não disponibilizado pelo backend.</p>
         )}
+
+        <AcoesBoletoPdf idCobranca={boleto.id_cobranca} />
 
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
 

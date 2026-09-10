@@ -1,0 +1,433 @@
+.modal-pagar-boleto {
+  width: min(640px, 100%);
+}
+
+.conteudo-pagar-boleto,
+.confirmacao-pagar-codigo,
+.buscando-codigo-boleto,
+.sucesso-pagamento-codigo {
+  padding: 25px 30px 30px;
+}
+
+.modos-pagar-boleto {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 21px;
+  padding: 5px;
+  border-radius: 11px;
+  background: #f6f3ea;
+}
+
+.modos-pagar-boleto button {
+  min-height: 39px;
+  padding: 8px;
+  border-radius: 8px;
+  color: #746e62;
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.modos-pagar-boleto button.ativo {
+  color: #0d4d4d;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(28, 28, 23, .06);
+}
+
+.campo-codigo-pagar-boleto {
+  display: flex;
+  gap: 7px;
+  flex-direction: column;
+}
+
+.campo-codigo-pagar-boleto > span {
+  color: #1c1c17;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.campo-codigo-pagar-boleto input {
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid #e5e2da;
+  border-radius: 10px;
+  outline: 0;
+  color: #183735;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.campo-codigo-pagar-boleto input:focus {
+  border-color: #137a74;
+  box-shadow: 0 0 0 3px rgba(19, 122, 116, .09);
+}
+
+.campo-codigo-pagar-boleto small {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.conteudo-pagar-boleto form > .mensagem-modal-perfil,
+.revisao-pagar-boleto > .mensagem-modal-perfil,
+.confirmacao-pagar-codigo > .mensagem-modal-perfil {
+  margin-top: 14px;
+}
+
+.conteudo-pagar-boleto form > footer,
+.revisao-pagar-boleto > footer,
+.confirmacao-pagar-codigo > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.conteudo-pagar-boleto footer .botao,
+.confirmacao-pagar-codigo footer .botao {
+  min-height: 44px;
+  font-size: 10px;
+}
+
+.modal-pagar-boleto button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.scanner-boleto {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.camera-scanner-boleto {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 290px;
+  border-radius: 15px;
+  background: #092f2e;
+}
+
+.camera-scanner-boleto video {
+  display: block;
+  width: 100%;
+  height: 290px;
+  object-fit: cover;
+}
+
+.moldura-scanner-boleto {
+  display: grid;
+  position: absolute;
+  inset: 0;
+  place-items: center;
+  background: linear-gradient(rgba(6, 42, 41, .36), rgba(6, 42, 41, .36));
+  pointer-events: none;
+}
+
+.moldura-scanner-boleto::before {
+  width: min(82%, 440px);
+  height: 105px;
+  border: 2px solid #f2c669;
+  border-radius: 12px;
+  box-shadow: 0 0 0 999px rgba(3, 24, 23, .25);
+  content: '';
+}
+
+.moldura-scanner-boleto span {
+  position: absolute;
+  width: min(76%, 410px);
+  height: 2px;
+  background: #f2c669;
+  box-shadow: 0 0 10px rgba(242, 198, 105, .75);
+  animation: linha-scanner-boleto 1.8s ease-in-out infinite;
+}
+
+@keyframes linha-scanner-boleto {
+  0%, 100% { transform: translateY(-42px); }
+  50% { transform: translateY(42px); }
+}
+
+.codigo-encontrado-scanner {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  bottom: 14px;
+  padding: 7px 10px;
+  border-radius: 20px;
+  color: #0d4d4d;
+  background: #f2c669;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.scanner-boleto > strong {
+  margin-top: 16px;
+  color: #183735;
+  font-size: 12px;
+}
+
+.scanner-boleto > p:not(.mensagem-scanner-boleto) {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.mensagem-scanner-boleto {
+  width: 100%;
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.mensagem-scanner-boleto.erro {
+  color: #8c2626;
+  background: #fff0f0;
+}
+
+.scanner-boleto > .botao {
+  min-height: 42px;
+  margin-top: 17px;
+  font-size: 10px;
+}
+
+.buscando-codigo-boleto {
+  display: flex;
+  min-height: 250px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.buscando-codigo-boleto > span {
+  width: 27px;
+  height: 27px;
+  margin-bottom: 13px;
+  border: 3px solid #d9e5e2;
+  border-top-color: #137a74;
+  border-radius: 50%;
+  animation: girar-busca-boleto .8s linear infinite;
+}
+
+@keyframes girar-busca-boleto {
+  to { transform: rotate(360deg); }
+}
+
+.buscando-codigo-boleto strong {
+  color: #183735;
+  font-size: 13px;
+}
+
+.buscando-codigo-boleto p {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.beneficiario-pagar-boleto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 11px;
+  background: #edf7f3;
+}
+
+.beneficiario-pagar-boleto > span {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #0d4d4d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.beneficiario-pagar-boleto > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.beneficiario-pagar-boleto small {
+  color: #137a74;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.beneficiario-pagar-boleto strong {
+  overflow: hidden;
+  color: #183735;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valor-revisao-boleto {
+  display: block;
+  margin: 18px 0;
+  color: #0d4d4d;
+  font-size: 30px;
+  text-align: center;
+}
+
+.revisao-pagar-boleto dl {
+  display: grid;
+  gap: 9px;
+}
+
+.revisao-pagar-boleto dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  background: #f6f3ea;
+}
+
+.revisao-pagar-boleto dt {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.revisao-pagar-boleto dd {
+  overflow-wrap: anywhere;
+  color: #183735;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.codigo-revisao-boleto {
+  letter-spacing: .6px;
+}
+
+.aviso-boleto-pago {
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 9px;
+  color: #8c2626;
+  background: #fff0f0;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.confirmacao-pagar-codigo,
+.sucesso-pagamento-codigo {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.confirmacao-pagar-codigo > span {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+  color: #76601d;
+  background: #fbf3d9;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.confirmacao-pagar-codigo h3,
+.sucesso-pagamento-codigo h3 {
+  margin-top: 13px;
+  color: #183735;
+  font-size: 19px;
+}
+
+.confirmacao-pagar-codigo > p {
+  max-width: 410px;
+  margin-top: 6px;
+  color: #746e62;
+  font-size: 10px;
+}
+
+.confirmacao-pagar-codigo > footer {
+  width: 100%;
+}
+
+.sucesso-pagamento-codigo > span {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #137a74;
+  font-size: 25px;
+}
+
+.sucesso-pagamento-codigo > strong {
+  margin-top: 7px;
+  color: #137a74;
+  font-size: 27px;
+}
+
+.sucesso-pagamento-codigo > p {
+  color: #746e62;
+  font-size: 10px;
+}
+
+.sucesso-pagamento-codigo > small {
+  margin-top: 3px;
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.sucesso-pagamento-codigo > .botao {
+  min-height: 44px;
+  margin-top: 21px;
+  font-size: 10px;
+}
+
+@media (max-width: 650px) {
+  .conteudo-pagar-boleto,
+  .confirmacao-pagar-codigo,
+  .buscando-codigo-boleto,
+  .sucesso-pagamento-codigo {
+    padding: 22px 20px 26px;
+  }
+
+  .campo-codigo-pagar-boleto input {
+    font-size: 16px;
+  }
+
+  .camera-scanner-boleto,
+  .camera-scanner-boleto video {
+    min-height: 240px;
+    height: 240px;
+  }
+
+  .conteudo-pagar-boleto form > footer,
+  .revisao-pagar-boleto > footer,
+  .confirmacao-pagar-codigo > footer {
+    flex-direction: column-reverse;
+  }
+
+  .conteudo-pagar-boleto footer .botao,
+  .confirmacao-pagar-codigo footer .botao {
+    width: 100%;
+  }
+
+  .revisao-pagar-boleto dl > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .revisao-pagar-boleto dd {
+    text-align: left;
+  }
+}

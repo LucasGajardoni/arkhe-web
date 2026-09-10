@@ -5,6 +5,7 @@ import {
   mascaraCnpj,
   mascaraCpf,
 } from '../../utils/formatadores.js'
+import AcoesBoletoPdf from './AcoesBoletoPdf.jsx'
 import './ModalEmissaoBoleto.css'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -336,6 +337,8 @@ export default function ModalEmissaoBoleto({ usuario, fechar }) {
             <button type="button" onClick={copiarCodigo}>{copiado ? 'Copiado!' : 'Copiar'}</button>
           </div>
         </div>
+
+        <AcoesBoletoPdf idCobranca={resultado?.id_cobranca} />
 
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
         <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>

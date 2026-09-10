@@ -1,0 +1,126 @@
+.area-acoes-pdf-boleto {
+  margin-top: 15px;
+}
+
+.acoes-pdf-boleto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.acoes-pdf-boleto .botao {
+  min-height: 42px;
+  padding: 9px 14px;
+  font-size: 10px;
+}
+
+.mensagem-pdf-boleto {
+  margin-top: 10px;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.mensagem-pdf-boleto.erro {
+  color: #8c2626;
+  background: #fff0f0;
+}
+
+.fundo-visualizador-boleto {
+  display: grid;
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  place-items: center;
+  padding: 24px;
+  background: rgba(6, 42, 41, .78);
+  backdrop-filter: blur(7px);
+}
+
+.visualizador-boleto {
+  display: grid;
+  width: min(960px, 100%);
+  height: min(90vh, 850px);
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 70px rgba(5, 36, 35, .32);
+}
+
+.visualizador-boleto > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e2da;
+}
+
+.visualizador-boleto > header p {
+  color: #d4af37;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.visualizador-boleto > header h2 {
+  color: #183735;
+  font-size: 20px;
+}
+
+.visualizador-boleto > header button {
+  color: #716a5c;
+  background: transparent;
+  cursor: pointer;
+  font-size: 28px;
+}
+
+.visualizador-boleto iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #f6f3ea;
+}
+
+.visualizador-boleto > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 14px 22px;
+  border-top: 1px solid #e5e2da;
+}
+
+.visualizador-boleto > footer .botao {
+  min-height: 42px;
+  font-size: 10px;
+}
+
+@media (max-width: 650px) {
+  .acoes-pdf-boleto {
+    flex-direction: column;
+  }
+
+  .acoes-pdf-boleto .botao {
+    width: 100%;
+  }
+
+  .fundo-visualizador-boleto {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .visualizador-boleto {
+    width: 100%;
+    height: 94vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .visualizador-boleto > footer {
+    flex-direction: column-reverse;
+  }
+
+  .visualizador-boleto > footer .botao {
+    width: 100%;
+  }
+}

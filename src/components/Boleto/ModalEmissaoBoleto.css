@@ -349,6 +349,14 @@
   margin-top: 10px;
 }
 
+.sucesso-boleto > .area-acoes-pdf-boleto {
+  width: min(470px, 100%);
+}
+
+.sucesso-boleto .acoes-pdf-boleto > button {
+  flex: 1;
+}
+
 .sucesso-boleto > .botao {
   min-height: 44px;
   margin-top: 20px;
