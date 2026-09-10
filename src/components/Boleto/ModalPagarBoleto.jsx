@@ -42,8 +42,8 @@ function formatarDataHora(valor) {
   return dataHora.format(data)
 }
 
-export default function ModalPagarBoleto({ usuario, fechar, atualizar }) {
-  const [etapa, setEtapa] = useState('entrada')
+export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fechar, atualizar }) {
+  const [etapa, setEtapa] = useState(modoInicial)
   const [codigo, setCodigo] = useState('')
   const [boleto, setBoleto] = useState(null)
   const [resultadoPagamento, setResultadoPagamento] = useState(null)
@@ -239,8 +239,8 @@ export default function ModalPagarBoleto({ usuario, fechar, atualizar }) {
         <header>
           <div>
             <p>PAGAMENTO DE BOLETO</p>
-            <h2 id="titulo-pagar-boleto">Pagar boleto</h2>
-            <span>Digite o código ou use a câmera para escanear.</span>
+            <h2 id="titulo-pagar-boleto">Localizar boleto</h2>
+            <span>Escaneie ou digite o código. O pagamento só acontece depois da sua confirmação.</span>
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>

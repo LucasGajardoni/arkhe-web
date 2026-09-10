@@ -52,6 +52,11 @@
   background: #fff;
 }
 
+.acoes-cabecalho-boletos button.codigo {
+  color: #0d4d4d;
+  background: #fff;
+}
+
 .acoes-cabecalho-boletos button.pagar {
   color: #fff;
   background: #0d4d4d;

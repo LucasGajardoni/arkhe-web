@@ -68,7 +68,7 @@ export default function Boletos() {
   const dados = useMovimentacoes()
   const [filtro, setFiltro] = useState('todos')
   const [boletoSelecionado, setBoletoSelecionado] = useState(null)
-  const [pagarBoletoAberto, setPagarBoletoAberto] = useState(false)
+  const [modoPagarBoleto, setModoPagarBoleto] = useState(null)
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
@@ -150,8 +150,11 @@ export default function Boletos() {
             <button className="atualizar" type="button" onClick={dados.carregar} disabled={dados.carregando}>
               {dados.carregando ? 'Atualizando...' : 'Atualizar'}
             </button>
-            <button className="pagar" type="button" onClick={() => setPagarBoletoAberto(true)}>
-              {contaPJ ? 'Pagar boleto' : 'Pagar boleto por código'}
+            <button className="codigo" type="button" onClick={() => setModoPagarBoleto('entrada')}>
+              Digitar código
+            </button>
+            <button className="pagar" type="button" onClick={() => setModoPagarBoleto('scanner')}>
+              Escanear código
             </button>
           </div>
         </header>
@@ -251,10 +254,11 @@ export default function Boletos() {
         />
       )}
 
-      {pagarBoletoAberto && (
+      {modoPagarBoleto && (
         <ModalPagarBoleto
           usuario={perfil}
-          fechar={() => setPagarBoletoAberto(false)}
+          modoInicial={modoPagarBoleto}
+          fechar={() => setModoPagarBoleto(null)}
           atualizar={dados.carregar}
         />
       )}
