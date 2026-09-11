@@ -85,3 +85,32 @@ export async function buscarBoletoPdf(idCobranca) {
 
   return resposta.blob()
 }
+
+export async function buscarComprovantePdf(idMovimentacao) {
+  let resposta
+
+  try {
+    resposta = await fetch(`${API_URL}/comprovante/${encodeURIComponent(idMovimentacao)}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/pdf' },
+    })
+  } catch {
+    throw new ErroApi('Não foi possível conectar ao servidor para obter o comprovante.', 0, {})
+  }
+
+  if (!resposta.ok) {
+    let resultado = {}
+    try { resultado = await resposta.json() } catch { /* Resposta sem JSON. */ }
+
+    let mensagem = resultado.mensagem || 'Não foi possível gerar o comprovante.'
+    if (resposta.status === 401) mensagem = 'Sua sessão expirou. Entre novamente para continuar.'
+    if (resposta.status === 403) mensagem = resultado.mensagem || 'Você não tem permissão para acessar este comprovante.'
+    if (resposta.status === 404) mensagem = resultado.mensagem || 'Comprovante não encontrado.'
+    if (resposta.status >= 500) mensagem = resultado.mensagem || 'O servidor não conseguiu gerar o comprovante.'
+
+    throw new ErroApi(mensagem, resposta.status, resultado)
+  }
+
+  return resposta.blob()
+}

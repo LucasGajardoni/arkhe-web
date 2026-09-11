@@ -1,0 +1,128 @@
+.lista-extrato article {
+  grid-template-columns: 43px minmax(0, 1fr) auto auto;
+}
+
+.abrir-comprovante-extrato {
+  padding: 7px 10px;
+  border: 1px solid #d7e5e1;
+  border-radius: 8px;
+  color: #0d4d4d;
+  background: #f4faf8;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.abrir-comprovante-extrato:hover {
+  border-color: #137a74;
+  background: #edf7f3;
+}
+
+.modal-detalhes-movimentacao {
+  width: min(560px, 100%);
+}
+
+.conteudo-detalhes-movimentacao {
+  padding: 25px 30px 30px;
+}
+
+.valor-detalhes-movimentacao {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  column-gap: 13px;
+  padding: 16px;
+  border-radius: 13px;
+  background: #f6f3ea;
+}
+
+.valor-detalhes-movimentacao > span {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  grid-row: 1 / 3;
+  place-items: center;
+  border-radius: 13px;
+  color: #0d4d4d;
+  background: #e1f0ec;
+}
+
+.valor-detalhes-movimentacao > small {
+  align-self: end;
+  color: #8a8374;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.valor-detalhes-movimentacao > strong {
+  align-self: start;
+  color: #4d4635;
+  font-size: 23px;
+  line-height: 1.25;
+}
+
+.valor-detalhes-movimentacao.entrada > strong {
+  color: #137a74;
+}
+
+.conteudo-detalhes-movimentacao dl {
+  display: grid;
+  gap: 9px;
+  margin-top: 15px;
+}
+
+.conteudo-detalhes-movimentacao dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  background: #f6f3ea;
+}
+
+.conteudo-detalhes-movimentacao dt {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.conteudo-detalhes-movimentacao dd {
+  color: #183735;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.conteudo-detalhes-movimentacao > footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.conteudo-detalhes-movimentacao > footer .botao {
+  min-height: 44px;
+  font-size: 10px;
+}
+
+@media (max-width: 650px) {
+  .lista-extrato article {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+  }
+
+  .lista-extrato article > b {
+    grid-column: 2;
+  }
+
+  .abrir-comprovante-extrato {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .conteudo-detalhes-movimentacao {
+    padding: 22px 20px 26px;
+  }
+
+  .conteudo-detalhes-movimentacao > footer .botao {
+    width: 100%;
+  }
+}

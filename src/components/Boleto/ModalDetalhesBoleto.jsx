@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { pagarCobranca } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
+import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import AcoesBoletoPdf from './AcoesBoletoPdf.jsx'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -25,10 +26,12 @@ export default function ModalDetalhesBoleto({
   fechar,
   atualizar,
   aoEscanear,
+  idMovimentacao,
 }) {
   const [etapa, setEtapa] = useState('detalhes')
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
+  const [resultadoPagamento, setResultadoPagamento] = useState(null)
   const pago = Number(boleto.status) === 1
   const vencimento = somenteData(boleto.data_vencimento)
   const dataPagamento = somenteData(boleto.data_pagamento)
@@ -61,7 +64,8 @@ export default function ModalDetalhesBoleto({
     setErro('')
 
     try {
-      await pagarCobranca(boleto.id_cobranca)
+      const resposta = await pagarCobranca(boleto.id_cobranca)
+      setResultadoPagamento(resposta)
       await atualizar()
       setEtapa('sucesso')
     } catch (falha) {
@@ -95,6 +99,7 @@ export default function ModalDetalhesBoleto({
         <h3>Boleto pago com sucesso</h3>
         <strong>{moeda.format(Number(boleto.valor) || 0)}</strong>
         <p>A cobrança foi baixada e o saldo da conta foi atualizado.</p>
+        <AcoesComprovante idMovimentacao={resultadoPagamento?.id_movimentacao} />
         <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )
@@ -121,13 +126,17 @@ export default function ModalDetalhesBoleto({
         )}
 
         <AcoesBoletoPdf idCobranca={boleto.id_cobranca} />
+        {pago && <AcoesComprovante idMovimentacao={idMovimentacao} />}
 
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
 
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Fechar</button>
           {!contaPJ && !pago && (
-            <button className="botao botao-principal" type="button" onClick={aoEscanear}>Escanear para pagar</button>
+            <>
+              <button className="botao botao-secundario" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
+              <button className="botao botao-principal" type="button" onClick={aoEscanear}>Escanear para pagar</button>
+            </>
           )}
         </footer>
       </div>

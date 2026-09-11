@@ -249,6 +249,11 @@ export default function Boletos() {
           contaPJ={contaPJ}
           nomeRelacionado={nomeRelacionado(boletoSelecionado, contaPJ)}
           situacao={situacaoCobranca(boletoSelecionado)}
+          idMovimentacao={dados.movimentacoes.find((item) => (
+            item.tipo === 'saida'
+            && item.origem === 'cobranca'
+            && Number(item.id_cobranca) === Number(boletoSelecionado.id_cobranca)
+          ))?.id_movimentacao}
           fechar={() => setBoletoSelecionado(null)}
           atualizar={dados.carregar}
           aoEscanear={() => {

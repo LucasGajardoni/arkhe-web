@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import { buscarContasUsuario, realizarPix } from '../../services/pixService.js'
 import { mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import './ModalPagamentoPix.css'
@@ -53,6 +54,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [destinatario, setDestinatario] = useState(null)
   const [buscandoDestinatario, setBuscandoDestinatario] = useState(false)
   const [erroBusca, setErroBusca] = useState('')
+  const [idMovimentacao, setIdMovimentacao] = useState(null)
 
   useEffect(() => {
     function fecharComEsc(evento) {
@@ -125,7 +127,8 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setProcessando(true)
     setErro('')
     try {
-      await realizarPix(tipoChave, limparChave(tipoChave, chave), centavos / 100)
+      const resposta = await realizarPix(tipoChave, limparChave(tipoChave, chave), centavos / 100)
+      setIdMovimentacao(resposta.id_movimentacao || null)
       await aoConcluir()
       setEtapa('sucesso')
     } catch (falha) {
@@ -200,6 +203,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <h3>Pix enviado com sucesso</h3>
         <strong>{moeda.format(centavos / 100)}</strong>
         <p>O pagamento foi concluído e suas movimentações já foram atualizadas.</p>
+        <AcoesComprovante idMovimentacao={idMovimentacao} />
         <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )

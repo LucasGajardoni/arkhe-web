@@ -4,6 +4,7 @@ import {
   pagarCobranca,
 } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
+import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import ScannerCodigoBarras from './ScannerCodigoBarras.jsx'
 import './ModalPagarBoleto.css'
 
@@ -228,6 +229,7 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
         <strong>{moeda.format(Number(boleto.valor) || 0)}</strong>
         <p>{beneficiarioBoleto(boleto)}</p>
         {momentoPagamento && <small>{momentoPagamento}</small>}
+        <AcoesComprovante idMovimentacao={resultadoPagamento?.id_movimentacao} />
         <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )
