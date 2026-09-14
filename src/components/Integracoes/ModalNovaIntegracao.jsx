@@ -11,7 +11,7 @@ const permissoes = [
   'Consultar status de cobranças Pix',
 ]
 
-export default function ModalNovaIntegracao({ fechar }) {
+export default function ModalNovaIntegracao({ fechar, aoCriar }) {
   const [etapa, setEtapa] = useState('dados')
   const [nome, setNome] = useState('')
   const [credenciais, setCredenciais] = useState(null)
@@ -57,6 +57,7 @@ export default function ModalNovaIntegracao({ fechar }) {
         clientSecret,
       })
       setEtapa('sucesso')
+      aoCriar?.()
     } catch (falha) {
       setErro(falha.message || 'Não foi possível autorizar a integração.')
     } finally {

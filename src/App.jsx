@@ -8,7 +8,6 @@ import Pix from './pages/Pix/Pix.jsx'
 import Extrato from './pages/Extrato/Extrato.jsx'
 import Boletos from './pages/Boletos/Boletos.jsx'
 import Integracoes from './pages/Integracoes/Integracoes.jsx'
-import ApiDocs from './pages/ApiDocs/ApiDocs.jsx'
 import SessaoProvider from './contexts/SessaoProvider.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 
@@ -22,7 +21,7 @@ export default function App() {
           <Route path="/cadastro" element={<EscolherConta />} />
           <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
           <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
-          <Route path="/desenvolvedores/api" element={<ApiDocs />} />
+          <Route path="/desenvolvedores/api" element={<Navigate to="/dashboard/integracoes#documentacao-api" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/pix" element={<Pix />} />

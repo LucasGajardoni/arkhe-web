@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import arkheLogo from '../../assets/arkhe-logo.svg'
 import { API_URL } from '../../config/api.js'
 import './ApiDocs.css'
 
@@ -75,21 +73,9 @@ function CabecalhoEndpoint({ metodo, caminho, children }) {
   )
 }
 
-export default function ApiDocs() {
+export default function DocumentacaoApi() {
   return (
-    <div className="pagina-documentacao-api">
-      <header className="topo-documentacao-api">
-        <div className="conteudo-documentacao-api barra-documentacao-api">
-          <Link to="/" className="marca-documentacao-api" aria-label="Banco Arkhé — página inicial">
-            <span><img src={arkheLogo} alt="" /></span><strong>ARKHÉ</strong>
-          </Link>
-          <nav aria-label="Ações da documentação">
-            <a href="#endpoints">Endpoints</a>
-            <Link to="/login">Acessar conta</Link>
-          </nav>
-        </div>
-      </header>
-
+    <div className="pagina-documentacao-api" id="documentacao-api">
       <section className="hero-documentacao-api">
         <div className="conteudo-documentacao-api">
           <p>DESENVOLVEDORES</p>
@@ -110,7 +96,7 @@ export default function ApiDocs() {
           </nav>
         </aside>
 
-        <main className="conteudo-principal-documentacao-api">
+        <div className="conteudo-principal-documentacao-api">
           <section id="introducao" className="secao-documentacao-api" aria-labelledby="titulo-introducao-api">
             <p className="rotulo-documentacao-api">VISÃO GERAL</p>
             <h2 id="titulo-introducao-api">Integração para contas empresariais</h2>
@@ -193,10 +179,8 @@ export default function ApiDocs() {
               <li>Cada integração pertence a uma única conta PJ.</li>
             </ul>
           </section>
-        </main>
+        </div>
       </div>
-
-      <footer className="rodape-documentacao-api"><div className="conteudo-documentacao-api"><strong>Banco Arkhé</strong><span>Documentação da API para integrações empresariais.</span></div></footer>
     </div>
   )
 }
