@@ -23,3 +23,356 @@
 }
 
 .busca-destinatario-pix,.destinatario-pix{display:flex;align-items:center;gap:12px;margin-top:16px;padding:14px;border-radius:11px;background:#edf7f3}.busca-destinatario-pix .carregando-pix{width:20px;height:20px;margin:0}.busca-destinatario-pix p{color:#657d79;font-size:10px}.destinatario-pix>span{display:grid;width:40px;height:40px;flex:0 0 auto;place-items:center;border-radius:50%;color:#fff;background:#0d4d4d;font-size:13px;font-weight:800}.destinatario-pix>div{display:flex;min-width:0;flex-direction:column}.destinatario-pix small{color:#137a74;font-size:8px;font-weight:800;letter-spacing:.8px}.destinatario-pix strong{overflow:hidden;color:#183735;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.destinatario-pix p{color:#657d79;font-size:9px}.erro-busca-destinatario{margin-top:12px;padding:11px;border-radius:9px;color:#8c2626;background:#fff0f0;font-size:9px;font-weight:700}
+
+.modal-pagamento-pix {
+  width: min(620px, 100%);
+}
+
+.conteudo-metodos-pix,
+.conteudo-scanner-pix,
+.buscando-cobranca-pix,
+.revisao-cobranca-pix,
+.confirmar-cobranca-pix,
+.form-copia-cola-pix {
+  padding: 25px 30px 30px;
+}
+
+.conteudo-metodos-pix > p {
+  margin-bottom: 15px;
+  color: #746e62;
+  font-size: 10px;
+}
+
+.metodos-pagamento-pix {
+  display: grid;
+  gap: 10px;
+}
+
+.metodos-pagamento-pix > button {
+  display: grid;
+  min-height: 74px;
+  align-items: center;
+  grid-template-columns: 42px minmax(0, 1fr) 18px;
+  gap: 13px;
+  padding: 13px 15px;
+  border: 1px solid #e5e2da;
+  border-radius: 12px;
+  color: #183735;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.metodos-pagamento-pix > button:hover,
+.metodos-pagamento-pix > button:focus-visible {
+  border-color: #137a74;
+  background: #f3faf7;
+  transform: translateY(-1px);
+}
+
+.metodos-pagamento-pix > button > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 11px;
+  color: #0d4d4d;
+  background: #edf7f3;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.metodos-pagamento-pix > button > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.metodos-pagamento-pix strong {
+  font-size: 12px;
+}
+
+.metodos-pagamento-pix small {
+  margin-top: 3px;
+  color: #8a8374;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.metodos-pagamento-pix b {
+  color: #137a74;
+  font-size: 23px;
+  font-weight: 400;
+}
+
+.conteudo-metodos-pix > footer,
+.conteudo-scanner-pix > footer,
+.revisao-cobranca-pix > footer,
+.confirmar-cobranca-pix > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.conteudo-metodos-pix footer .botao,
+.conteudo-scanner-pix footer .botao,
+.revisao-cobranca-pix footer .botao,
+.confirmar-cobranca-pix footer .botao {
+  min-height: 44px;
+  font-size: 10px;
+}
+
+.form-copia-cola-pix > label {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-copia-cola-pix > label > span {
+  margin-bottom: 8px;
+  color: #1c1c17;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.form-copia-cola-pix textarea {
+  width: 100%;
+  min-height: 138px;
+  resize: vertical;
+  padding: 13px 14px;
+  border: 1px solid #e5e2da;
+  border-radius: 10px;
+  outline: 0;
+  color: #183735;
+  background: #fff;
+  font: 600 12px/1.5 inherit;
+  overflow-wrap: anywhere;
+}
+
+.form-copia-cola-pix textarea:focus {
+  border-color: #137a74;
+  box-shadow: 0 0 0 3px rgba(19, 122, 116, .09);
+}
+
+.form-copia-cola-pix label small {
+  margin-top: 7px;
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.buscando-cobranca-pix {
+  display: flex;
+  min-height: 250px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.buscando-cobranca-pix > span {
+  width: 29px;
+  height: 29px;
+  margin-bottom: 14px;
+  border: 3px solid #d9e5e2;
+  border-top-color: #137a74;
+  border-radius: 50%;
+  animation: girar-busca-pix .8s linear infinite;
+}
+
+@keyframes girar-busca-pix {
+  to { transform: rotate(360deg); }
+}
+
+.buscando-cobranca-pix strong {
+  color: #183735;
+  font-size: 13px;
+}
+
+.buscando-cobranca-pix p {
+  margin-top: 4px;
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.recebedor-cobranca-pix {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 11px;
+  background: #edf7f3;
+}
+
+.recebedor-cobranca-pix > span {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #0d4d4d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recebedor-cobranca-pix > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.recebedor-cobranca-pix small {
+  color: #137a74;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .7px;
+}
+
+.recebedor-cobranca-pix strong {
+  overflow: hidden;
+  color: #183735;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valor-cobranca-pix {
+  display: block;
+  margin: 19px 0;
+  color: #0d4d4d;
+  font-size: 30px;
+  text-align: center;
+}
+
+.revisao-cobranca-pix dl {
+  display: grid;
+  gap: 9px;
+}
+
+.revisao-cobranca-pix dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  background: #f6f3ea;
+}
+
+.revisao-cobranca-pix dt {
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.revisao-cobranca-pix dd {
+  overflow-wrap: anywhere;
+  color: #183735;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.aviso-cobranca-pix-paga {
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 9px;
+  color: #8c2626;
+  background: #fff0f0;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.confirmar-cobranca-pix {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.confirmar-cobranca-pix > span {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+  color: #76601d;
+  background: #fbf3d9;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.confirmar-cobranca-pix h3 {
+  margin-top: 13px;
+  color: #183735;
+  font-size: 19px;
+}
+
+.confirmar-cobranca-pix > p {
+  max-width: 420px;
+  margin-top: 7px;
+  color: #746e62;
+  font-size: 10px;
+}
+
+.confirmar-cobranca-pix > small {
+  margin-top: 5px;
+  color: #8a8374;
+  font-size: 9px;
+}
+
+.confirmar-cobranca-pix > footer {
+  width: 100%;
+}
+
+@media (max-width: 650px) {
+  .conteudo-metodos-pix,
+  .conteudo-scanner-pix,
+  .buscando-cobranca-pix,
+  .revisao-cobranca-pix,
+  .confirmar-cobranca-pix,
+  .form-copia-cola-pix {
+    padding: 22px 20px calc(26px + env(safe-area-inset-bottom));
+  }
+
+  .metodos-pagamento-pix > button {
+    min-height: 70px;
+    grid-template-columns: 38px minmax(0, 1fr) 14px;
+    gap: 10px;
+    padding: 11px 12px;
+  }
+
+  .metodos-pagamento-pix > button > span {
+    width: 38px;
+    height: 38px;
+  }
+
+  .conteudo-metodos-pix > footer,
+  .conteudo-scanner-pix > footer,
+  .revisao-cobranca-pix > footer,
+  .confirmar-cobranca-pix > footer {
+    flex-direction: column-reverse;
+  }
+
+  .conteudo-metodos-pix footer .botao,
+  .conteudo-scanner-pix footer .botao,
+  .revisao-cobranca-pix footer .botao,
+  .confirmar-cobranca-pix footer .botao {
+    width: 100%;
+  }
+
+  .form-copia-cola-pix textarea {
+    min-height: 150px;
+    font-size: 16px;
+  }
+
+  .revisao-cobranca-pix dl > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .revisao-cobranca-pix dd {
+    text-align: left;
+  }
+}

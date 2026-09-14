@@ -89,6 +89,20 @@ export function criarCobrancaPix(valor) {
   }, 'Não foi possível gerar o Pix para receber.')
 }
 
+export function buscarCobrancaPixPorCodigo(codigoPagamento) {
+  return requisitarPix('/buscar_cobranca_codigo', {
+    method: 'POST',
+    body: JSON.stringify({ codigo_pagamento: String(codigoPagamento || '').trim() }),
+  }, 'Não foi possível localizar esta cobrança Pix.')
+}
+
+export function pagarCobrancaPix(idCobranca) {
+  return requisitarPix('/baixar_cobranca', {
+    method: 'POST',
+    body: JSON.stringify({ id_cobranca: idCobranca }),
+  }, 'Não foi possível pagar esta cobrança Pix.')
+}
+
 export function buscarContasUsuario(busca) {
   return requisitarPix('/buscar_contas_usuario', {
     method: 'POST',

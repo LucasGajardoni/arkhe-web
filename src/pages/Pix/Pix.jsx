@@ -205,7 +205,7 @@ export default function Pix() {
               <span><Icone nome="setaCima" /></span>
               <div>
                 <strong>Pagar</strong>
-                <small>Envie por uma chave Pix</small>
+                <small>Use chave, QR Code ou Copia e Cola</small>
               </div>
               <Icone nome="seta" tamanho={17} />
             </button>
