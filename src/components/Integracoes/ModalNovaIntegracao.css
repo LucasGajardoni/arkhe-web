@@ -1,0 +1,297 @@
+.modal-nova-integracao {
+  width: min(620px, 100%);
+}
+
+.modal-nova-integracao .form-nova-integracao {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-nova-integracao > label input {
+  font-size: 14px;
+}
+
+.vinculo-nova-integracao {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  border-radius: 11px;
+  color: #0d4d4d;
+  background: #edf7f3;
+}
+
+.vinculo-nova-integracao > span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #137a74;
+  font-size: 15px;
+}
+
+.vinculo-nova-integracao p {
+  display: flex;
+  flex-direction: column;
+}
+
+.vinculo-nova-integracao strong {
+  font-size: 10px;
+}
+
+.vinculo-nova-integracao small {
+  margin-top: 2px;
+  color: #657d79;
+  font-size: 9px;
+}
+
+.permissoes-nova-integracao {
+  padding: 15px;
+  border: 1px solid #e5e2da;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.permissoes-nova-integracao > strong {
+  color: #183735;
+  font-size: 10px;
+}
+
+.permissoes-nova-integracao ul {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.permissoes-nova-integracao li {
+  position: relative;
+  padding-left: 20px;
+  color: #746e62;
+  font-size: 9px;
+}
+
+.permissoes-nova-integracao li::before {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  color: #137a74;
+  content: '✓';
+  font-weight: 800;
+}
+
+.confirmacao-nova-integracao,
+.credenciais-integracao {
+  padding: 25px 30px 30px;
+}
+
+.nome-confirmacao-integracao {
+  display: flex;
+  margin-bottom: 14px;
+  padding: 15px;
+  border-radius: 11px;
+  background: #f6f3ea;
+  flex-direction: column;
+}
+
+.nome-confirmacao-integracao small {
+  color: #8a8374;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.nome-confirmacao-integracao strong {
+  margin-top: 3px;
+  color: #183735;
+  font-size: 13px;
+}
+
+.aviso-autorizacao-integracao {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  color: #74601d;
+  background: #fbf3d9;
+  font-size: 9px;
+}
+
+.aviso-autorizacao-integracao strong {
+  display: block;
+  color: #665013;
+}
+
+.confirmacao-nova-integracao > .mensagem-modal-perfil,
+.credenciais-integracao > .mensagem-modal-perfil {
+  margin-top: 14px;
+}
+
+.confirmacao-nova-integracao > footer,
+.credenciais-integracao > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 23px;
+}
+
+.confirmacao-nova-integracao footer .botao,
+.credenciais-integracao footer .botao {
+  min-height: 44px;
+  font-size: 10px;
+}
+
+.credenciais-integracao {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.icone-sucesso-integracao {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #137a74;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.credenciais-integracao h3 {
+  margin-top: 11px;
+  color: #183735;
+  font-size: 19px;
+}
+
+.nome-integracao-criada {
+  color: #746e62;
+  font-size: 10px;
+}
+
+.aviso-secret-integracao {
+  display: flex;
+  width: 100%;
+  margin: 18px 0;
+  padding: 13px;
+  border: 1px solid #ead58a;
+  border-radius: 10px;
+  color: #6d5717;
+  background: #fff8df;
+  flex-direction: column;
+  text-align: left;
+}
+
+.aviso-secret-integracao strong {
+  font-size: 10px;
+}
+
+.aviso-secret-integracao span {
+  margin-top: 2px;
+  font-size: 9px;
+}
+
+.campo-credencial-integracao {
+  width: 100%;
+  text-align: left;
+}
+
+.campo-credencial-integracao + .campo-credencial-integracao {
+  margin-top: 13px;
+}
+
+.campo-credencial-integracao label {
+  color: #183735;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.campo-credencial-integracao > div {
+  display: grid;
+  margin-top: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border: 1px solid #dfe5de;
+  border-radius: 10px;
+  background: #f6f3ea;
+}
+
+.campo-credencial-integracao.destaque > div {
+  border-color: #d8c167;
+  background: #fffaf0;
+}
+
+.campo-credencial-integracao input {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 0;
+  outline: 0;
+  color: #183735;
+  background: transparent;
+  font: 700 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-overflow: ellipsis;
+}
+
+.campo-credencial-integracao button {
+  min-width: 76px;
+  margin: 5px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  color: #fff;
+  background: #0d4d4d;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.feedback-copia-integracao {
+  width: 100%;
+  margin-top: 10px;
+  color: #137a74;
+  font-size: 9px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.credenciais-integracao > footer {
+  width: 100%;
+}
+
+@media (max-width: 650px) {
+  .confirmacao-nova-integracao,
+  .credenciais-integracao {
+    padding: 22px 20px calc(26px + env(safe-area-inset-bottom));
+  }
+
+  .confirmacao-nova-integracao > footer,
+  .credenciais-integracao > footer {
+    flex-direction: column-reverse;
+  }
+
+  .confirmacao-nova-integracao footer .botao,
+  .credenciais-integracao footer .botao {
+    width: 100%;
+  }
+
+  .campo-credencial-integracao > div {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 5px;
+  }
+
+  .campo-credencial-integracao input {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .campo-credencial-integracao button {
+    width: 100%;
+    min-height: 42px;
+    margin: 0;
+  }
+}

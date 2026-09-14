@@ -68,6 +68,13 @@ const caminhos = {
       <path d="m11 12 8-8M15 8l3 3M17 6l2 2" />
     </>
   ),
+  api: (
+    <>
+      <path d="m8 8-4 4 4 4" />
+      <path d="m16 8 4 4-4 4" />
+      <path d="m14 4-4 16" />
+    </>
+  ),
 }
 
 export default function Icone({ nome, tamanho = 22 }) {

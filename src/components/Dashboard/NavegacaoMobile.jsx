@@ -22,6 +22,12 @@ export default function NavegacaoMobile({ secao = 'inicio', tipoConta = '' }) {
         <Icone nome="boleto" />
         <span>{tipoConta === 'PJ' ? 'Cobranças' : 'Boletos'}</span>
       </button>
+      {tipoConta === 'PJ' && (
+        <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>
+          <Icone nome="api" />
+          <span>API</span>
+        </button>
+      )}
     </nav>
   )
 }

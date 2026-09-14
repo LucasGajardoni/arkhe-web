@@ -31,6 +31,9 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           </button>
           <button className={secao === 'extrato' ? 'ativo' : ''} type="button" aria-current={secao === 'extrato' ? 'page' : undefined} onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
           <button className={secao === 'boletos' ? 'ativo' : ''} type="button" aria-current={secao === 'boletos' ? 'page' : undefined} onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
+          {usuario?.tipoConta === 'PJ' && (
+            <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>Integrações</button>
+          )}
         </nav>
         <div className="perfil-topo-dashboard">
           <button className="usuario-dashboard" type="button" onClick={abrirPerfil}>
