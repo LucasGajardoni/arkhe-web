@@ -7,6 +7,7 @@ export default function AcoesComprovante({ idMovimentacao }) {
   const [erro, setErro] = useState('')
   const [urlVisualizacao, setUrlVisualizacao] = useState('')
   const urlVisualizacaoRef = useRef('')
+  const visualizadorRef = useRef(null)
   const acaoRef = useRef('')
   const ativoRef = useRef(true)
 
@@ -18,6 +19,12 @@ export default function AcoesComprovante({ idMovimentacao }) {
       if (urlVisualizacaoRef.current) URL.revokeObjectURL(urlVisualizacaoRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (!urlVisualizacao) return undefined
+    const quadro = window.requestAnimationFrame(() => visualizadorRef.current?.focus())
+    return () => window.cancelAnimationFrame(quadro)
+  }, [urlVisualizacao])
 
   function iniciarAcao(nome) {
     if (!idMovimentacao || acaoRef.current) return false
@@ -97,7 +104,20 @@ export default function AcoesComprovante({ idMovimentacao }) {
 
       {urlVisualizacao && (
         <div className="fundo-visualizador-comprovante" role="presentation" onMouseDown={fecharAoClicarFora}>
-          <section className="visualizador-comprovante" role="dialog" aria-modal="true" aria-labelledby="titulo-visualizador-comprovante">
+          <section
+            ref={visualizadorRef}
+            className="visualizador-comprovante"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-visualizador-comprovante"
+            tabIndex="-1"
+            onKeyDown={(evento) => {
+              if (evento.key === 'Escape') {
+                evento.stopPropagation()
+                fecharVisualizacao()
+              }
+            }}
+          >
             <header>
               <div>
                 <p>DOCUMENTO ARKHÉ</p>

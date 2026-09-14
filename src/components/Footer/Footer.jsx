@@ -2,9 +2,9 @@ import logo from '../../assets/arkhe-logo.svg'
 import './Footer.css'
 
 const colunasRodape = [
-  ['Produtos', ['Conta Digital', 'Cartões', 'Pix', 'Investimentos']],
-  ['Projeto', ['Sobre o projeto', 'Metodologia', 'Equipe 2026']],
-  ['Ajuda', ['Central de apoio', 'Canais de contato', 'Privacidade']],
+  ['Produtos', [['Conta digital', '#conta'], ['Pix', '#pix'], ['Boletos', '#boletos']]],
+  ['Conheça', [['Benefícios', '#beneficios'], ['Segurança', '#seguranca'], ['Contas PF e PJ', '#abrir-conta']]],
+  ['Acesso', [['Acessar conta', '/login'], ['Abrir conta', '/cadastro']]],
 ]
 
 export default function Footer() {
@@ -23,9 +23,9 @@ export default function Footer() {
             <div className="coluna-rodape" key={titulo}>
               <h2>{titulo}</h2>
               <ul>
-                {links.map((link) => (
-                  <li key={link}>
-                    <a href="#inicio">{link}</a>
+                {links.map(([rotulo, destino]) => (
+                  <li key={rotulo}>
+                    <a href={destino}>{rotulo}</a>
                   </li>
                 ))}
               </ul>
@@ -36,9 +36,8 @@ export default function Footer() {
         <div className="base-rodape">
           <p>© 2026 Banco Arkhé</p>
           <nav aria-label="Links legais">
-            <a href="#inicio">Termos de uso</a>
-            <a href="#inicio">Ética e conduta</a>
             <a href="#seguranca">Segurança</a>
+            <a href="/login">Acessar conta</a>
           </nav>
         </div>
       </div>

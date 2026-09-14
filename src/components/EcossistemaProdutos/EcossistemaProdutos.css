@@ -44,7 +44,7 @@
 }
 
 .cartao-conta,
-.cartao-investimentos {
+.cartao-boletos {
   grid-column: span 2;
 }
 
@@ -122,23 +122,46 @@
   background-color: var(--dourado-claro);
 }
 
-.cartao-cartao {
+.cartao-extrato {
   gap: 26px;
   background-color: var(--fundo-claro);
 }
 
-.cartao-cartao img {
-  width: 100%;
-  max-width: 285px;
-  margin: 0 auto -28px;
-  transform: rotate(-4deg);
+.visual-extrato-produto {
+  display: grid;
+  gap: 8px;
 }
 
-.cartao-investimentos {
+.visual-extrato-produto > span {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  color: var(--texto-secundario);
+  background: #fff;
+  font-size: 11px;
+}
+
+.visual-extrato-produto i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--verde-medio);
+}
+
+.visual-extrato-produto b {
+  color: var(--verde-escuro);
+  font-size: 14px;
+}
+
+.cartao-boletos {
   background-color: #faf9f4;
 }
 
-.cartao-investimentos ul {
+.cartao-boletos ul {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
@@ -147,14 +170,14 @@
   list-style: none;
 }
 
-.cartao-investimentos li {
+.cartao-boletos li {
   padding: 17px;
   border: 1px solid var(--borda);
   border-radius: 14px;
   background-color: var(--branco);
 }
 
-.cartao-investimentos li::before {
+.cartao-boletos li::before {
   display: block;
   width: 7px;
   height: 7px;
@@ -164,17 +187,17 @@
   content: '';
 }
 
-.cartao-investimentos li span,
-.cartao-investimentos li small {
+.cartao-boletos li span,
+.cartao-boletos li small {
   display: block;
 }
 
-.cartao-investimentos li span {
+.cartao-boletos li span {
   font-size: 13px;
   font-weight: 800;
 }
 
-.cartao-investimentos li small {
+.cartao-boletos li small {
   margin-top: 3px;
   color: var(--texto-secundario);
   font-size: 11px;
@@ -186,11 +209,11 @@
   }
 
   .cartao-conta,
-  .cartao-investimentos {
+  .cartao-boletos {
     grid-column: span 1;
   }
 
-  .cartao-investimentos ul {
+  .cartao-boletos ul {
     grid-template-columns: 1fr;
   }
 }

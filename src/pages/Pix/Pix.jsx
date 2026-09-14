@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.jsx'
 import Icone from '../../components/Dashboard/Icone.jsx'
@@ -7,6 +7,7 @@ import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import ModalChavePix from '../../components/Pix/ModalChavePix.jsx'
 import ModalExcluirChave from '../../components/Pix/ModalExcluirChave.jsx'
 import ModalPagamentoPix from '../../components/Pix/ModalPagamentoPix.jsx'
+import ModalReceberPix from '../../components/Pix/ModalReceberPix.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { usePix } from '../../hooks/usePix.js'
 import { useSessao } from '../../hooks/useSessao.js'
@@ -30,10 +31,12 @@ export default function Pix() {
   const pix = usePix(usuario)
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [pagamentoAberto, setPagamentoAberto] = useState(false)
+  const [recebimentoAberto, setRecebimentoAberto] = useState(false)
   const [chaveCopiada, setChaveCopiada] = useState('')
   const [saindo, setSaindo] = useState(false)
-  const secaoChaves = useRef(null)
   const movimentacoes = useMovimentacoes()
+  const contaPJ = usuario.tipoConta === 'PJ'
+  const podeCadastrarChave = pix.tiposDisponiveis.length > 0
 
   async function sair() {
     if (saindo) return
@@ -55,6 +58,10 @@ export default function Pix() {
   function abrirCadastro() {
     pix.setErro('')
     pix.setMensagem('')
+    if (!podeCadastrarChave) {
+      pix.setMensagem('Todos os tipos de chave disponíveis já estão cadastrados.')
+      return
+    }
     pix.alterarTipo(pix.tiposDisponiveis[0] || 'aleatoria')
     pix.setModalCadastro(true)
   }
@@ -62,10 +69,6 @@ export default function Pix() {
   function fecharCadastro() {
     pix.setModalCadastro(false)
     pix.setErro('')
-  }
-
-  function verChaves() {
-    secaoChaves.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   function prepararExclusao(chave) {
@@ -102,7 +105,7 @@ export default function Pix() {
       <div className="estado-chaves-pix">
         <span><Icone nome="pix" tamanho={29} /></span>
         <strong>Você ainda não possui chaves Pix</strong>
-        <p>Cadastre sua primeira chave para começar a receber.</p>
+        <p>Cadastre uma chave para receber transferências diretamente por ela.</p>
         <button className="botao botao-principal" type="button" onClick={abrirCadastro}>
           Cadastrar chave
         </button>
@@ -185,8 +188,8 @@ export default function Pix() {
           <div className="conteudo-dashboard-largo cabecalho-pix-conteudo">
             <div>
               <p>ÁREA PIX</p>
-              <h1>Seu Pix, simples<br />e sempre à mão.</h1>
-              <span>Cadastre suas chaves e receba com praticidade.</span>
+              <h1>{contaPJ ? 'O Pix da sua empresa,' : 'Seu Pix, simples'}<br />sempre à mão.</h1>
+              <span>Envie, receba e gerencie suas chaves com clareza.</span>
             </div>
             <div className="selo-pix">
               <Icone nome="pix" tamanho={38} />
@@ -202,23 +205,15 @@ export default function Pix() {
               <span><Icone nome="setaCima" /></span>
               <div>
                 <strong>Pagar</strong>
-                <small>Envie um Pix</small>
+                <small>Envie por uma chave Pix</small>
               </div>
               <Icone nome="seta" tamanho={17} />
             </button>
-            <button type="button" onClick={verChaves}>
+            <button type="button" onClick={() => setRecebimentoAberto(true)}>
               <span><Icone nome="setaBaixo" /></span>
               <div>
                 <strong>Receber</strong>
-                <small>Use uma das suas chaves</small>
-              </div>
-              <Icone nome="seta" tamanho={17} />
-            </button>
-            <button type="button" onClick={abrirCadastro}>
-              <span><Icone nome="mais" /></span>
-              <div>
-                <strong>Nova chave</strong>
-                <small>Cadastre com segurança</small>
+                <small>Crie um Pix para cobrar</small>
               </div>
               <Icone nome="seta" tamanho={17} />
             </button>
@@ -227,25 +222,25 @@ export default function Pix() {
           {pix.mensagem && (
             <div className="mensagem-pix sucesso" role="status">
               {pix.mensagem}
-              <button type="button" onClick={() => pix.setMensagem('')}>×</button>
+              <button type="button" onClick={() => pix.setMensagem('')} aria-label="Fechar mensagem">×</button>
             </div>
           )}
 
           {pix.erro && !pix.modalCadastro && !pix.chaveExclusao && (
             <div className="mensagem-pix erro" role="alert">
               {pix.erro}
-              <button type="button" onClick={() => pix.setErro('')}>×</button>
+              <button type="button" onClick={() => pix.setErro('')} aria-label="Fechar mensagem de erro">×</button>
             </div>
           )}
 
-          <section className="painel-chaves-pix" ref={secaoChaves}>
+          <section className="painel-chaves-pix">
             <header>
               <div>
-                <p>RECEBER</p>
+                <p>CHAVES PIX</p>
                 <h2>Minhas chaves Pix</h2>
                 <span>Copie uma chave para compartilhar ou gerencie seus cadastros.</span>
               </div>
-              <button className="botao botao-principal" type="button" onClick={abrirCadastro}>
+              <button className="botao botao-principal" type="button" onClick={abrirCadastro} disabled={!podeCadastrarChave}>
                 <Icone nome="mais" tamanho={17} /> Nova chave
               </button>
             </header>
@@ -260,6 +255,13 @@ export default function Pix() {
       {modalExclusao}
       {pagamentoAberto && (
         <ModalPagamentoPix usuario={usuario} fechar={() => setPagamentoAberto(false)} aoConcluir={movimentacoes.carregar} />
+      )}
+      {recebimentoAberto && (
+        <ModalReceberPix
+          usuario={usuario}
+          fechar={() => setRecebimentoAberto(false)}
+          aoCriar={movimentacoes.carregar}
+        />
       )}
     </div>
   )

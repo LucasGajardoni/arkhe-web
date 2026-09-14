@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { buscarMovimentacoes } from '../services/movimentacoesService.js'
-
-function dataValida(valor) {
-  if (!valor) return null
-  const data = new Date(valor)
-  return Number.isNaN(data.getTime()) ? null : data
-}
+import { dataMovimentacao, montarPanoramaMensal } from '../utils/movimentacoes.js'
 
 export function useMovimentacoes() {
   const [movimentacoes, setMovimentacoes] = useState([])
@@ -49,8 +44,8 @@ export function useMovimentacoes() {
 
   const resumo = useMemo(() => {
     const ordenadas = [...movimentacoes].sort((a, b) => {
-      const dataA = dataValida(a.data_movimentacao)?.getTime() || 0
-      const dataB = dataValida(b.data_movimentacao)?.getTime() || 0
+      const dataA = dataMovimentacao(a)?.getTime() || 0
+      const dataB = dataMovimentacao(b)?.getTime() || 0
       return dataB - dataA
     })
     const saldo = movimentacoes.reduce((total, item) => {
@@ -60,15 +55,13 @@ export function useMovimentacoes() {
       return total
     }, 0)
 
-    const datas = movimentacoes.map((item) => dataValida(item.data_movimentacao))
-    const podeFiltrarMes = movimentacoes.length > 0 && datas.every(Boolean)
     const agora = new Date()
-    const basePeriodo = podeFiltrarMes
-      ? movimentacoes.filter((_, indice) => (
-        datas[indice].getMonth() === agora.getMonth()
-        && datas[indice].getFullYear() === agora.getFullYear()
-      ))
-      : movimentacoes
+    const basePeriodo = movimentacoes.filter((item) => {
+      const data = dataMovimentacao(item)
+      return data
+        && data.getMonth() === agora.getMonth()
+        && data.getFullYear() === agora.getFullYear()
+    })
     const entradas = basePeriodo.reduce(
       (total, item) => total + (item.tipo === 'entrada' ? Number(item.valor) || 0 : 0),
       0,
@@ -78,7 +71,13 @@ export function useMovimentacoes() {
       0,
     )
 
-    return { ordenadas, saldo, entradas, saidas, podeFiltrarMes }
+    return {
+      ordenadas,
+      saldo,
+      entradas,
+      saidas,
+      panorama: montarPanoramaMensal(movimentacoes, agora),
+    }
   }, [movimentacoes])
 
   return { movimentacoes, cobrancas, carregando, erro, carregar, ...resumo }

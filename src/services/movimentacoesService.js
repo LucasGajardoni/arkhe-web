@@ -3,12 +3,14 @@ import { ErroApi } from './authService.js'
 
 async function requisitarMovimentacoes(caminho, opcoes = {}, mensagemPadrao) {
   let resposta
+  const headers = { ...opcoes.headers }
+  if (opcoes.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
 
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
       credentials: 'include',
       ...opcoes,
-      headers: { 'Content-Type': 'application/json', ...opcoes.headers },
+      headers,
     })
   } catch {
     throw new ErroApi('Não foi possível conectar ao servidor.', 0, {})

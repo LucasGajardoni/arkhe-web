@@ -43,6 +43,11 @@ button {
   border: none;
 }
 
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(212, 175, 55, .58);
+  outline-offset: 3px;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -120,6 +125,47 @@ svg {
 
 .botao-secundario:hover {
   background-color: var(--fundo-claro);
+}
+
+.estado-sessao {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  color: var(--verde-escuro);
+  background: var(--fundo);
+}
+
+.estado-sessao > span {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #d9e5e2;
+  border-top-color: var(--verde-medio);
+  border-radius: 50%;
+  animation: girar-estado-sessao .8s linear infinite;
+}
+
+.estado-sessao strong {
+  font-size: 13px;
+}
+
+@keyframes girar-estado-sessao {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
 
 @media (max-width: 760px) {

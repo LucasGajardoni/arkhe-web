@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import {
   buscarCobrancaPorCodigo,
   pagarCobranca,
@@ -51,24 +52,7 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
   const processandoRef = useRef(false)
-
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape' && !processando) fechar()
-    }
-
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar, processando])
-
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget && !processando) fechar()
-  }
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   async function localizarBoleto(codigoInformado) {
     const codigoLimpo = limparCodigo(codigoInformado)
@@ -120,6 +104,17 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
   }
 
   let conteudo
+  let titulo = 'Pagar boleto'
+  let etapaAtual = 1
+  if (etapa === 'revisao') {
+    titulo = 'Revisar boleto'
+    etapaAtual = 2
+  }
+  if (etapa === 'confirmacao') {
+    titulo = 'Confirmar pagamento'
+    etapaAtual = 3
+  }
+  if (etapa === 'sucesso') titulo = 'Pagamento concluído'
 
   if (etapa === 'entrada') {
     conteudo = (
@@ -237,15 +232,20 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section className="modal-perfil modal-pagar-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-pagar-boleto">
+      <section ref={modalRef} className="modal-perfil modal-pagar-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-pagar-boleto" tabIndex="-1">
         <header>
           <div>
             <p>PAGAMENTO DE BOLETO</p>
-            <h2 id="titulo-pagar-boleto">Localizar boleto</h2>
+            <h2 id="titulo-pagar-boleto">{titulo}</h2>
             <span>Escaneie ou digite o código. O pagamento só acontece depois da sua confirmação.</span>
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
+        {etapa !== 'sucesso' && (
+          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de 3`}>
+            <span style={{ width: `${(etapaAtual / 3) * 100}%` }} />
+          </p>
+        )}
         {conteudo}
       </section>
     </div>

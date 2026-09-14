@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { editarUsuario } from '../../services/authService.js'
 import { mascaraCpfParcial, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import { emailValido, nomeValido } from '../../utils/validadores.js'
@@ -20,20 +21,7 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
     || dados.email.trim().toLowerCase() !== String(usuario?.email || '').trim().toLowerCase()
     || somenteNumeros(dados.telefone) !== somenteNumeros(usuario?.telefone)
   const podeSalvar = nomeOk && emailOk && telefoneOk && alterado && !salvando
-
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape') fechar()
-    }
-
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar])
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, salvando)
 
   function alterar(evento) {
     const { name, value } = evento.target
@@ -78,10 +66,6 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
     }
   }
 
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget) fechar()
-  }
-
   let iniciais = 'AR'
   if (usuario?.nome) {
     iniciais = usuario.nome.split(' ').slice(0, 2).map((nome) => nome[0]).join('')
@@ -95,7 +79,7 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section className="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil">
+      <section ref={modalRef} className="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil" tabIndex="-1">
         <header>
           <div>
             <p>MINHA CONTA</p>

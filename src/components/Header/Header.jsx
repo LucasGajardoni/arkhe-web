@@ -5,8 +5,8 @@ import './Header.css'
 const linksNavegacao = [
   ['Para você', '#inicio'],
   ['Conta', '#conta'],
-  ['Cartões', '#cartoes'],
-  ['Investimentos', '#investimentos'],
+  ['Pix', '#pix'],
+  ['Boletos', '#boletos'],
   ['Segurança', '#seguranca'],
 ]
 

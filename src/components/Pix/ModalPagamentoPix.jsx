@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import { buscarContasUsuario, realizarPix } from '../../services/pixService.js'
 import { mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
@@ -55,18 +56,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [buscandoDestinatario, setBuscandoDestinatario] = useState(false)
   const [erroBusca, setErroBusca] = useState('')
   const [idMovimentacao, setIdMovimentacao] = useState(null)
-
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape' && !processando) fechar()
-    }
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar, processando])
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   useEffect(() => {
     if (!chaveCompleta(tipoChave, chave)) return undefined
@@ -93,10 +83,6 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
       clearTimeout(temporizador)
     }
   }, [chave, tipoChave])
-
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget && !processando) fechar()
-  }
 
   function alterarValor(evento) {
     const digitos = evento.target.value.replace(/\D/g, '').slice(0, 13)
@@ -139,6 +125,18 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   }
 
   let conteudo
+  let etapaAtual = 1
+  let titulo = 'Escolha o destinatário'
+  if (etapa === 'valor') {
+    etapaAtual = 2
+    titulo = 'Informe o valor'
+  }
+  if (etapa === 'confirmacao') {
+    etapaAtual = 3
+    titulo = 'Revise antes de enviar'
+  }
+  if (etapa === 'sucesso') titulo = 'Pix concluído'
+
   if (etapa === 'chave') {
     conteudo = (
       <form onSubmit={(evento) => { evento.preventDefault(); if (destinatario) setEtapa('valor') }}>
@@ -211,11 +209,16 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section className="modal-perfil modal-chave-pix modal-pagamento-pix" role="dialog" aria-modal="true" aria-labelledby="titulo-pagamento-pix">
+      <section ref={modalRef} className="modal-perfil modal-chave-pix modal-pagamento-pix" role="dialog" aria-modal="true" aria-labelledby="titulo-pagamento-pix" tabIndex="-1">
         <header>
-          <div><p>PAGAR COM PIX</p><h2 id="titulo-pagamento-pix">Enviar um Pix</h2><span>Transferência instantânea pela sua conta atual.</span></div>
+          <div><p>ENVIAR PIX</p><h2 id="titulo-pagamento-pix">{titulo}</h2><span>Transferência instantânea pela sua conta atual.</span></div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
+        {etapa !== 'sucesso' && (
+          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de 3`}>
+            <span style={{ width: `${(etapaAtual / 3) * 100}%` }} />
+          </p>
+        )}
         {conteudo}
       </section>
     </div>

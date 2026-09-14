@@ -19,6 +19,16 @@ function montarPerfilVisual(resultado = {}, fallback = {}) {
     telefone: usuario.telefone || resultado.telefone || fallback.telefone || '',
     cpf: usuario.cpf || resultado.cpf || fallback.cpf || '',
     cnpj: conta.cnpj || resultado.cnpj || fallback.cnpj || '',
+    nomeFantasia: conta.nome_fantasia
+      || usuario.nome_fantasia
+      || resultado.nome_fantasia
+      || fallback.nomeFantasia
+      || '',
+    razaoSocial: conta.razao_social
+      || usuario.razao_social
+      || resultado.razao_social
+      || fallback.razaoSocial
+      || '',
     tipoConta: tipoContaPorExtenso(tipoRecebido, fallback.tipoConta || ''),
     idConta: conta.id_conta ?? resultado.id_conta ?? fallback.idConta ?? null,
     banco: conta.banco || resultado.banco || fallback.banco || '',
@@ -72,6 +82,8 @@ export default function SessaoProvider({ children }) {
       ...(atual || { nome: 'Cliente' }),
       tipoConta: tipoSelecionado,
       cnpj,
+      nomeFantasia: dadosConta.nome_fantasia || dadosConta.nomeFantasia || '',
+      razaoSocial: dadosConta.razao_social || dadosConta.razaoSocial || '',
       idConta: dadosConta.id_conta ?? null,
       banco: dadosConta.banco || '',
       agencia: dadosConta.agencia || '',

@@ -1,3 +1,4 @@
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import './ModalTipoConta.css'
 
 function EscolhaConta({ escolherTipo }) {
@@ -95,6 +96,8 @@ export default function ModalTipoConta({
   escolherTipo,
   autenticarClienteExistente,
 }) {
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, verificando)
+
   let conteudo = (
     <VerificacaoCpf
       cpf={cpf}
@@ -109,13 +112,14 @@ export default function ModalTipoConta({
   if (etapa === 'existente') conteudo = <ClienteExistente autenticar={autenticarClienteExistente} />
 
   return (
-    <div className="fundo-modal-conta" role="presentation" onMouseDown={fechar}>
+    <div className="fundo-modal-conta" role="presentation" onMouseDown={fecharAoClicarFora}>
       <section
+        ref={modalRef}
         className="modal-tipo-conta"
         role="dialog"
         aria-modal="true"
         aria-labelledby="titulo-modal-conta"
-        onMouseDown={(evento) => evento.stopPropagation()}
+        tabIndex="-1"
       >
         <button className="fechar-modal-conta" type="button" aria-label="Fechar" onClick={fechar}>
           ×

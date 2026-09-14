@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { adicionarCobranca, buscarContasUsuario } from '../../services/pixService.js'
 import {
   formatarDataBrasileira,
@@ -59,7 +60,7 @@ function descricaoRecebedora(usuario) {
   return partes.join(' · ')
 }
 
-export default function ModalEmissaoBoleto({ usuario, fechar }) {
+export default function ModalEmissaoBoleto({ usuario, fechar, aoConcluir }) {
   const [etapa, setEtapa] = useState('busca')
   const [busca, setBusca] = useState('')
   const [contas, setContas] = useState([])
@@ -73,24 +74,7 @@ export default function ModalEmissaoBoleto({ usuario, fechar }) {
   const [erro, setErro] = useState('')
   const [copiado, setCopiado] = useState(false)
   const hoje = dataLocalHoje()
-
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape' && !processando) fechar()
-    }
-
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar, processando])
-
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget && !processando) fechar()
-  }
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   async function pesquisarPagador(evento) {
     evento.preventDefault()
@@ -163,6 +147,7 @@ export default function ModalEmissaoBoleto({ usuario, fechar }) {
       )
       setResultado(resposta)
       setEtapa('sucesso')
+      if (aoConcluir) await aoConcluir()
     } catch (falha) {
       setErro(falha.message || 'Não foi possível emitir o boleto.')
     } finally {
@@ -348,7 +333,7 @@ export default function ModalEmissaoBoleto({ usuario, fechar }) {
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section className="modal-perfil modal-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-boleto">
+      <section ref={modalRef} className="modal-perfil modal-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-boleto" tabIndex="-1">
         <header>
           <div>
             <p>COBRANÇA EMPRESARIAL</p>

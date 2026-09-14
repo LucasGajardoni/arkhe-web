@@ -7,6 +7,7 @@ export default function AcoesBoletoPdf({ idCobranca }) {
   const [erro, setErro] = useState('')
   const [urlVisualizacao, setUrlVisualizacao] = useState('')
   const urlVisualizacaoRef = useRef('')
+  const visualizadorRef = useRef(null)
   const ativoRef = useRef(true)
 
   useEffect(() => {
@@ -17,6 +18,12 @@ export default function AcoesBoletoPdf({ idCobranca }) {
       if (urlVisualizacaoRef.current) URL.revokeObjectURL(urlVisualizacaoRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (!urlVisualizacao) return undefined
+    const quadro = window.requestAnimationFrame(() => visualizadorRef.current?.focus())
+    return () => window.cancelAnimationFrame(quadro)
+  }, [urlVisualizacao])
 
   async function visualizar() {
     if (!idCobranca || acao) return
@@ -66,6 +73,10 @@ export default function AcoesBoletoPdf({ idCobranca }) {
     setUrlVisualizacao('')
   }
 
+  function fecharAoClicarFora(evento) {
+    if (evento.target === evento.currentTarget) fecharVisualizacao()
+  }
+
   if (!idCobranca) return null
 
   return (
@@ -82,8 +93,21 @@ export default function AcoesBoletoPdf({ idCobranca }) {
       {erro && <p className="mensagem-pdf-boleto erro" role="alert">{erro}</p>}
 
       {urlVisualizacao && (
-        <div className="fundo-visualizador-boleto" role="presentation">
-          <section className="visualizador-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-visualizador-boleto">
+        <div className="fundo-visualizador-boleto" role="presentation" onMouseDown={fecharAoClicarFora}>
+          <section
+            ref={visualizadorRef}
+            className="visualizador-boleto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="titulo-visualizador-boleto"
+            tabIndex="-1"
+            onKeyDown={(evento) => {
+              if (evento.key === 'Escape') {
+                evento.stopPropagation()
+                fecharVisualizacao()
+              }
+            }}
+          >
             <header>
               <div>
                 <p>DOCUMENTO ARKHÉ</p>

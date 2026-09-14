@@ -1,24 +1,8 @@
-import { useEffect } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { formatarChavePix } from '../../utils/formatadores.js'
 
 export default function ModalExcluirChave({ chave, processando, erro, fechar, excluir }) {
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape') fechar()
-    }
-
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar])
-
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget) fechar()
-  }
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   let textoExcluir = 'Excluir chave'
   if (processando) textoExcluir = 'Excluindo...'
@@ -26,10 +10,12 @@ export default function ModalExcluirChave({ chave, processando, erro, fechar, ex
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
       <section
+        ref={modalRef}
         className="modal-perfil modal-excluir-chave"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="titulo-excluir-chave"
+        tabIndex="-1"
       >
         <header>
           <div>
@@ -37,7 +23,7 @@ export default function ModalExcluirChave({ chave, processando, erro, fechar, ex
             <h2 id="titulo-excluir-chave">Excluir chave Pix?</h2>
             <span>Você deixará de receber transferências por esta chave.</span>
           </div>
-          <button type="button" onClick={fechar} aria-label="Fechar modal">×</button>
+          <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
         <div className="conteudo-excluir-chave">
           <span>{chave.tipo}</span>

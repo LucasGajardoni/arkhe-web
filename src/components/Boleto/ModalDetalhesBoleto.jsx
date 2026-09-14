@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { pagarCobranca } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
@@ -25,7 +26,6 @@ export default function ModalDetalhesBoleto({
   situacao,
   fechar,
   atualizar,
-  aoEscanear,
   idMovimentacao,
 }) {
   const [etapa, setEtapa] = useState('detalhes')
@@ -38,24 +38,7 @@ export default function ModalDetalhesBoleto({
   let textoSituacao = situacao.texto
   if (contaPJ && pago) textoSituacao = 'Pagamento recebido'
   if (contaPJ && !pago && situacao.classe === 'pendente') textoSituacao = 'Pagamento pendente'
-
-  useEffect(() => {
-    function fecharComEsc(evento) {
-      if (evento.key === 'Escape' && !processando) fechar()
-    }
-
-    document.addEventListener('keydown', fecharComEsc)
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.removeEventListener('keydown', fecharComEsc)
-      document.body.style.overflow = ''
-    }
-  }, [fechar, processando])
-
-  function fecharAoClicarFora(evento) {
-    if (evento.target === evento.currentTarget && !processando) fechar()
-  }
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   async function confirmarPagamento() {
     if (processando || contaPJ || pago) return
@@ -114,15 +97,15 @@ export default function ModalDetalhesBoleto({
           <div><dt>{contaPJ ? 'Pagador' : 'Recebedor'}</dt><dd>{nomeRelacionado}</dd></div>
           <div><dt>Valor</dt><dd>{moeda.format(Number(boleto.valor) || 0)}</dd></div>
           <div><dt>Vencimento</dt><dd>{vencimento ? formatarDataBrasileira(vencimento) : 'Não informado'}</dd></div>
-          <div><dt>Situação</dt><dd>{situacao.texto}</dd></div>
+          <div><dt>Situação</dt><dd>{textoSituacao}</dd></div>
           <div><dt>Conta atual</dt><dd>{descricaoConta(usuario)}</dd></div>
           <div><dt>ID da cobrança</dt><dd>#{boleto.id_cobranca}</dd></div>
           {boleto.codigo_pagamento && <div><dt>Código de pagamento</dt><dd className="codigo-detalhes-boleto">{boleto.codigo_pagamento}</dd></div>}
-          {pago && dataPagamento && <div><dt>Pagamento recebido em</dt><dd>{formatarDataBrasileira(dataPagamento)}</dd></div>}
+          {pago && dataPagamento && <div><dt>{contaPJ ? 'Recebido em' : 'Pago em'}</dt><dd>{formatarDataBrasileira(dataPagamento)}</dd></div>}
         </dl>
 
         {!boleto.codigo_pagamento && contaPJ && (
-          <p className="dado-indisponivel-boleto">Código de pagamento não disponibilizado pelo backend.</p>
+          <p className="dado-indisponivel-boleto">Código de pagamento não disponível para esta cobrança.</p>
         )}
 
         <AcoesBoletoPdf idCobranca={boleto.id_cobranca} />
@@ -133,10 +116,7 @@ export default function ModalDetalhesBoleto({
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Fechar</button>
           {!contaPJ && !pago && (
-            <>
-              <button className="botao botao-secundario" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
-              <button className="botao botao-principal" type="button" onClick={aoEscanear}>Escanear para pagar</button>
-            </>
+            <button className="botao botao-principal" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
           )}
         </footer>
       </div>
@@ -145,11 +125,11 @@ export default function ModalDetalhesBoleto({
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section className="modal-perfil modal-detalhes-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-detalhes-boleto">
+      <section ref={modalRef} className="modal-perfil modal-detalhes-boleto" role="dialog" aria-modal="true" aria-labelledby="titulo-detalhes-boleto" tabIndex="-1">
         <header>
           <div>
             <p>{contaPJ ? 'BOLETO EMITIDO' : 'DDA / BOLETO'}</p>
-            <h2 id="titulo-detalhes-boleto">Detalhes da cobrança</h2>
+            <h2 id="titulo-detalhes-boleto">{contaPJ ? 'Detalhes da cobrança' : 'Detalhes do boleto'}</h2>
             <span>Cobrança #{boleto.id_cobranca}</span>
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>

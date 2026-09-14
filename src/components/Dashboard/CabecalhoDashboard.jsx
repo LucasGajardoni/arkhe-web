@@ -6,17 +6,9 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
   const navigate = useNavigate()
   const primeiroNome = usuario?.nome?.split(' ')[0] || 'Cliente'
   const iniciais = usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'
-  let classeInicio = ''
-  let classePix = ''
-  let classeExtrato = ''
-  let classeBoletos = ''
   let rotuloConta = 'Conta Arkhé'
   let rotuloBoletos = 'DDA / Boletos'
 
-  if (secao === 'inicio') classeInicio = 'ativo'
-  if (secao === 'pix') classePix = 'ativo'
-  if (secao === 'extrato') classeExtrato = 'ativo'
-  if (secao === 'boletos') classeBoletos = 'ativo'
   if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
   if (usuario?.tipoConta === 'PJ') {
     rotuloConta = 'Conta empresarial'
@@ -30,17 +22,15 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           <span><img src={arkheLogo} alt="" /></span>
           <strong>ARKHÉ</strong>
         </button>
-        <nav>
-          <button className={classeInicio} type="button" onClick={() => navigate('/dashboard')}>
+        <nav aria-label="Navegação da conta">
+          <button className={secao === 'inicio' ? 'ativo' : ''} type="button" aria-current={secao === 'inicio' ? 'page' : undefined} onClick={() => navigate('/dashboard')}>
             Visão geral
           </button>
-          <button className={classePix} type="button" onClick={() => navigate('/dashboard/pix')}>
+          <button className={secao === 'pix' ? 'ativo' : ''} type="button" aria-current={secao === 'pix' ? 'page' : undefined} onClick={() => navigate('/dashboard/pix')}>
             Pix
           </button>
-          <button className={classeExtrato} type="button" onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
-          <button className={classeBoletos} type="button" onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
-          <button type="button">Cartões</button>
-          <button type="button">Planejamento</button>
+          <button className={secao === 'extrato' ? 'ativo' : ''} type="button" aria-current={secao === 'extrato' ? 'page' : undefined} onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
+          <button className={secao === 'boletos' ? 'ativo' : ''} type="button" aria-current={secao === 'boletos' ? 'page' : undefined} onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
         </nav>
         <div className="perfil-topo-dashboard">
           <button className="usuario-dashboard" type="button" onClick={abrirPerfil}>

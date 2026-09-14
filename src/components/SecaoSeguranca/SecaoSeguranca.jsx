@@ -2,9 +2,9 @@ import imagemSeguranca from '../../assets/digital-security.png'
 import './SecaoSeguranca.css'
 
 const itensSeguranca = [
-  'Criptografia e proteção de dados',
-  'Biometria e autenticação multifator',
-  'Monitoramento inteligente de operações',
+  'PIN e confirmação facial no acesso',
+  'Sessão mantida com segurança pelo servidor',
+  'Revisão antes de confirmar pagamentos',
 ]
 
 export default function SecaoSeguranca() {
@@ -13,8 +13,8 @@ export default function SecaoSeguranca() {
       <div className="conteudo grade-seguranca">
         <div className="conteudo-seguranca">
           <p className="rotulo-secao">PROTEÇÃO EM CADA MOVIMENTO</p>
-          <h2 className="titulo-secao" id="titulo-seguranca">Segurança digital de alta performance</h2>
-          <p className="texto-secao">Utilizamos tecnologias avançadas de proteção e autenticação para manter seus dados e suas operações sempre protegidos.</p>
+          <h2 className="titulo-secao" id="titulo-seguranca">Segurança presente em cada etapa</h2>
+          <p className="texto-secao">Acesso protegido, sessão autenticada e confirmação clara antes das operações da sua conta.</p>
           <ul>
             {itensSeguranca.map((item) => (
               <li key={item}>

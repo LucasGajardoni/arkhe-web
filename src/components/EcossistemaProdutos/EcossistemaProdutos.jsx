@@ -1,4 +1,3 @@
-import imagemCartao from '../../assets/arkhe-card.png'
 import './EcossistemaProdutos.css'
 
 function IconeSeta() {
@@ -33,7 +32,7 @@ export default function EcossistemaProdutos() {
             </div>
             <a className="link-texto" href="#abrir-conta">Explorar agora <IconeSeta /></a>
           </article>
-          <article className="cartao-produto cartao-pix">
+          <article className="cartao-produto cartao-pix" id="pix">
             <div className="marca-pix" aria-hidden="true">
               <span />
               <span />
@@ -44,32 +43,36 @@ export default function EcossistemaProdutos() {
               <p>Transferências instantâneas a qualquer hora, com segurança e controle.</p>
             </div>
           </article>
-          <article className="cartao-produto cartao-cartao" id="cartoes">
+          <article className="cartao-produto cartao-extrato">
             <div>
-              <p className="rotulo-produto">CARTÃO ARKHÉ</p>
-              <h3>Seu cartão, do seu jeito</h3>
-              <p>Design moderno, benefícios exclusivos e controle completo para o seu dia a dia.</p>
+              <p className="rotulo-produto">EXTRATO</p>
+              <h3>Cada movimento, com clareza</h3>
+              <p>Entradas, saídas e comprovantes organizados para facilitar o acompanhamento da conta.</p>
             </div>
-            <img src={imagemCartao} alt="Cartão de crédito Banco Arkhé com design exclusivo" />
+            <div className="visual-extrato-produto" aria-hidden="true">
+              <span><i />Pix recebido <b>+</b></span>
+              <span><i />Pagamento de boleto <b>−</b></span>
+              <span><i />Pix enviado <b>−</b></span>
+            </div>
           </article>
-          <article className="cartao-produto cartao-investimentos" id="investimentos">
+          <article className="cartao-produto cartao-boletos" id="boletos">
             <div>
-              <p className="rotulo-produto">INVESTIMENTOS</p>
-              <h3>Patrimônio com propósito</h3>
-              <p>Opções para diferentes objetivos, com acompanhamento claro da evolução do seu patrimônio.</p>
+              <p className="rotulo-produto">BOLETOS E COBRANÇAS</p>
+              <h3>Uma experiência para cada conta</h3>
+              <p>Pague boletos na conta pessoal e emita cobranças para clientes na conta empresarial.</p>
             </div>
             <ul>
               <li>
-                <span>Renda fixa</span>
-                <small>CDBs e títulos</small>
+                <span>DDA</span>
+                <small>Boletos da conta PF</small>
               </li>
               <li>
-                <span>Renda variável</span>
-                <small>Ações e FIIs</small>
+                <span>Scanner</span>
+                <small>Leitura de código</small>
               </li>
               <li>
-                <span>Futuro</span>
-                <small>Planejamento financeiro</small>
+                <span>Cobranças PJ</span>
+                <small>Emissão e acompanhamento</small>
               </li>
             </ul>
           </article>

@@ -7,11 +7,13 @@ async function requisitarPix(
   mensagemPadrao = 'Não foi possível concluir a operação.',
 ) {
   let resposta
+  const headers = { ...opcoes.headers }
+  if (opcoes.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json'
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
       credentials: 'include',
       ...opcoes,
-      headers: { 'Content-Type': 'application/json', ...opcoes.headers },
+      headers,
     })
   } catch {
     throw new ErroApi('Não foi possível conectar ao servidor.', 0, {})
@@ -78,6 +80,13 @@ export function realizarPix(tipoChave, chavePix, valor) {
       valor,
     }),
   })
+}
+
+export function criarCobrancaPix(valor) {
+  return requisitarPix('/criar_cobranca_pix', {
+    method: 'POST',
+    body: JSON.stringify({ valor }),
+  }, 'Não foi possível gerar o Pix para receber.')
 }
 
 export function buscarContasUsuario(busca) {

@@ -39,6 +39,11 @@
 }
 
 .acoes-cabecalho-boletos button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   padding: 10px 14px;
   border: 1px solid #0d4d4d;
   border-radius: 9px;
@@ -48,11 +53,6 @@
 }
 
 .acoes-cabecalho-boletos button.atualizar {
-  color: #0d4d4d;
-  background: #fff;
-}
-
-.acoes-cabecalho-boletos button.codigo {
   color: #0d4d4d;
   background: #fff;
 }
@@ -106,6 +106,10 @@
   color: #137a74;
 }
 
+.resumo-boletos strong.vencido {
+  color: #8c2626;
+}
+
 .painel-boletos {
   margin-top: 22px;
   padding: 27px;
@@ -153,7 +157,10 @@
 }
 
 .estado-boletos {
+  display: grid;
   padding: 60px 15px;
+  place-items: center;
+  gap: 10px;
   color: #8a8374;
   font-size: 11px;
   text-align: center;
@@ -163,12 +170,35 @@
   color: #8c2626;
 }
 
+.estado-boletos button,
+.mostrar-mais-boletos {
+  min-height: 40px;
+  padding: 8px 13px;
+  border: 1px solid #cfdeda;
+  border-radius: 9px;
+  color: #0d4d4d;
+  background: #fff;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.mostrar-mais-boletos {
+  display: block;
+  min-height: 44px;
+  margin: 22px auto 0;
+}
+
 .lista-boletos article {
   border-bottom: 1px solid #eeeae0;
 }
 
 .lista-boletos article:last-child {
   border-bottom: 0;
+}
+
+.lista-boletos article.vencido {
+  box-shadow: inset 3px 0 #c6685f;
 }
 
 .lista-boletos article > button {
@@ -442,8 +472,9 @@
   }
 
   .acoes-cabecalho-boletos {
+    display: grid;
     width: 100%;
-    flex-direction: column-reverse;
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .acoes-cabecalho-boletos button {
@@ -452,7 +483,11 @@
 
   .resumo-boletos,
   .resumo-boletos.resumo-pj-boletos {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resumo-boletos > div {
+    padding: 16px;
   }
 
   .painel-boletos {
@@ -460,7 +495,12 @@
   }
 
   .filtros-boletos {
+    width: 100%;
     justify-content: flex-start;
+  }
+
+  .filtros-boletos button {
+    flex: 1;
   }
 
   .lista-boletos article > button {
@@ -508,5 +548,26 @@
 
   .conteudo-detalhes-boleto > footer .botao {
     width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .acoes-cabecalho-boletos {
+    grid-template-columns: 1fr;
+  }
+
+  .resumo-boletos,
+  .resumo-boletos.resumo-pj-boletos {
+    grid-template-columns: 1fr;
+  }
+
+  .lista-boletos article > button {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .status-boleto {
+    grid-column: 2;
+    grid-row: auto;
+    justify-self: start;
   }
 }

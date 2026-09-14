@@ -52,7 +52,7 @@ function IconeBeneficio({ nome }) {
 
 export default function Beneficios() {
   return (
-    <section className="beneficios" aria-labelledby="titulo-beneficios">
+    <section className="beneficios" id="beneficios" aria-labelledby="titulo-beneficios">
       <div className="conteudo">
         <div className="cabecalho-secao">
           <p className="rotulo-secao">FEITO PARA SER SIMPLES</p>

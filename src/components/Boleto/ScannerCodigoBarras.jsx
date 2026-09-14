@@ -106,7 +106,7 @@ export default function ScannerCodigoBarras({ aoLer, aoDigitar }) {
   return (
     <div className="scanner-boleto">
       <div className="camera-scanner-boleto">
-        <video ref={videoRef} autoPlay muted playsInline />
+        <video ref={videoRef} autoPlay muted playsInline aria-label="Leitura do código de barras pela câmera" />
         <div className="moldura-scanner-boleto"><span /></div>
         {codigoEncontrado && <p className="codigo-encontrado-scanner">✓ Código encontrado</p>}
       </div>
