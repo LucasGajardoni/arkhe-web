@@ -304,7 +304,31 @@
   font-size: 9px;
 }
 
+.atalhos-endpoints-api {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.atalhos-endpoints-api a {
+  padding: 8px 10px;
+  border: 1px solid #d9e5e1;
+  border-radius: 8px;
+  color: #0d4d4d;
+  background: #f4faf8;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.atalhos-endpoints-api a:hover,
+.atalhos-endpoints-api a:focus-visible {
+  border-color: #137a74;
+  background: #edf7f3;
+}
+
 .endpoint-api {
+  scroll-margin-top: 92px;
   margin-top: 15px;
   overflow: hidden;
   border: 1px solid #e5e2da;
@@ -437,6 +461,34 @@
   color: #0d4d4d;
 }
 
+.lista-erros-api {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.lista-erros-api > div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid #e5e2da;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.lista-erros-api dt {
+  color: #0d4d4d;
+  font: 800 10px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.lista-erros-api dd {
+  color: #657873;
+  font-size: 9px;
+}
+
 .boas-praticas-api {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -551,6 +603,10 @@
   }
 
   .boas-praticas-api {
+    grid-template-columns: 1fr;
+  }
+
+  .lista-erros-api {
     grid-template-columns: 1fr;
   }
 
