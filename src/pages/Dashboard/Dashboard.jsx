@@ -9,7 +9,12 @@ import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
-import { dataMovimentacao, metadadosMovimentacao } from '../../utils/movimentacoes.js'
+import {
+  formatarDataHoraMovimentacao,
+  metadadosMovimentacao,
+  nomeContraparteMovimentacao,
+  valorMovimentacao,
+} from '../../utils/movimentacoes.js'
 import './Dashboard.css'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -18,11 +23,6 @@ const formatarDataAtual = new Intl.DateTimeFormat('pt-BR', {
   day: 'numeric',
   month: 'long',
 })
-const formatarDataMovimentacao = new Intl.DateTimeFormat('pt-BR', {
-  day: '2-digit',
-  month: 'short',
-})
-
 function atalhosPorTipo(contaPJ) {
   if (contaPJ) {
     return [
@@ -199,15 +199,17 @@ export default function Dashboard() {
                 )}
                 {dadosDisponiveis && movimentacoes.ordenadas.slice(0, 5).map((item, indice) => {
                   const meta = metadadosMovimentacao(item)
-                  const data = dataMovimentacao(item)
-                  const detalhe = data ? formatarDataMovimentacao.format(data) : 'Data não informada'
+                  const contraparte = nomeContraparteMovimentacao(item)
+                  const dataHora = formatarDataHoraMovimentacao(item)
+                  const detalhe = meta.detalhe ? `${dataHora} · ${meta.detalhe}` : dataHora
+                  const valor = valorMovimentacao(item)
 
                   return (
                     <article key={item.id_movimentacao || `${item.data_movimentacao}-${indice}`}>
                       <span><Icone nome={meta.icone} /></span>
-                      <div><strong>{meta.descricao}</strong><small>{detalhe}</small></div>
+                      <div><strong>{meta.descricao}</strong><small>{contraparte}</small><small>{detalhe}</small></div>
                       <b className={meta.entrada ? 'entrada' : ''}>
-                        {meta.entrada ? '+' : '-'} {moeda.format(Number(item.valor) || 0)}
+                        {meta.entrada ? '+' : '-'} {moeda.format(valor)}
                       </b>
                     </article>
                   )

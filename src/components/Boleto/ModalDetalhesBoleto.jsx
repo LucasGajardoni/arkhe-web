@@ -8,7 +8,8 @@ import AcoesBoletoPdf from './AcoesBoletoPdf.jsx'
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function somenteData(valor) {
-  return String(valor || '').slice(0, 10)
+  const data = String(valor || '').trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : ''
 }
 
 function descricaoConta(usuario) {
@@ -99,7 +100,7 @@ export default function ModalDetalhesBoleto({
           <div><dt>Vencimento</dt><dd>{vencimento ? formatarDataBrasileira(vencimento) : 'Não informado'}</dd></div>
           <div><dt>Situação</dt><dd>{textoSituacao}</dd></div>
           <div><dt>Conta atual</dt><dd>{descricaoConta(usuario)}</dd></div>
-          <div><dt>ID da cobrança</dt><dd>#{boleto.id_cobranca}</dd></div>
+          {boleto.id_cobranca && <div><dt>ID da cobrança</dt><dd>#{boleto.id_cobranca}</dd></div>}
           {boleto.codigo_pagamento && <div><dt>Código de pagamento</dt><dd className="codigo-detalhes-boleto">{boleto.codigo_pagamento}</dd></div>}
           {pago && dataPagamento && <div><dt>{contaPJ ? 'Recebido em' : 'Pago em'}</dt><dd>{formatarDataBrasileira(dataPagamento)}</dd></div>}
         </dl>
@@ -130,7 +131,7 @@ export default function ModalDetalhesBoleto({
           <div>
             <p>{contaPJ ? 'BOLETO EMITIDO' : 'DDA / BOLETO'}</p>
             <h2 id="titulo-detalhes-boleto">{contaPJ ? 'Detalhes da cobrança' : 'Detalhes do boleto'}</h2>
-            <span>Cobrança #{boleto.id_cobranca}</span>
+            {boleto.id_cobranca && <span>Cobrança #{boleto.id_cobranca}</span>}
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>

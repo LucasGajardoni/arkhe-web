@@ -9,10 +9,73 @@ const formatadorMes = new Intl.DateTimeFormat('pt-BR', {
   year: 'numeric',
 })
 
+function componentesDataMovimentacao(item) {
+  const valor = String(item?.data_movimentacao || '').trim()
+  const partes = valor.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/)
+  if (!partes) return null
+
+  const [, ano, mes, dia, hora = '00', minuto = '00', segundo = '00'] = partes
+  const data = new Date(
+    Number(ano),
+    Number(mes) - 1,
+    Number(dia),
+    Number(hora),
+    Number(minuto),
+    Number(segundo),
+  )
+
+  if (
+    Number.isNaN(data.getTime())
+    || data.getFullYear() !== Number(ano)
+    || data.getMonth() !== Number(mes) - 1
+    || data.getDate() !== Number(dia)
+    || data.getHours() !== Number(hora)
+    || data.getMinutes() !== Number(minuto)
+  ) return null
+
+  return { ano, mes, dia, hora, minuto, data }
+}
+
+function textoValido(valor) {
+  if (valor == null) return ''
+  const texto = String(valor).trim()
+  if (!texto || ['undefined', 'null', 'none', 'nan'].includes(texto.toLowerCase())) return ''
+  return texto
+}
+
 export function dataMovimentacao(item) {
-  if (!item?.data_movimentacao) return null
-  const data = new Date(item.data_movimentacao)
-  return Number.isNaN(data.getTime()) ? null : data
+  return componentesDataMovimentacao(item)?.data || null
+}
+
+export function formatarDataHoraMovimentacao(item) {
+  const partes = componentesDataMovimentacao(item)
+  if (!partes) return 'Data não informada'
+  return `${partes.dia}/${partes.mes}/${partes.ano} às ${partes.hora}:${partes.minuto}`
+}
+
+export function nomeContraparteMovimentacao(item) {
+  const nomesRecebedor = [
+    item?.nome_recebedor,
+    item?.recebedor?.nome_fantasia,
+    item?.recebedor?.razao_social,
+    item?.recebedor?.nome,
+  ]
+  const nomesPagador = [
+    item?.nome_pagador,
+    item?.pagador?.nome_fantasia,
+    item?.pagador?.razao_social,
+    item?.pagador?.nome,
+  ]
+  const candidatos = item?.tipo === 'saida'
+    ? [...nomesRecebedor, item?.nome_contraparte, ...nomesPagador]
+    : [...nomesPagador, item?.nome_contraparte, ...nomesRecebedor]
+
+  return candidatos.map(textoValido).find(Boolean) || 'Conta Arkhé'
+}
+
+export function valorMovimentacao(item) {
+  const valor = Number(item?.valor)
+  return Number.isFinite(valor) ? Math.abs(valor) : 0
 }
 
 function chaveData(data) {
@@ -30,19 +93,21 @@ export function metadadosMovimentacao(item) {
   const entrada = item?.tipo === 'entrada'
   const origem = String(item?.origem || '').toLowerCase()
 
-  if (origem === 'pix') {
+  if (origem === 'pix' || origem === 'pix_qrcode') {
     return {
       entrada,
       descricao: entrada ? 'Pix recebido' : 'Pix enviado',
       icone: 'pix',
+      detalhe: origem === 'pix_qrcode' ? 'Via QR Code' : '',
     }
   }
 
-  if (origem === 'cobranca') {
+  if (origem === 'boleto' || origem === 'cobranca') {
     return {
       entrada,
       descricao: entrada ? 'Recebimento de boleto' : 'Pagamento de boleto',
       icone: 'boleto',
+      detalhe: '',
     }
   }
 
@@ -50,6 +115,7 @@ export function metadadosMovimentacao(item) {
     entrada,
     descricao: entrada ? 'Crédito em conta' : 'Débito em conta',
     icone: 'transferir',
+    detalhe: '',
   }
 }
 

@@ -26,7 +26,15 @@ function dataLocalHoje() {
 }
 
 function somenteData(valor) {
-  return String(valor || '').slice(0, 10)
+  const data = String(valor || '').trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : ''
+}
+
+function textoValido(valor) {
+  if (valor == null) return ''
+  const texto = String(valor).trim()
+  if (!texto || ['undefined', 'null', 'none', 'nan'].includes(texto.toLowerCase())) return ''
+  return texto
 }
 
 function cobrancaPaga(cobranca) {
@@ -58,19 +66,11 @@ function ordenarCobrancas(a, b) {
 }
 
 function nomeRelacionado(cobranca, contaPJ) {
-  if (contaPJ) {
-    return cobranca.nome_pagador
-      || cobranca.pagador?.nome_fantasia
-      || cobranca.pagador?.razao_social
-      || cobranca.pagador?.nome
-      || (cobranca.id_pagador != null ? `Conta pagadora #${cobranca.id_pagador}` : 'Pagador não informado')
-  }
+  const candidatos = contaPJ
+    ? [cobranca.nome_pagador, cobranca.pagador?.nome_fantasia, cobranca.pagador?.razao_social, cobranca.pagador?.nome]
+    : [cobranca.nome_recebedor, cobranca.recebedor?.nome_fantasia, cobranca.recebedor?.razao_social, cobranca.recebedor?.nome]
 
-  return cobranca.nome_recebedor
-    || cobranca.recebedor?.nome_fantasia
-    || cobranca.recebedor?.razao_social
-    || cobranca.recebedor?.nome
-    || (cobranca.id_recebedor != null ? `Conta recebedora #${cobranca.id_recebedor}` : 'Beneficiário não informado')
+  return candidatos.map(textoValido).find(Boolean) || 'Conta Arkhé'
 }
 
 export default function Boletos() {
@@ -248,7 +248,7 @@ export default function Boletos() {
                       <span className="identificacao-lista-boleto">
                         <small>{contaPJ ? 'PAGADOR' : 'BENEFICIÁRIO'}</small>
                         <strong>{relacionado}</strong>
-                        <em>Cobrança #{boleto.id_cobranca}</em>
+                        {boleto.id_cobranca && <em>Cobrança #{boleto.id_cobranca}</em>}
                       </span>
                       <span className="vencimento-lista-boleto">
                         <small>Vencimento</small>
@@ -285,7 +285,7 @@ export default function Boletos() {
           situacao={situacaoCobranca(boletoSelecionado)}
           idMovimentacao={dados.movimentacoes.find((item) => (
             item.tipo === 'saida'
-            && item.origem === 'cobranca'
+            && ['boleto', 'cobranca'].includes(String(item.origem || '').toLowerCase())
             && Number(item.id_cobranca) === Number(boletoSelecionado.id_cobranca)
           ))?.id_movimentacao}
           fechar={() => setBoletoSelecionado(null)}

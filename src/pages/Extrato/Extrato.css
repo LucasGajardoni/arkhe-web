@@ -230,6 +230,14 @@
   font-size: 10px;
 }
 
+.lista-extrato .contraparte-movimentacao-extrato {
+  overflow: hidden;
+  color: #5f594d;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .lista-extrato b {
   color: #4d4635;
   font-size: 12px;
