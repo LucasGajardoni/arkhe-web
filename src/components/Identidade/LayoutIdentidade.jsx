@@ -5,7 +5,7 @@ import { encerrarSessao } from '../../services/authService.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import './Identidade.css'
 
-export default function LayoutIdentidade({ titulo, descricao, children, ocupado = false }) {
+export default function LayoutIdentidade({ titulo, descricao, children, ocupado = false, variante = '' }) {
   const navigate = useNavigate()
   const { usuarioIdentidade, limparSessao } = useSessao()
   const [saindo, setSaindo] = useState(false)
@@ -21,7 +21,7 @@ export default function LayoutIdentidade({ titulo, descricao, children, ocupado 
     } catch (falha) { setErro(falha.message) }
     finally { setSaindo(false) }
   }
-  return <div className="pagina-identidade">
+  return <div className={`pagina-identidade ${variante}`.trim()}>
     <CadastroHeader voltarParaHome={() => navigate('/')} textoAviso="ACESSO PESSOAL" />
     <main className="conteudo central-identidade">
       <header className="topo-identidade">

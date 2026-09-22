@@ -122,7 +122,15 @@ caso('01-login-pf', { autenticado: false }, async ({ page, state }) => {
   assert(!state.requests.some((r) => r.path === '/login'))
 })
 caso('02-troca-pf-pj', { contas: [pf, pj] }, async ({ page }) => {
-  await page.goto(`${base}/selecionar-conta`); await entrar(page, 'Conta pessoal')
+  await page.goto(`${base}/selecionar-conta`)
+  await visivel(page.getByRole('heading', { name: 'Empresa Própria', exact: true }))
+  const alturas = await page.locator('.cartao-conta-identidade').evaluateAll((cartoes) => cartoes.map((cartao) => cartao.getBoundingClientRect().height))
+  assert.equal(alturas.length, 2)
+  assert(Math.abs(alturas[0] - alturas[1]) < 1)
+  assert.equal(await page.locator('.icone-tipo-conta svg').count(), 2)
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+  await page.screenshot({ path: join(artifacts, 'seletor-contas-desktop.png'), fullPage: true })
+  await entrar(page, 'Conta pessoal')
   await visivel(page.getByText(/123,00/).first())
   await page.getByRole('button', { name: 'Trocar conta', exact: true }).click()
   await entrar(page, 'Empresa Própria')
@@ -205,6 +213,10 @@ caso('10-equipe-delegado-negada', { contas: [delegada], selecionada: delegada },
 caso('11-reload-primeiro-acesso', { obrigatorio: true, contas: [] }, async ({ page }) => {
   await page.goto(`${base}/primeiro-acesso`); await page.reload()
   await visivel(page.getByRole('heading', { name: 'Crie seu PIN pessoal' }))
+  await visivel(page.getByRole('heading', { name: 'Um PIN, todos os seus acessos.' }))
+  assert.equal(await page.locator('.ornamentos-primeiro-acesso i').count(), 3)
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+  await page.screenshot({ path: join(artifacts, 'primeiro-acesso-desktop.png'), fullPage: true })
   await page.goto(`${base}/dashboard`); await page.waitForURL('**/primeiro-acesso')
 })
 caso('12-reload-seletor', {}, async ({ page }) => {

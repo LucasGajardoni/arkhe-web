@@ -75,6 +75,31 @@ const caminhos = {
       <path d="m14 4-4 16" />
     </>
   ),
+  pessoa: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+    </>
+  ),
+  empresa: (
+    <>
+      <path d="M4 21V5l8-3 8 3v16" />
+      <path d="M8 8h1M15 8h1M8 12h1M15 12h1M8 16h1M15 16h1M10 21v-4h4v4" />
+    </>
+  ),
+  convite: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <path d="m4 7 8 6 8-6" />
+    </>
+  ),
+  escudo: (
+    <>
+      <path d="M12 2 20 5v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z" />
+      <path d="m9 12 2 2 4-5" />
+    </>
+  ),
+  conferir: <path d="m5 12 4 4L19 6" />,
 }
 
 export default function Icone({ nome, tamanho = 22 }) {

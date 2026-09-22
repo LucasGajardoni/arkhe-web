@@ -164,6 +164,7 @@ for (const [nome, total, usado, esperado] of [['zero', 0, 10, 0], ['nulos', null
   caso(`limite-${nome}`, { cartao: { ...cartao, limite_total: total, limite_utilizado: usado, limite_disponivel: null } }, async ({ page }) => {
     const modal = await abrir(page, true)
     assert.equal(await modal.locator('progress').evaluate((elemento) => elemento.value), esperado)
+    assert.equal(await bloco(page).locator('.anel-limite').getAttribute('aria-label'), `${esperado}% do limite utilizado`)
     assert(!(await modal.innerText()).includes('NaN'))
     assert(!(await modal.innerText()).includes('Infinity'))
   })
@@ -176,6 +177,7 @@ for (const width of [390, 650, 900, 1440]) {
     assert(await modal.evaluate((el) => el.scrollWidth <= el.clientWidth))
     const rect = await modal.boundingBox()
     assert(rect.x >= 0 && rect.x + rect.width <= width)
+    assert.equal(await bloco(page).locator('.anel-limite').getAttribute('aria-label'), '24% do limite utilizado')
     await page.screenshot({ path: join(artifacts, `modal-${width}.png`) })
     await page.getByRole('button', { name: 'Fechar cartão' }).click()
     await bloco(page).screenshot({ path: join(artifacts, `resumo-${width}.png`) })
