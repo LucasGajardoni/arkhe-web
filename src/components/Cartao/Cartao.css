@@ -1,7 +1,8 @@
 .cartao-resumo { grid-column: 1 / -1; overflow: hidden; }
 .cartao-selo { color: var(--verde-medio); font-size: 9px; font-weight: 800; letter-spacing: 1.2px; }
 .cartao-resumo-conteudo { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 38px; align-items: center; margin-top: 24px; }
-.cartao-resumo-conteudo.com-grafico-limite { grid-template-columns: minmax(300px, 340px) minmax(230px, 1fr) minmax(190px, 225px); gap: clamp(24px, 3vw, 42px); }
+.cartao-resumo-conteudo.com-grafico-limite { width: 100%; max-width: 1080px; grid-template-columns: minmax(320px, 380px) minmax(500px, 620px); justify-content: center; gap: clamp(30px, 4vw, 54px); margin: 30px auto 0; }
+.cartao-resumo-informacoes { display: grid; grid-template-columns: minmax(230px, 1fr) 220px; align-items: center; gap: 26px; padding: 22px 22px 22px 28px; border: 1px solid #e4e3da; border-radius: 22px; background: linear-gradient(145deg, #fbfcf8, #f5f7f1); }
 .cartao-resumo-detalhes { display: grid; gap: 18px; justify-items: start; }
 .cartao-resumo-detalhes h3 { color: var(--verde-escuro); font-size: 23px; margin-bottom: -8px; }
 .cartao-resumo-detalhes p { color: var(--texto-secundario); max-width: 490px; font-size: 14px; line-height: 1.7; }
@@ -11,7 +12,10 @@
 .cartao-resumo-limites dt { color: #736c5e; font-size: 12px; }
 .cartao-resumo-limites dd { margin: 4px 0 0; color: var(--verde-escuro); font-size: 27px; font-weight: 800; }
 .cartao-resumo-limites > div + div dd { font-size: 20px; font-weight: 600; }
-.grafico-limite-cartao { display: grid; min-width: 0; justify-items: center; padding: 20px 18px 17px; border: 1px solid #e4e3da; border-radius: 18px; background: linear-gradient(145deg, #fbfcf8, #f4f6ef); }
+.cartao-resumo-informacoes .cartao-resumo-limites { display: grid; grid-template-columns: 1fr; gap: 15px; }
+.cartao-resumo-informacoes .cartao-resumo-limites > div + div { padding-top: 14px; border-top: 1px solid #e3e5dc; }
+.cartao-resumo-informacoes .cartao-resumo-detalhes .botao { width: 100%; justify-content: space-between; }
+.grafico-limite-cartao { display: grid; min-width: 0; justify-items: center; padding: 4px 0 4px 22px; border-left: 1px solid #e0e4dc; }
 .grafico-limite-cabecalho { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; color: #736c5e; font-size: 8px; font-weight: 800; letter-spacing: 1.2px; }
 .grafico-limite-cabecalho i { width: 7px; height: 7px; border-radius: 50%; background: var(--dourado); box-shadow: 0 0 0 4px #d4af3716; }
 .anel-limite { display: grid; width: 132px; height: 132px; margin: 17px 0; place-items: center; border-radius: 50%; background: conic-gradient(var(--dourado) 0 var(--percentual-limite), #dfe8e2 var(--percentual-limite) 100%); box-shadow: 0 9px 24px #0d4d4d12; }
@@ -79,19 +83,22 @@
 .cartao-mensagem.erro { background: #f8e7e1; color: #8b342e; }
 .cartao-nota { color: #736c5e; font-size: 10px; line-height: 1.6; text-align: center; margin-top: 24px; }
 .modal-cartao button:disabled { opacity: .55; cursor: not-allowed; }
-@media (max-width: 1000px) {
-  .cartao-resumo-conteudo.com-grafico-limite { grid-template-columns: minmax(280px, 340px) minmax(220px, 1fr); align-items: stretch; }
-  .grafico-limite-cartao { grid-column: 2; grid-template-columns: 132px minmax(130px, 1fr); grid-template-rows: auto 1fr auto; align-items: center; column-gap: 18px; }
-  .grafico-limite-cabecalho { grid-column: 1 / -1; }
-  .anel-limite { grid-row: 2 / 4; margin: 12px 0 0; }
-  .grafico-limite-cartao > p { align-self: end; }
+@media (max-width: 1050px) {
+  .cartao-resumo-conteudo.com-grafico-limite { max-width: 700px; grid-template-columns: 1fr; gap: 28px; }
+  .cartao-resumo-conteudo.com-grafico-limite > .cartao-visual { max-width: 380px; }
 }
 @media (max-width: 650px) {
   .cartao-resumo-conteudo { grid-template-columns: 1fr; gap: 24px; }
   .cartao-resumo-conteudo.com-grafico-limite { grid-template-columns: 1fr; }
   .cartao-resumo .cartao-visual { max-width: 360px; }
   .cartao-resumo-detalhes { justify-items: stretch; }
-  .grafico-limite-cartao { grid-column: auto; }
+  .cartao-resumo-informacoes { grid-template-columns: 1fr; gap: 20px; padding: 22px; }
+  .cartao-resumo-informacoes .cartao-resumo-limites { grid-template-columns: 1fr 1fr; }
+  .cartao-resumo-informacoes .cartao-resumo-limites > div + div { padding-top: 0; padding-left: 14px; border-top: 0; border-left: 1px solid #e3e5dc; }
+  .grafico-limite-cartao { grid-template-columns: 132px minmax(130px, 1fr); grid-template-rows: auto 1fr auto; align-items: center; column-gap: 18px; padding: 20px 0 0; border-top: 1px solid #e0e4dc; border-left: 0; }
+  .grafico-limite-cabecalho { grid-column: 1 / -1; }
+  .anel-limite { grid-row: 2 / 4; margin: 12px 0 0; }
+  .grafico-limite-cartao > p { align-self: end; }
   .cartao-selo { display: none; }
   .fundo-modal-cartao { padding: 16px; }
   .modal-cartao { padding: 22px; max-height: calc(100dvh - 32px); }

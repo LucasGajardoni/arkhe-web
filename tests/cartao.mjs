@@ -18,7 +18,7 @@ const cartao = { id_cartao: 7, id_conta: 1, numero_cartao: '2481234567890123', n
 const visible = (locator) => locator.waitFor({ state: 'visible', timeout: 8000 })
 
 async function ambiente(options = {}) {
-  const state = { conta: pf, cartao: null, statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
+  const state = { conta: pf, cartao: null, movimentacoes: [], statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
   const context = await browser.newContext({ viewport: { width: options.width || 1440, height: 1000 } })
   const page = await context.newPage()
   page.on('pageerror', (error) => state.erros.push(error.message))
@@ -44,7 +44,7 @@ async function ambiente(options = {}) {
     const reply = (data, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) })
     if (path === '/sessao_usuario') return reply({ usuario: pessoa, conta_selecionada: true })
     if (path === '/sessao') return reply({ usuario: pessoa, conta: state.conta })
-    if (path === '/buscar_movimentacoes') return reply({ movimentacoes: [], cobrancas: [] })
+    if (path === '/buscar_movimentacoes') return reply({ movimentacoes: state.movimentacoes, cobrancas: [] })
     if (path === '/edicao_usuario') return reply({ mensagem: 'Usuário atualizado com sucesso', usuario: pessoa })
     if (path === '/contas_disponiveis') return reply({ contas: [pf, pj] })
     if (path === '/convites_pendentes') return reply({ convites: [] })
@@ -160,6 +160,13 @@ caso('resposta-atrasada-nao-vaza-na-troca', { cartao, delayGet: 1200 }, async ({
   assert((await bloco(page).innerText()).includes('9999'))
   assert(!(await bloco(page).innerText()).includes('0123'))
 })
+caso('dashboard-limita-movimentacoes-a-tres', {
+  movimentacoes: Array.from({ length: 5 }, (_, indice) => ({ id_movimentacao: indice + 1, tipo: 'entrada', valor: 100 + indice, descricao: `Movimento ${indice + 1}`, data: `2026-09-${20 - indice}` })),
+}, async ({ page }) => {
+  await page.goto(`${base}/dashboard`)
+  await visible(page.getByRole('heading', { name: 'Movimentações recentes' }))
+  assert.equal(await page.locator('.lista-dashboard article').count(), 3)
+})
 for (const [nome, total, usado, esperado] of [['zero', 0, 10, 0], ['nulos', null, null, 0], ['excedido', 5000, 8000, 100]]) {
   caso(`limite-${nome}`, { cartao: { ...cartao, limite_total: total, limite_utilizado: usado, limite_disponivel: null } }, async ({ page }) => {
     const modal = await abrir(page, true)
@@ -178,6 +185,7 @@ for (const width of [390, 650, 900, 1440]) {
     const rect = await modal.boundingBox()
     assert(rect.x >= 0 && rect.x + rect.width <= width)
     assert.equal(await bloco(page).locator('.anel-limite').getAttribute('aria-label'), '24% do limite utilizado')
+    assert.equal(await bloco(page).locator('.cartao-resumo-informacoes').count(), 1)
     await page.screenshot({ path: join(artifacts, `modal-${width}.png`) })
     await page.getByRole('button', { name: 'Fechar cartão' }).click()
     await bloco(page).screenshot({ path: join(artifacts, `resumo-${width}.png`) })

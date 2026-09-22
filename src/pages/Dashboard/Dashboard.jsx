@@ -198,7 +198,7 @@ export default function Dashboard() {
                 {dadosDisponiveis && movimentacoes.ordenadas.length === 0 && (
                   <p className="estado-movimentacoes-dashboard">Suas movimentações aparecerão aqui.</p>
                 )}
-                {dadosDisponiveis && movimentacoes.ordenadas.slice(0, 5).map((item, indice) => {
+                {dadosDisponiveis && movimentacoes.ordenadas.slice(0, 3).map((item, indice) => {
                   const meta = metadadosMovimentacao(item)
                   const contraparte = nomeContraparteMovimentacao(item)
                   const dataHora = formatarDataHoraMovimentacao(item)
