@@ -45,6 +45,7 @@ async function ambiente(options = {}) {
     if (path === '/sessao_usuario') return reply({ usuario: pessoa, conta_selecionada: true })
     if (path === '/sessao') return reply({ usuario: pessoa, conta: state.conta })
     if (path === '/buscar_movimentacoes') return reply({ movimentacoes: [], cobrancas: [] })
+    if (path === '/edicao_usuario') return reply({ mensagem: 'Usuário atualizado com sucesso', usuario: pessoa })
     if (path === '/contas_disponiveis') return reply({ contas: [pf, pj] })
     if (path === '/convites_pendentes') return reply({ convites: [] })
     if (path === '/selecionar_conta') { state.conta = json.id_conta === 9 ? pj : pf; state.cartao = { ...cartao, id_conta: 9, numero_cartao: '2481234567899999', numero_formatado: '2481 2345 6789 9999' }; return reply({ conta: state.conta }) }
@@ -187,6 +188,21 @@ caso('criacao-responsiva-390', { width: 390 }, async ({ page }) => {
   await visible(page.getByLabel('Dia de vencimento da fatura'))
   await modal.screenshot({ path: join(artifacts, 'criacao-390.png') })
 })
+for (const width of [390, 1440]) {
+  caso(`perfil-renovado-${width}`, { width }, async ({ page }) => {
+    await page.goto(`${base}/dashboard`)
+    await page.getByRole('button', { name: 'Abrir perfil de João Teste' }).click()
+    const modal = page.getByRole('dialog', { name: 'Seus dados pessoais' })
+    await visible(modal)
+    assert.equal(await page.getByLabel('CPF', { exact: true }).inputValue(), '529.982.247-25')
+    assert(!(await modal.innerText()).includes('***'))
+    assert.equal(await modal.locator('footer').getByRole('button', { name: 'Trocar conta' }).count(), 1)
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    assert(await modal.evaluate((elemento) => elemento.scrollWidth <= elemento.clientWidth))
+    await page.waitForTimeout(250)
+    await modal.screenshot({ path: join(artifacts, `perfil-${width}.png`) })
+  })
+}
 
 let failures = 0
 for (const { nome, options, run } of casos) {

@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { editarUsuario } from '../../services/authService.js'
-import { mascaraCpfParcial, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
+import { mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import { emailValido, nomeValido } from '../../utils/validadores.js'
+import { rotuloConta } from '../../utils/contas.js'
 
 export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
   const navigate = useNavigate()
@@ -75,66 +76,74 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
 
   let textoSalvar = 'Salvar alterações'
   if (salvando) textoSalvar = 'Salvando...'
-  let rotuloConta = 'Conta Arkhé'
-  if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
-  if (usuario?.tipoConta === 'PJ') rotuloConta = 'Conta empresarial'
+  const contextoConta = rotuloConta(usuario)
+  const nomeConta = usuario?.tipoConta === 'PJ'
+    ? usuario.nomeFantasia || usuario.razaoSocial || ''
+    : ''
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section ref={modalRef} className="modal-perfil" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil" tabIndex="-1">
+      <section ref={modalRef} className="modal-perfil modal-perfil-dados" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-perfil" tabIndex="-1">
         <header>
           <div>
-            <p>MINHA CONTA</p>
-            <h2 id="titulo-modal-perfil">Dados pessoais</h2>
-            <span>Confira e mantenha suas informações atualizadas.</span>
+            <p>MEU PERFIL</p>
+            <h2 id="titulo-modal-perfil">Seus dados pessoais</h2>
+            <span>Consulte e mantenha seus dados de acesso atualizados.</span>
           </div>
-          <button type="button" onClick={fechar} aria-label="Fechar modal">×</button>
+          <button type="button" disabled={salvando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
-        <div className="identidade-modal-perfil">
-          <div>{iniciais}</div>
-          <p>
-            <strong>{usuario?.nome}</strong>
-            <span>Cliente Arkhé · {rotuloConta}</span>
-          </p>
-        </div>
-        <form onSubmit={salvar}>
-          <label>
-            <span>Nome completo</span>
-            <input name="nome" value={dados.nome} onChange={alterar} autoComplete="name" />
-            {dados.nome && !nomeOk && (
-              <small className="erro-campo-modal-perfil">Use apenas letras e espaços.</small>
-            )}
-          </label>
-          <label>
-            <span>E-mail</span>
-            <input name="email" type="email" value={dados.email} onChange={alterar} autoComplete="email" />
-            {dados.email && !emailOk && (
-              <small className="erro-campo-modal-perfil">Informe um e-mail válido.</small>
-            )}
-          </label>
-          <label>
-            <span>Telefone</span>
-            <input name="telefone" value={dados.telefone} onChange={alterar} inputMode="tel" autoComplete="tel" />
-            {dados.telefone && !telefoneOk && (
-              <small className="erro-campo-modal-perfil">Informe um telefone com DDD.</small>
-            )}
-          </label>
-          <label>
-            <span>CPF</span>
-            <input value={mascaraCpfParcial(usuario?.cpf || '')} readOnly />
-            <small>O CPF não pode ser alterado.</small>
-          </label>
-          {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
-          {mensagem && <p className="mensagem-modal-perfil sucesso" role="status">{mensagem}</p>}
-          <footer>
-            <button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button>
-            <button className="botao botao-principal" type="submit" disabled={!podeSalvar}>
-              {textoSalvar}
-            </button>
-          </footer>
-        </form>
-        <div className="acoes-identidade">
-          <button className="botao botao-secundario" type="button" disabled={salvando} onClick={() => { fechar(); navigate('/selecionar-conta') }}>Trocar conta</button>
+        <div className="corpo-modal-perfil-dados">
+          <div className="identidade-modal-perfil">
+            <div>{iniciais}</div>
+            <p>
+              <strong>{usuario?.nome}</strong>
+              <span>{contextoConta}</span>
+              {nomeConta && <small>{nomeConta}</small>}
+            </p>
+          </div>
+          <form onSubmit={salvar}>
+            <div className="grade-campos-modal-perfil">
+              <div className="campo-modal-perfil">
+                <label htmlFor="nome-modal-perfil">Nome completo</label>
+                <input id="nome-modal-perfil" name="nome" value={dados.nome} onChange={alterar} autoComplete="name" />
+                {dados.nome && !nomeOk && (
+                  <small className="erro-campo-modal-perfil">Use apenas letras e espaços.</small>
+                )}
+              </div>
+              <div className="campo-modal-perfil">
+                <label htmlFor="email-modal-perfil">E-mail</label>
+                <input id="email-modal-perfil" name="email" type="email" value={dados.email} onChange={alterar} autoComplete="email" />
+                {dados.email && !emailOk && (
+                  <small className="erro-campo-modal-perfil">Informe um e-mail válido.</small>
+                )}
+              </div>
+              <div className="campo-modal-perfil">
+                <label htmlFor="telefone-modal-perfil">Telefone</label>
+                <input id="telefone-modal-perfil" name="telefone" value={dados.telefone} onChange={alterar} inputMode="tel" autoComplete="tel" />
+                {dados.telefone && !telefoneOk && (
+                  <small className="erro-campo-modal-perfil">Informe um telefone com DDD.</small>
+                )}
+              </div>
+              <div className="campo-modal-perfil">
+                <label htmlFor="cpf-modal-perfil">CPF</label>
+                <input id="cpf-modal-perfil" value={mascaraCpf(usuario?.cpf || '')} readOnly aria-describedby="aviso-cpf-perfil" />
+                <small id="aviso-cpf-perfil">Seu CPF completo é apenas para consulta e não pode ser alterado.</small>
+              </div>
+            </div>
+            {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
+            {mensagem && <p className="mensagem-modal-perfil sucesso" role="status">{mensagem}</p>}
+            <footer className="rodape-modal-perfil-dados">
+              <button className="trocar-conta-modal-perfil" type="button" disabled={salvando} onClick={() => { fechar(); navigate('/selecionar-conta') }}>
+                Trocar conta
+              </button>
+              <div>
+                <button className="botao botao-secundario" type="button" disabled={salvando} onClick={fechar}>Cancelar</button>
+                <button className="botao botao-principal" type="submit" disabled={!podeSalvar}>
+                  {textoSalvar}
+                </button>
+              </div>
+            </footer>
+          </form>
         </div>
       </section>
     </div>

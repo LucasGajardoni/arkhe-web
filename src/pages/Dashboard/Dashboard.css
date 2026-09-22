@@ -938,6 +938,178 @@
   opacity: .5;
 }
 
+/* Modal de perfil: escopo próprio para não interferir nas outras modais bancárias. */
+.modal-perfil-dados {
+  width: min(720px, 100%);
+  border: 0;
+  background: #fcfaf3;
+}
+
+.modal-perfil-dados > header {
+  padding: 30px 34px 20px;
+  border-bottom: 0;
+}
+
+.modal-perfil-dados > header h2 {
+  font-size: 27px;
+  letter-spacing: -.5px;
+}
+
+.modal-perfil-dados > header span {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.modal-perfil-dados > header button {
+  border-radius: 50%;
+  color: var(--verde-escuro);
+  background: #eef0e8;
+}
+
+.corpo-modal-perfil-dados {
+  padding: 0 34px 30px;
+}
+
+.modal-perfil-dados .identidade-modal-perfil {
+  position: relative;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 20px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(120deg, #0a3e3e, #12635d);
+}
+
+.modal-perfil-dados .identidade-modal-perfil::after {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  right: -110px;
+  top: -135px;
+  border: 1px solid rgba(242, 198, 105, .3);
+  border-radius: 50%;
+  box-shadow: 0 0 0 28px rgba(242, 198, 105, .05);
+  content: '';
+}
+
+.modal-perfil-dados .identidade-modal-perfil > div {
+  position: relative;
+  z-index: 1;
+  width: 52px;
+  height: 52px;
+  color: var(--verde-escuro);
+  background: var(--dourado-claro);
+  font-size: 12px;
+}
+
+.modal-perfil-dados .identidade-modal-perfil p {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.modal-perfil-dados .identidade-modal-perfil strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-perfil-dados .identidade-modal-perfil span,
+.modal-perfil-dados .identidade-modal-perfil small {
+  overflow: hidden;
+  color: #c7dbd6;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-perfil-dados form {
+  display: block;
+  padding: 0;
+}
+
+.grade-campos-modal-perfil {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.campo-modal-perfil {
+  display: flex;
+  gap: 6px;
+  flex-direction: column;
+}
+
+.modal-perfil-dados .campo-modal-perfil > label {
+  color: var(--verde-escuro);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.modal-perfil-dados form input {
+  min-height: 50px;
+  padding: 0 15px;
+  border-color: #dcd8cd;
+  background: #fffefa;
+  font-size: 13px;
+}
+
+.modal-perfil-dados form input[readonly] {
+  border-style: dashed;
+  color: var(--verde-escuro);
+  background: #f2f5ef;
+  cursor: default;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.modal-perfil-dados .campo-modal-perfil small {
+  line-height: 1.45;
+  color: #8a8374;
+  font-size: 8px;
+}
+
+.modal-perfil-dados .mensagem-modal-perfil {
+  margin-top: 16px;
+  font-size: 11px;
+}
+
+.modal-perfil-dados form .rodape-modal-perfil-dados {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.rodape-modal-perfil-dados > div {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-perfil-dados form .rodape-modal-perfil-dados .botao {
+  min-height: 46px;
+  padding-inline: 22px;
+}
+
+.trocar-conta-modal-perfil {
+  min-height: 42px;
+  padding: 0;
+  border-bottom: 1px solid currentColor;
+  color: var(--verde-medio);
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .progresso-operacao {
   height: 3px;
   overflow: hidden;
@@ -1158,6 +1330,49 @@
   .modal-perfil form footer .botao {
     width: auto;
     flex: 1;
+  }
+
+  .modal-perfil-dados {
+    background: #fcfaf3;
+  }
+
+  .modal-perfil-dados > header {
+    padding: 24px 20px 18px;
+  }
+
+  .corpo-modal-perfil-dados {
+    padding: 0 20px 24px;
+  }
+
+  .modal-perfil-dados .identidade-modal-perfil {
+    margin: 0 0 18px;
+    padding: 17px;
+  }
+
+  .modal-perfil-dados form {
+    padding: 0;
+  }
+
+  .grade-campos-modal-perfil {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 18px;
+  }
+
+  .modal-perfil-dados form .rodape-modal-perfil-dados {
+    position: static;
+    align-items: stretch;
+    padding-top: 0;
+    flex-direction: column-reverse;
+    background: transparent;
+  }
+
+  .rodape-modal-perfil-dados > div {
+    width: 100%;
+  }
+
+  .trocar-conta-modal-perfil {
+    align-self: center;
   }
 }
 
