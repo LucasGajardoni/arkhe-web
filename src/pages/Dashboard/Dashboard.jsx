@@ -6,6 +6,7 @@ import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.js
 import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
+import CartaoResumo from '../../components/Cartao/CartaoResumo.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
@@ -252,6 +253,8 @@ export default function Dashboard() {
                 <Icone nome="seta" tamanho={15} />
               </button>
             </section>
+
+            <CartaoResumo usuario={usuario} />
 
             <section className="bloco-dashboard panorama-dashboard">
               <div className="titulo-bloco-dashboard">
