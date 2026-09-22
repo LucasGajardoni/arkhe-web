@@ -10,20 +10,14 @@ export default function GraficoLimite({ cartao }) {
   const percentualExibido = Math.round(percentual)
 
   return <aside className="grafico-limite-cartao" aria-label="Resumo visual do limite">
-    <div className="grafico-limite-cabecalho">
-      <span>USO DO LIMITE</span>
-      <strong>{percentualExibido}%</strong>
+    <div className="grafico-limite-cabecalho"><span>USO DO LIMITE</span><i aria-hidden="true" /></div>
+    <div className="anel-limite" role="img" aria-label={`${percentualExibido}% do limite utilizado`} style={{ '--percentual-limite': `${percentual}%` }}>
+      <div><strong>{percentualExibido}%</strong><span>utilizado</span></div>
     </div>
-
-    <div className="anel-limite" role="img" aria-label={`${percentualExibido}% do limite utilizado`}>
-      <span style={{ width: `${percentual}%` }} />
-    </div>
-
     <div className="legenda-limite">
       <span><i className="legenda-utilizado" />Utilizado <strong>{formatarLimite(utilizado)}</strong></span>
       <span><i className="legenda-disponivel" />Disponível <strong>{formatarLimite(disponivel)}</strong></span>
     </div>
-
     <p>Limite total de <strong>{formatarLimite(total)}</strong></p>
   </aside>
 }
