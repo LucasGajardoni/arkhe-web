@@ -1,24 +1,23 @@
 import { useNavigate } from 'react-router-dom'
 import arkheLogo from '../../assets/arkhe-logo.svg'
 import Icone from './Icone.jsx'
+import { proprietarioPJ, rotuloConta as descreverConta } from '../../utils/contas.js'
 
 export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPerfil, sair }) {
   const navigate = useNavigate()
   const primeiroNome = usuario?.nome?.split(' ')[0] || 'Cliente'
   const iniciais = usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'
-  let rotuloConta = 'Conta Arkhé'
+  const rotuloConta = descreverConta(usuario)
   let rotuloBoletos = 'DDA / Boletos'
 
-  if (usuario?.tipoConta === 'PF') rotuloConta = 'Conta pessoal'
   if (usuario?.tipoConta === 'PJ') {
-    rotuloConta = 'Conta empresarial'
     rotuloBoletos = 'Boletos emitidos'
   }
 
   return (
     <header className="cabecalho-dashboard">
       <div className="conteudo-dashboard-largo barra-dashboard">
-        <button className="marca-dashboard" type="button" onClick={() => navigate('/dashboard')}>
+        <button className="marca-dashboard" type="button" aria-label="Arkhé, visão geral" onClick={() => navigate('/dashboard')}>
           <span><img src={arkheLogo} alt="" /></span>
           <strong>ARKHÉ</strong>
         </button>
@@ -36,11 +35,14 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           )}
         </nav>
         <div className="perfil-topo-dashboard">
-          <button className="usuario-dashboard" type="button" onClick={abrirPerfil}>
+          {proprietarioPJ(usuario) && <button className={`atalho-equipe ${secao === 'acessos' ? 'ativo' : ''}`} type="button" aria-current={secao === 'acessos' ? 'page' : undefined} onClick={() => navigate('/dashboard/acessos')}>Equipe</button>}
+          <button className="trocar-conta-dashboard" type="button" onClick={() => navigate('/selecionar-conta')}>Trocar conta</button>
+          <button className="usuario-dashboard" type="button" aria-label={`Abrir perfil de ${usuario?.nome || 'cliente'}`} onClick={abrirPerfil}>
             <span>{iniciais}</span>
             <div>
               <small>{rotuloConta}</small>
               <strong>{primeiroNome}</strong>
+              {usuario?.tipoConta === 'PJ' && <small className="empresa-topo-dashboard">{usuario.nomeFantasia || usuario.razaoSocial}</small>}
             </div>
           </button>
           <button className="sair-dashboard" type="button" onClick={sair} aria-label="Sair">

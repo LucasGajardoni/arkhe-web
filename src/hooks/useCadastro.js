@@ -28,7 +28,7 @@ const FLUXOS_CADASTRO = {
     { id: 'pessoais', nome: 'Dados pessoais', titulo: 'Vamos começar pelos seus dados' },
     { id: 'contato', nome: 'Contato', titulo: 'Como podemos falar com você?' },
     { id: 'endereco', nome: 'Endereço', titulo: 'Onde você mora?' },
-    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da sua conta' },
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie seu PIN pessoal' },
     { id: 'revisao', nome: 'Revisão', titulo: 'Revise seus dados' },
     { id: 'facial', nome: 'Reconhecimento facial', titulo: 'Cadastre seu rosto' },
   ],
@@ -37,17 +37,15 @@ const FLUXOS_CADASTRO = {
     { id: 'responsavel', nome: 'Responsável', titulo: 'Quem será o responsável?' },
     { id: 'contato', nome: 'Contato', titulo: 'Contato empresarial' },
     { id: 'endereco', nome: 'Endereço', titulo: 'Endereço da empresa' },
-    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da conta empresarial' },
+    { id: 'acesso', nome: 'PIN', titulo: 'Crie seu PIN pessoal' },
     { id: 'revisao', nome: 'Revisão', titulo: 'Revise os dados empresariais' },
     { id: 'facial', nome: 'Reconhecimento facial', titulo: 'Cadastre o rosto do responsável' },
   ],
   existentePF: [
-    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da nova conta PF' },
     { id: 'revisao', nome: 'Revisão', titulo: 'Revise a nova conta' },
   ],
   existentePJ: [
     { id: 'empresa', nome: 'Dados da empresa', titulo: 'Conte sobre sua nova empresa' },
-    { id: 'acesso', nome: 'PIN', titulo: 'Crie o PIN da nova conta PJ' },
     { id: 'revisao', nome: 'Revisão', titulo: 'Revise a nova conta empresarial' },
   ],
 }
@@ -104,19 +102,12 @@ function dadosIniciaisPessoaJuridica(cpf) {
 
 export function useCadastro(tipoConta, fluxo = {}) {
   const navigate = useNavigate()
-  const { selecionarConta } = useSessao()
+  const { usuarioIdentidade, atualizarSessaoConta, tratarErroSessao } = useSessao()
   const empresarial = tipoConta === 'PJ'
-  const clienteExistente = fluxo.clienteExistente === true
-  const cpfVerificado = mascaraCpf(fluxo.cpfVerificado || '')
-  let fluxoVerificado = cpfValido(cpfVerificado)
-    && typeof fluxo.clienteExistente === 'boolean'
-
-  if (clienteExistente) {
-    const contaAutenticada = fluxo.tipoContaAutenticada
-    fluxoVerificado = fluxoVerificado
-      && ['PF', 'PJ'].includes(contaAutenticada)
-      && contaAutenticada !== tipoConta
-  }
+  const clienteExistente = Boolean(usuarioIdentidade)
+  const cpfVerificado = mascaraCpf(usuarioIdentidade?.cpf || fluxo.cpfVerificado || '')
+  const fluxoVerificado = cpfValido(cpfVerificado)
+    && (clienteExistente || fluxo.clienteExistente === false)
 
   let chaveFluxo = 'novoPF'
   if (empresarial) chaveFluxo = 'novoPJ'
@@ -136,6 +127,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
   const [mensagemCep, setMensagemCep] = useState('')
   const [mostrarPin, setMostrarPin] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [contaCriada, setContaCriada] = useState(false)
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [modoFacial, setModoFacial] = useState('cadastro')
   const [mensagemFacial, setMensagemFacial] = useState('')
@@ -284,8 +276,6 @@ export function useCadastro(tipoConta, fluxo = {}) {
       const pinCorreto = pinSeguroCadastro
         && dadosAtuais.pin === dadosAtuais.confirmarPin
 
-      if (clienteExistente) return pinCorreto
-
       let consentimentosAceitos = dadosPF.aceitarTermos
         && dadosPF.aceitarDados
         && dadosPF.aceitarBiometria
@@ -334,7 +324,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
       if (!pinValido(dadosAtuais.pin)) return 'O PIN deve possuir exatamente 6 dígitos.'
       if (!pinSeguroCadastro) return 'O PIN não pode aparecer em nenhum dado numérico do cadastro.'
       if (dadosAtuais.pin !== dadosAtuais.confirmarPin) return 'Os PINs informados precisam ser iguais.'
-      if (!clienteExistente) return 'Aceite todos os consentimentos para continuar.'
+      return 'Aceite todos os consentimentos para continuar.'
     }
 
     return 'Preencha todos os campos obrigatórios.'
@@ -412,22 +402,20 @@ export function useCadastro(tipoConta, fluxo = {}) {
     setMensagemErro('')
 
     try {
-      await adicionarConta({
-        tipoConta,
-        pin: dadosAtuais.pin,
-        cnpj: dadosPJ.cnpj,
-        nomeFantasia: dadosPJ.nomeFantasia,
-        razaoSocial: dadosPJ.razaoSocial,
-        representante: cpfVerificado,
-      })
-      selecionarConta(tipoConta, { cnpj: dadosPJ.cnpj })
-      transicionarFormulario(() => {
-        navigate('/dashboard', {
-          replace: true,
-          state: { tipoContaAtiva: tipoConta },
+      if (!contaCriada) {
+        await adicionarConta({
+          tipoConta,
+          cnpj: dadosPJ.cnpj,
+          nomeFantasia: dadosPJ.nomeFantasia,
+          razaoSocial: dadosPJ.razaoSocial,
+          representante: cpfVerificado,
         })
-      })
+        setContaCriada(true)
+      }
+      await atualizarSessaoConta()
+      navigate('/dashboard', { replace: true })
     } catch (erro) {
+      tratarErroSessao(erro)
       setMensagemErro(erro.message || 'Não foi possível abrir a nova conta.')
     } finally {
       setEnviando(false)
@@ -435,6 +423,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
   }
 
   async function enviarCadastro() {
+    if (enviando) return
     if (clienteExistente) {
       await salvarContaExistente()
       return
@@ -513,6 +502,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
     mostrarPin,
     setMostrarPin,
     enviando,
+    contaCriada,
     sessaoFacial,
     modoFacial,
     mensagemFacial,

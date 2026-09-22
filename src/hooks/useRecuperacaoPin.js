@@ -8,7 +8,7 @@ import { somenteNumeros } from '../utils/formatadores.js'
 import { transicionarFormulario } from '../utils/transicaoFormulario.js'
 import { emailValido, pinSeguro } from '../utils/validadores.js'
 
-export function useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
+export function useRecuperacaoPin({ cpf, aoCancelar, aoConcluir }) {
   const [etapa, setEtapa] = useState(0)
   const [email, setEmail] = useState('')
   const [codigo, setCodigo] = useState('')
@@ -87,7 +87,7 @@ export function useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
 
   async function salvarNovoPin(evento) {
     evento.preventDefault()
-    if (!tipoConta || !pinsCorretos || processando) return
+    if (!pinsCorretos || processando) return
 
     setProcessando(true)
     setMensagemErro('')
@@ -96,7 +96,6 @@ export function useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
       const resultado = await trocarPin({
         email,
         codigo,
-        tipoConta,
         novoPin,
       })
       transicionarFormulario(() => {
@@ -125,7 +124,6 @@ export function useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
     etapa,
     email,
     codigo,
-    tipoConta,
     novoPin,
     confirmarPin,
     mostrarPins,

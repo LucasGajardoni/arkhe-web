@@ -48,7 +48,7 @@ export function useModalAcessivel(fechar, bloqueado = false) {
       const primeiro = focaveis[0]
       const ultimo = focaveis[focaveis.length - 1]
 
-      if (evento.shiftKey && document.activeElement === primeiro) {
+      if (evento.shiftKey && (document.activeElement === primeiro || document.activeElement === modalRef.current)) {
         evento.preventDefault()
         ultimo.focus()
       } else if (!evento.shiftKey && document.activeElement === ultimo) {

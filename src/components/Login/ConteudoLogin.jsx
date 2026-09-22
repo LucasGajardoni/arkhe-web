@@ -1,5 +1,4 @@
 import CredenciaisLogin from './CredenciaisLogin.jsx'
-import EscolhaTipoConta from './EscolhaTipoConta.jsx'
 import RecuperacaoPin from './RecuperacaoPin.jsx'
 import ReconhecimentoLogin from './ReconhecimentoLogin.jsx'
 
@@ -8,18 +7,19 @@ export default function ConteudoLogin({ login }) {
     return (
       <RecuperacaoPin
         cpf={login.credenciais.cpf}
-        tipoConta={login.tipoConta}
         aoCancelar={login.fecharRecuperacaoPin}
         aoConcluir={login.concluirRecuperacaoPin}
       />
     )
   }
 
-  if (login.etapa === 1) return <CredenciaisLogin login={login} />
+  if (login.etapa === 'credenciais') return <CredenciaisLogin login={login} />
 
-  if (login.etapa === 2) {
+  if (login.etapa === 'facial') {
     return (
       <ReconhecimentoLogin
+        modo={login.modoFacial}
+        mensagem={login.mensagemFacial}
         sessao={login.sessaoFacial}
         concluir={login.concluirReconhecimentoFacial}
         informarErro={login.setMensagemErro}
@@ -29,12 +29,5 @@ export default function ConteudoLogin({ login }) {
     )
   }
 
-  return (
-    <EscolhaTipoConta
-      abrindoOutraConta={login.abrindoOutraConta}
-      tipoConta={login.tipoConta}
-      escolher={login.escolherTipoConta}
-      continuar={login.avancarParaCredenciais}
-    />
-  )
+  return null
 }

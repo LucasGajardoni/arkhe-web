@@ -1,0 +1,39 @@
+.pagina-identidade { min-height: 100vh; background: var(--fundo); }
+.central-identidade { max-width: 1120px; padding-top: 48px; padding-bottom: 64px; }
+.topo-identidade { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
+.topo-identidade h1 { color: var(--verde-escuro); font-size: clamp(1.8rem, 4vw, 2.8rem); margin: 8px 0 12px; }
+.topo-identidade p, .cartao-identidade p, .modal-identidade p { line-height: 1.65; }
+.topo-identidade > .botao { flex-shrink: 0; width: auto; }
+.topo-identidade > div { min-width: 0; }
+.secao-identidade { margin: 32px 0; }
+.secao-identidade h2 { color: var(--verde-escuro); margin-bottom: 18px; }
+.grade-identidade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 20px; }
+.cartao-identidade { background: #fff; border: 1px solid #dbe5de; border-radius: 20px; padding: 26px; box-shadow: 0 8px 28px #123d2610; min-width: 0; }
+.cartao-identidade h3 { margin: 14px 0 8px; color: var(--verde-escuro); overflow-wrap: anywhere; }
+.cartao-identidade p { margin: 8px 0; overflow-wrap: anywhere; }
+.cartao-identidade dl { margin: 16px 0; }
+.cartao-identidade dl > div { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.cartao-identidade dt { color: #52645a; }
+.cartao-identidade dd { margin: 0; overflow-wrap: anywhere; }
+.badge-identidade { display: inline-block; border-radius: 99px; padding: 6px 12px; background: #edf2ef; color: var(--verde-escuro); font-size: .78rem; font-weight: 700; }
+.badge-identidade.status-0 { background: #fff2cc; color: #725600; }
+.badge-identidade.status-1 { background: #ddf3e4; color: #195632; }
+.badge-identidade.status-2, .badge-identidade.status-3 { background: #f8e8e5; color: #8b342e; }
+.acoes-identidade { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; }
+.mensagem-identidade { padding: 16px; border-radius: 12px; background: #e4f1e8; color: var(--verde-escuro); line-height: 1.6; }
+.mensagem-identidade.erro { background: #faeae7; color: #8b342e; }
+.vazio-identidade { border: 1px dashed #b6c8ba; border-radius: 20px; padding: 32px; line-height: 1.7; }
+.formulario-identidade { max-width: 540px; }
+.campo-identidade { display: grid; gap: 8px; margin: 18px 0; font-weight: 600; }
+.campo-identidade input, .campo-identidade select { width: 100%; min-width: 0; border: 1px solid #bccdc2; border-radius: 10px; padding: 13px; background: #fff; color: var(--verde-escuro); font: inherit; }
+.fundo-modal-identidade { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; background: #092c22a6; overflow-y: auto; }
+.modal-identidade { width: min(100%, 560px); max-height: 90dvh; overflow-y: auto; border-radius: 22px; padding: 30px; background: var(--fundo); box-shadow: 0 20px 80px #001a1640; }
+.modal-identidade h2 { color: var(--verde-escuro); }
+.pagina-identidade button:disabled, .modal-identidade button:disabled { opacity: .55; cursor: not-allowed; }
+@media (max-width: 600px) {
+  .central-identidade { padding-top: 28px; }
+  .topo-identidade { gap: 12px; }
+  .topo-identidade > .botao { padding: 10px 16px; }
+  .cartao-identidade, .modal-identidade { padding: 20px; }
+  .acoes-identidade > .botao { flex: 1 1 130px; }
+}

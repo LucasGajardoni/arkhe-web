@@ -20,15 +20,15 @@ function MensagensRecuperacao({ erro, mensagem }) {
   )
 }
 
-export default function RecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir }) {
-  const recuperacao = useRecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir })
+export default function RecuperacaoPin({ cpf, aoCancelar, aoConcluir }) {
+  const recuperacao = useRecuperacaoPin({ cpf, aoCancelar, aoConcluir })
 
   if (recuperacao.etapa === 0) {
     return (
       <form onSubmit={recuperacao.enviarCodigo}>
         <CabecalhoRecuperacao
           etapa={recuperacao.etapa}
-          titulo="Recupere o acesso à sua conta"
+          titulo="Recupere seu PIN pessoal"
           descricao="Informe o e-mail cadastrado para receber um código de verificação."
         />
         <label className="campo-login">
@@ -101,19 +101,14 @@ export default function RecuperacaoPin({ cpf, tipoConta, aoCancelar, aoConcluir 
 
   const pinsDiferentes = recuperacao.confirmarPin && !recuperacao.pinsIguais
   const pinInseguro = pinValido(recuperacao.novoPin) && !recuperacao.pinSeguroRecuperacao
-  const nomeTipoConta = tipoConta === 'PJ' ? 'Conta Pessoa Jurídica' : 'Conta Pessoa Física'
 
   return (
     <form onSubmit={recuperacao.salvarNovoPin}>
       <CabecalhoRecuperacao
         etapa={recuperacao.etapa}
         titulo="Crie seu novo PIN"
-        descricao={`Defina um novo PIN de acesso para sua ${nomeTipoConta.toLowerCase()}.`}
+        descricao="Defina seu PIN pessoal de acesso ao Arkhé."
       />
-      <div className="empresa-selecionada conta-recuperacao" aria-label="Conta que terá o PIN alterado">
-        <span>Conta selecionada</span>
-        <strong>{nomeTipoConta}</strong>
-      </div>
       <div className="grade-pins-recuperacao">
         <label className="campo-login">
           <span>Novo PIN</span>

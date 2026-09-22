@@ -1,5 +1,6 @@
 import { FACE_API_URL, FACE_CLIENT_ID, FACE_CLIENT_SECRET } from '../config/api.js'
 import { somenteNumeros } from '../utils/formatadores.js'
+import { verificarUsuario } from './authService.js'
 
 const SDK_ID = 'arkhe-face-identity-sdk'
 
@@ -88,6 +89,22 @@ export async function prepararSessaoFacialCadastro(dados) {
       sessao,
       mensagem: 'Seu CPF ainda não possui cadastro facial. Vamos cadastrar você no sistema.',
     }
+  }
+}
+
+// Chamar somente depois da validação de CPF e PIN pessoal.
+export async function prepararSessaoFacialLogin(dadosUsuario) {
+  try {
+    const sessao = await criarSessaoVerificacao(dadosUsuario.cpf, 'login')
+    return { modo: 'login', sessao, mensagem: 'Confirme sua identidade com o reconhecimento facial.' }
+  } catch (erro) {
+    if (!cpfSemCadastroFacial(erro)) throw erro
+    const resultado = await verificarUsuario(dadosUsuario.cpf)
+    if (!resultado.usuario_existente || !resultado.usuario) {
+      throw new Error('Não foi possível obter seus dados para o cadastro facial. Tente novamente.', { cause: erro })
+    }
+    const sessao = await criarSessaoCadastro({ ...resultado.usuario, cpf: dadosUsuario.cpf })
+    return { modo: 'cadastro', sessao, mensagem: 'Este é seu primeiro acesso. Vamos cadastrar seu rosto para proteger seu acesso Arkhé.' }
   }
 }
 

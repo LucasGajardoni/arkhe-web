@@ -1,214 +1,100 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { realizarLogin } from '../services/authService.js'
-import { criarSessaoVerificacao } from '../services/facialService.js'
+import { realizarLoginUsuario } from '../services/authService.js'
+import { prepararSessaoFacialLogin } from '../services/facialService.js'
 import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
-import { transicionarFormulario } from '../utils/transicaoFormulario.js'
 import { cpfValido, pinValido } from '../utils/validadores.js'
 import { useSessao } from './useSessao.js'
 
 export function useLogin() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { iniciarSessao } = useSessao()
-  const estadoNavegacao = location.state || {}
-  const abrindoOutraConta = estadoNavegacao.abrindoOutraConta === true
-  const cpfInicial = mascaraCpf(estadoNavegacao.cpfInicial || '')
-
-  const [tipoConta, setTipoConta] = useState('')
-  const [etapa, setEtapa] = useState(0)
-  const [credenciais, setCredenciais] = useState({ cpf: cpfInicial, pin: '' })
+  const { iniciarSessaoIdentidade } = useSessao()
+  const [etapa, setEtapa] = useState('credenciais')
+  const [credenciais, setCredenciais] = useState({ cpf: mascaraCpf(location.state?.cpfInicial || ''), pin: '' })
   const [credenciaisPendentes, setCredenciaisPendentes] = useState(null)
   const [mostrarPin, setMostrarPin] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [mensagemErro, setMensagemErro] = useState('')
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [sessaoFacial, setSessaoFacial] = useState(null)
+  const [modoFacial, setModoFacial] = useState('login')
+  const [mensagemFacial, setMensagemFacial] = useState('')
   const [recuperandoPin, setRecuperandoPin] = useState(false)
-
+  const ocupado = useRef(false)
   const credenciaisValidas = cpfValido(credenciais.cpf) && pinValido(credenciais.pin)
 
-  function alterarCredencial(evento) {
-    const { name, value } = evento.target
-    let novoValor = value
-
-    if (name === 'cpf') novoValor = mascaraCpf(value)
-    if (name === 'pin') novoValor = somenteNumeros(value).slice(0, 6)
-
-    setCredenciais((dados) => ({ ...dados, [name]: novoValor }))
-    setMensagemErro('')
-    setMensagemSucesso('')
-  }
-
-  function escolherTipoConta(tipo) {
-    setTipoConta(tipo)
+  function alterarCredencial({ target: { name, value } }) {
+    setCredenciais((dados) => ({ ...dados, [name]: name === 'cpf' ? mascaraCpf(value) : somenteNumeros(value).slice(0, 6) }))
     setMensagemErro('')
     setMensagemSucesso('')
   }
 
   function voltarEtapa() {
+    if (ocupado.current) return
     setMensagemErro('')
-
-    if (recuperandoPin) {
-      transicionarFormulario(() => setRecuperandoPin(false))
-      return
-    }
-
-    if (etapa === 0) {
-      let destino = '/'
-      if (abrindoOutraConta) destino = '/cadastro'
-      transicionarFormulario(() => navigate(destino))
-      return
-    }
-
-    if (etapa === 2) {
-      setSessaoFacial(null)
-      setCredenciaisPendentes(null)
-    }
-
-    transicionarFormulario(() => setEtapa((atual) => Math.max(0, atual - 1)))
-  }
-
-  function abrirRecuperacaoPin() {
-    setMensagemErro('')
-    setMensagemSucesso('')
-    transicionarFormulario(() => setRecuperandoPin(true))
-  }
-
-  function fecharRecuperacaoPin() {
-    transicionarFormulario(() => setRecuperandoPin(false))
-  }
-
-  function concluirRecuperacaoPin(mensagem) {
-    setCredenciais((dados) => ({ ...dados, pin: '' }))
-    setMostrarPin(false)
-    setMensagemErro('')
-    setMensagemSucesso(mensagem || 'PIN alterado com sucesso.')
-    setRecuperandoPin(false)
-  }
-
-  function avancarParaCredenciais() {
-    transicionarFormulario(() => setEtapa(1))
-  }
-
-  function irParaCadastro() {
-    transicionarFormulario(() => navigate('/cadastro'))
-  }
-
-  function alterarTipoConta() {
-    setTipoConta('')
-    transicionarFormulario(() => setEtapa(0))
-    setCredenciais((dados) => {
-      let cpf = ''
-      if (abrindoOutraConta) cpf = dados.cpf
-      return { cpf, pin: '' }
-    })
-    setCredenciaisPendentes(null)
-    setMostrarPin(false)
-    setMensagemErro('')
-    setMensagemSucesso('')
+    if (recuperandoPin) return setRecuperandoPin(false)
+    if (etapa === 'credenciais') return navigate('/')
     setSessaoFacial(null)
+    setCredenciaisPendentes(null)
+    setEtapa('credenciais')
   }
 
-  function concluirAcesso(resultado, dadosUsados) {
-    iniciarSessao(resultado, {
-      cpf: dadosUsados.cpf,
-      tipoConta: dadosUsados.tipoConta,
-    })
-
-    if (abrindoOutraConta) {
-      let novaConta = 'PF'
-      if (dadosUsados.tipoConta === 'PF') novaConta = 'PJ'
-      transicionarFormulario(() => {
-        navigate(`/cadastro/${novaConta.toLowerCase()}`, {
-          replace: true,
-          state: {
-            cpfVerificado: dadosUsados.cpf,
-            clienteExistente: true,
-            tipoContaAutenticada: dadosUsados.tipoConta,
-          },
-        })
-      })
-      return
-    }
-
-    transicionarFormulario(() => navigate('/dashboard', { replace: true }))
-  }
-
-  async function autenticar(dadosUsados, cadastroFacial) {
+  async function autenticar(dados, cadastroFacial) {
+    if (ocupado.current) return
+    ocupado.current = true
     setProcessando(true)
     setMensagemErro('')
-
     try {
-      const resultado = await realizarLogin({
-        cpf: dadosUsados.cpf,
-        pin: dadosUsados.pin,
-        tipoConta: dadosUsados.tipoConta,
-        cadastroFacial,
-      })
-
-      if (!cadastroFacial && resultado.reconhecimento_facial_pendente === true) {
-        setSessaoFacial(await criarSessaoVerificacao(dadosUsados.cpf))
-        transicionarFormulario(() => setEtapa(2))
+      const resultado = await realizarLoginUsuario({ ...dados, cadastroFacial })
+      if (!cadastroFacial) {
+        const preparacao = await prepararSessaoFacialLogin({ cpf: dados.cpf })
+        setModoFacial(preparacao.modo)
+        setMensagemFacial(preparacao.mensagem)
+        setSessaoFacial(preparacao.sessao)
+        setEtapa('facial')
         return
       }
-
-      concluirAcesso(resultado, dadosUsados)
+      if (!resultado.usuario) throw new Error('O servidor não confirmou sua identidade. Tente novamente.')
+      iniciarSessaoIdentidade(resultado)
+      setCredenciaisPendentes(null)
+      setCredenciais((atuais) => ({ ...atuais, pin: '' }))
+      navigate(resultado.troca_pin_obrigatoria ? '/primeiro-acesso' : '/selecionar-conta', { replace: true })
     } catch (erro) {
-      if (erro.status === 401 || erro.status === 403) {
-        setSessaoFacial(null)
-        transicionarFormulario(() => setEtapa(1))
-      }
-
-      setMensagemErro(erro.message || 'Não foi possível conectar ao servidor.')
+      setSessaoFacial(null)
+      setCredenciaisPendentes(null)
+      setEtapa('credenciais')
+      setMensagemErro(erro.dados?.pin_temporario_expirado
+        ? 'Seu PIN temporário expirou. Peça ao responsável pela empresa para reenviar o convite.'
+        : erro.message || 'Não foi possível entrar. Tente novamente.')
     } finally {
+      ocupado.current = false
       setProcessando(false)
     }
   }
 
-  function continuarCredenciais() {
-    if (!credenciaisValidas || processando) return
-
-    const dadosUsados = Object.freeze({
-      cpf: somenteNumeros(credenciais.cpf),
-      pin: credenciais.pin,
-      tipoConta,
-    })
-
-    setCredenciaisPendentes(dadosUsados)
-    autenticar(dadosUsados, false)
-  }
-
-  function concluirReconhecimentoFacial() {
-    if (!credenciaisPendentes || processando) return Promise.resolve()
-    return autenticar(credenciaisPendentes, true)
+  function continuarCredenciais(evento) {
+    evento?.preventDefault()
+    if (!credenciaisValidas || ocupado.current) return
+    const dados = { cpf: somenteNumeros(credenciais.cpf), pin: credenciais.pin }
+    setCredenciaisPendentes(dados)
+    return autenticar(dados, false)
   }
 
   return {
-    navigate,
-    abrindoOutraConta,
-    tipoConta,
-    etapa,
-    credenciais,
-    credenciaisValidas,
-    mostrarPin,
-    processando,
-    mensagemErro,
-    mensagemSucesso,
-    sessaoFacial,
-    recuperandoPin,
-    setMostrarPin,
-    setMensagemErro,
-    escolherTipoConta,
-    alterarCredencial,
-    voltarEtapa,
-    alterarTipoConta,
-    avancarParaCredenciais,
-    irParaCadastro,
-    abrirRecuperacaoPin,
-    fecharRecuperacaoPin,
-    concluirRecuperacaoPin,
-    continuarCredenciais,
-    concluirReconhecimentoFacial,
+    etapa, credenciais, credenciaisValidas, mostrarPin, processando, mensagemErro, mensagemSucesso,
+    sessaoFacial, modoFacial, mensagemFacial, recuperandoPin, setMostrarPin, setMensagemErro,
+    alterarCredencial, voltarEtapa, continuarCredenciais,
+    irParaCadastro: () => navigate('/cadastro'),
+    abrirRecuperacaoPin: () => { if (!ocupado.current) setRecuperandoPin(true) },
+    fecharRecuperacaoPin: () => setRecuperandoPin(false),
+    concluirRecuperacaoPin: (mensagem) => {
+      setCredenciais((dados) => ({ ...dados, pin: '' }))
+      setMostrarPin(false)
+      setMensagemErro('')
+      setMensagemSucesso(mensagem || 'PIN pessoal alterado com sucesso.')
+      setRecuperandoPin(false)
+    },
+    concluirReconhecimentoFacial: () => credenciaisPendentes && autenticar(credenciaisPendentes, true),
   }
 }

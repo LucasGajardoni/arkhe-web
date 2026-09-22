@@ -1,0 +1,5 @@
+.pagina-acessos .central-identidade { padding-bottom: 110px; }
+.empresa-acessos { border-left: 4px solid var(--dourado); padding: 8px 20px; margin-bottom: 28px; color: var(--verde-escuro); }
+.empresa-acessos h2 { margin: 0 0 8px; }
+.pagina-acessos .mensagem-identidade { margin-bottom: 20px; }
+@media (max-width: 600px) { .pagina-acessos .topo-identidade { flex-direction: column; } }

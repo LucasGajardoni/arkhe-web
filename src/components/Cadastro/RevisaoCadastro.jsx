@@ -7,7 +7,7 @@ function BlocoRevisao({ titulo, itens, editar }) {
     <section className="bloco-revisao">
       <div className="topo-revisao">
         <h3>{titulo}</h3>
-        <button type="button" onClick={editar}>Editar</button>
+        {editar && <button type="button" onClick={editar}>Editar</button>}
       </div>
       <dl>
         {itensPreenchidos.map(([nome, valor]) => (
@@ -23,11 +23,9 @@ function BlocoRevisao({ titulo, itens, editar }) {
 
 function RevisaoContaExistente({ empresarial, dadosPJ, editarEtapa }) {
   let blocoEmpresa = null
-  let etapaAcesso = 0
   let tipoConta = 'Pessoa Física'
 
   if (empresarial) {
-    etapaAcesso = 1
     tipoConta = 'Pessoa Jurídica'
     blocoEmpresa = (
       <BlocoRevisao
@@ -49,9 +47,8 @@ function RevisaoContaExistente({ empresarial, dadosPJ, editarEtapa }) {
         titulo="Nova conta"
         itens={[
           ['Tipo', tipoConta],
-          ['PIN', '••••••'],
+          ['Acesso', 'Seu PIN pessoal atual'],
         ]}
-        editar={() => editarEtapa(etapaAcesso)}
       />
     </div>
   )

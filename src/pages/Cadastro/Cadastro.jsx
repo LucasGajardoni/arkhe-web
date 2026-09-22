@@ -5,7 +5,19 @@ import IndicadorEtapas from '../../components/IndicadorEtapas/IndicadorEtapas.js
 import { useCadastro } from '../../hooks/useCadastro.js'
 import './Cadastro.css'
 
+import { useSessao } from '../../hooks/useSessao.js'
+import EstadoSessao from '../../components/ProtectedRoute/EstadoSessao.jsx'
+import AberturaAutenticada from '../../components/Cadastro/AberturaAutenticada.jsx'
+
 export default function Cadastro({ tipoConta }) {
+  const { usuarioIdentidade, verificandoSessao, trocaPinObrigatoria, erroSessao } = useSessao()
+  if (verificandoSessao || erroSessao) return <EstadoSessao />
+  if (trocaPinObrigatoria) return <Navigate to="/primeiro-acesso" replace />
+  if (usuarioIdentidade) return <AberturaAutenticada tipoConta={tipoConta}><FormularioCadastro key={tipoConta} tipoConta={tipoConta} /></AberturaAutenticada>
+  return <FormularioCadastro key={tipoConta} tipoConta={tipoConta} />
+}
+
+function FormularioCadastro({ tipoConta }) {
   const location = useLocation()
   const cadastro = useCadastro(tipoConta, location.state || {})
   const {
@@ -22,6 +34,7 @@ export default function Cadastro({ tipoConta }) {
     modoFacial,
     mensagemFacial,
     enviando,
+    contaCriada,
     validarEtapa,
     avancar,
     voltar,
@@ -49,6 +62,7 @@ export default function Cadastro({ tipoConta }) {
     if (etapaAtual === etapaRevisao) {
       let textoBotao = 'Enviar cadastro'
       if (clienteExistente) textoBotao = 'Abrir nova conta'
+      if (contaCriada) textoBotao = 'Continuar para minha conta'
       if (enviando) textoBotao = 'Enviando...'
       if (enviando && clienteExistente) textoBotao = 'Abrindo conta...'
 

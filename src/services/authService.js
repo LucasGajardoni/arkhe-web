@@ -96,13 +96,12 @@ export async function verificarUsuario(cpf) {
   return resultado
 }
 
-export function realizarLogin({ cpf, pin, tipoConta, cadastroFacial = false }) {
+export function realizarLoginUsuario({ cpf, pin, cadastroFacial = false }) {
   return enviarJson(
-    '/login',
+    '/login_usuario',
     {
       cpf: somenteNumeros(cpf),
       pin: prepararPin(pin),
-      tipo_conta: numeroTipoConta(tipoConta),
       cadastro_facial: cadastroFacial,
     },
     'Não foi possível entrar na conta.',
@@ -128,13 +127,12 @@ export function verificarCodigoRecuperacaoPin({ email, codigo }) {
   )
 }
 
-export function trocarPin({ email, codigo, tipoConta, novoPin }) {
+export function trocarPin({ email, codigo, novoPin }) {
   return enviarJson(
     '/trocar_pin',
     {
       email: String(email || '').trim().toLowerCase(),
       codigo: somenteNumeros(codigo).slice(0, 6),
-      tipo_conta: numeroTipoConta(tipoConta),
       novo_pin: prepararPin(novoPin),
     },
     'Não foi possível alterar o PIN.',
@@ -155,6 +153,27 @@ export async function obterSessao() {
 
   return resultado
 }
+
+export async function requisitarApi(caminho, { method = 'GET', dados } = {}) {
+  const resposta = await requisitar(caminho, {
+    method,
+    credentials: 'include',
+    ...(dados === undefined ? {} : {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados),
+    }),
+  })
+  return validarResposta(resposta, 'Não foi possível concluir a solicitação.')
+}
+
+export const obterSessaoUsuario = () => requisitarApi('/sessao_usuario')
+export const obterContasDisponiveis = () => requisitarApi('/contas_disponiveis')
+export const definirPinPessoal = (novoPin) => requisitarApi('/definir_pin_pessoal', {
+  method: 'POST', dados: { novo_pin: prepararPin(novoPin) },
+})
+export const selecionarContaBackend = (idConta) => requisitarApi('/selecionar_conta', {
+  method: 'POST', dados: { id_conta: idConta },
+})
 
 function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
   const empresarial = numeroTipoConta(tipoConta) === 1
@@ -185,6 +204,7 @@ function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
   formData.append('email', String(email || '').trim().toLowerCase())
   formData.append('telefone', somenteNumeros(telefone))
   formData.append('cpf', somenteNumeros(cpf))
+  formData.append('data_nascimento', empresarial ? dadosPJ.dataNascimentoResponsavel : dadosPF.dataNascimento)
   formData.append('cnpj', somenteNumeros(cnpj))
   formData.append('pin', prepararPin(dados.pin))
   formData.append('tipo_conta', String(numeroTipoConta(tipoConta)))
@@ -215,7 +235,6 @@ export function cadastrarUsuario({ tipoConta, dadosPF, dadosPJ }) {
 
 export function adicionarConta({
   tipoConta,
-  pin,
   cnpj = '',
   nomeFantasia = '',
   razaoSocial = '',
@@ -225,7 +244,6 @@ export function adicionarConta({
   const formData = new FormData()
 
   formData.append('tipo_conta', String(tipoContaNumero))
-  formData.append('pin', prepararPin(pin))
 
   if (tipoContaNumero === 1) {
     formData.append('cnpj', somenteNumeros(cnpj))

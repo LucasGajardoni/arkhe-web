@@ -10,6 +10,10 @@ import Boletos from './pages/Boletos/Boletos.jsx'
 import Integracoes from './pages/Integracoes/Integracoes.jsx'
 import SessaoProvider from './contexts/SessaoProvider.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
+import IdentityRoute from './components/ProtectedRoute/IdentityRoute.jsx'
+import PrimeiroAcesso from './pages/PrimeiroAcesso/PrimeiroAcesso.jsx'
+import SelecionarConta from './pages/SelecionarConta/SelecionarConta.jsx'
+import Acessos from './pages/Acessos/Acessos.jsx'
 
 export default function App() {
   return (
@@ -22,12 +26,17 @@ export default function App() {
           <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
           <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
           <Route path="/desenvolvedores/api" element={<Navigate to="/dashboard/integracoes#documentacao-api" replace />} />
+          <Route element={<IdentityRoute />}>
+            <Route path="/primeiro-acesso" element={<PrimeiroAcesso />} />
+            <Route path="/selecionar-conta" element={<SelecionarConta />} />
+          </Route>
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/pix" element={<Pix />} />
             <Route path="/dashboard/extrato" element={<Extrato />} />
             <Route path="/dashboard/boletos" element={<Boletos />} />
             <Route path="/dashboard/integracoes" element={<Integracoes />} />
+            <Route path="/dashboard/acessos" element={<Acessos />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

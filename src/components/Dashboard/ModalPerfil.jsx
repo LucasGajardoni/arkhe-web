@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { editarUsuario } from '../../services/authService.js'
 import { mascaraCpfParcial, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import { emailValido, nomeValido } from '../../utils/validadores.js'
 
 export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
+  const navigate = useNavigate()
   const [dados, setDados] = useState(() => ({
     nome: usuario?.nome || '',
     email: usuario?.email || '',
@@ -131,6 +133,9 @@ export default function ModalPerfil({ usuario, fechar, aoAtualizar }) {
             </button>
           </footer>
         </form>
+        <div className="acoes-identidade">
+          <button className="botao botao-secundario" type="button" disabled={salvando} onClick={() => { fechar(); navigate('/selecionar-conta') }}>Trocar conta</button>
+        </div>
       </section>
     </div>
   )

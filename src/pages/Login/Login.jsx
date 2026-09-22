@@ -13,11 +13,11 @@ export default function Login() {
         <aside className="lateral-login">
           <p className="rotulo-secao">BANCO ARKHÉ</p>
           <h2>Seu acesso, protegido em cada etapa.</h2>
-          <p>O Arkhé reúne o PIN da sua conta e a confirmação facial em uma experiência simples.</p>
+          <p>O Arkhé reúne seu PIN pessoal e a confirmação facial em uma experiência simples.</p>
           <ul>
-            <li>Acesso PF e PJ</li>
+            <li>Um único acesso pessoal</li>
             <li>Confirmação facial</li>
-            <li>Controle de sessão</li>
+            <li>Escolha sua conta após autenticar</li>
             <li>Proteção dos dados</li>
           </ul>
           <small>Recursos apresentados para fins acadêmicos. Sua sessão é mantida pelo cookie seguro do servidor.</small>

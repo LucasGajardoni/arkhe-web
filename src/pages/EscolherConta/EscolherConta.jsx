@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import Home from '../Home/Home.jsx'
 import ModalTipoConta from '../../components/ModalTipoConta/ModalTipoConta.jsx'
 import { verificarUsuario } from '../../services/authService.js'
@@ -7,7 +7,19 @@ import { mascaraCpf } from '../../utils/formatadores.js'
 import { transicionarFormulario } from '../../utils/transicaoFormulario.js'
 import { cpfValido } from '../../utils/validadores.js'
 
+import { useSessao } from '../../hooks/useSessao.js'
+import EstadoSessao from '../../components/ProtectedRoute/EstadoSessao.jsx'
+import AberturaAutenticada from '../../components/Cadastro/AberturaAutenticada.jsx'
+
 export default function EscolherConta() {
+  const { usuarioIdentidade, verificandoSessao, trocaPinObrigatoria, erroSessao } = useSessao()
+  if (verificandoSessao || erroSessao) return <EstadoSessao />
+  if (trocaPinObrigatoria) return <Navigate to="/primeiro-acesso" replace />
+  if (usuarioIdentidade) return <AberturaAutenticada />
+  return <EscolhaPublica />
+}
+
+function EscolhaPublica() {
   const navigate = useNavigate()
   const [cpf, setCpf] = useState('')
   const [etapa, setEtapa] = useState('cpf')
@@ -52,7 +64,7 @@ export default function EscolherConta() {
   function autenticarClienteExistente() {
     transicionarFormulario(() => {
       navigate('/login', {
-        state: { abrindoOutraConta: true, cpfInicial: cpf },
+        state: { cpfInicial: cpf },
       })
     })
   }

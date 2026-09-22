@@ -68,7 +68,7 @@ function ClienteExistente({ autenticar }) {
       <p className="rotulo-secao">QUE BOM TER VOCÊ AQUI</p>
       <h2 id="titulo-modal-conta">Você já é cliente Arkhé</h2>
       <p className="texto-modal-conta">
-        Para abrir o outro tipo de conta, entre primeiro na conta que você já possui.
+        Para abrir sua conta, entre primeiro com seu CPF e PIN pessoal.
       </p>
       <div className="cliente-existente-conta">
         <span aria-hidden="true">✓</span>
@@ -78,7 +78,7 @@ function ClienteExistente({ autenticar }) {
         </p>
       </div>
       <button className="botao botao-principal botao-cpf-conta" type="button" onClick={autenticar}>
-        Entrar e abrir outra conta
+        Entrar com meu acesso pessoal
       </button>
     </>
   )

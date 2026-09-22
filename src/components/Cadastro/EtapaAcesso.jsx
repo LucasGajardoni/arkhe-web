@@ -67,7 +67,7 @@ export default function EtapaAcesso({
       <div className="grade-formulario">
         <Campo
           nome="pin"
-          rotulo="PIN de 6 dígitos"
+          rotulo="PIN pessoal de 6 dígitos"
           valor={dadosAtuais.pin}
           alterar={alterar}
           tipo={tipoCampoPin}

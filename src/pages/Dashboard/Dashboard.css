@@ -1222,3 +1222,27 @@
     animation: none;
   }
 }
+.trocar-conta-dashboard, .atalho-equipe {
+  border: 1px solid #d5dfd9;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--verde-escuro);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.atalho-equipe.ativo { background: var(--verde-escuro); color: white; }
+.empresa-topo-dashboard { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1200px) {
+  .cabecalho-dashboard { height: auto; min-height: 76px; }
+  .cabecalho-dashboard .barra-dashboard { flex-wrap: wrap; min-height: 76px; padding: 10px 0; }
+}
+@media (max-width: 600px) {
+  .cabecalho-dashboard .barra-dashboard { gap: 12px; }
+  .cabecalho-dashboard .perfil-topo-dashboard { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .cabecalho-dashboard .marca-dashboard strong { display: none; }
+  .cabecalho-dashboard .sair-dashboard { display: inline-flex; min-width: 30px; min-height: 36px; padding: 5px; align-items: center; }
+  .trocar-conta-dashboard, .atalho-equipe { padding: 8px; font-size: .72rem; }
+}

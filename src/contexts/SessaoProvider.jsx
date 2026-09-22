@@ -1,112 +1,99 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import SessaoContext from './SessaoContext.js'
-import { obterSessao } from '../services/authService.js'
-
-function tipoContaPorExtenso(valor, fallback = '') {
-  if (valor === 0 || valor === '0' || valor === 'PF') return 'PF'
-  if (valor === 1 || valor === '1' || valor === 'PJ') return 'PJ'
-  return fallback
-}
-
-function montarPerfilVisual(resultado = {}, fallback = {}) {
-  const usuario = resultado.usuario || {}
-  const conta = resultado.conta || {}
-  const tipoRecebido = conta.tipo_conta ?? resultado.tipo_conta ?? usuario.tipo_conta
-
-  return {
-    nome: usuario.nome || resultado.nome || fallback.nome || 'Cliente',
-    email: usuario.email || resultado.email || fallback.email || '',
-    telefone: usuario.telefone || resultado.telefone || fallback.telefone || '',
-    cpf: usuario.cpf || resultado.cpf || fallback.cpf || '',
-    cnpj: conta.cnpj || resultado.cnpj || fallback.cnpj || '',
-    nomeFantasia: conta.nome_fantasia
-      || usuario.nome_fantasia
-      || resultado.nome_fantasia
-      || fallback.nomeFantasia
-      || '',
-    razaoSocial: conta.razao_social
-      || usuario.razao_social
-      || resultado.razao_social
-      || fallback.razaoSocial
-      || '',
-    tipoConta: tipoContaPorExtenso(tipoRecebido, fallback.tipoConta || ''),
-    idConta: conta.id_conta ?? resultado.id_conta ?? fallback.idConta ?? null,
-    banco: conta.banco || resultado.banco || fallback.banco || '',
-    agencia: conta.agencia || resultado.agencia || fallback.agencia || '',
-    numeroConta: conta.numero_conta
-      || resultado.numero_conta
-      || fallback.numeroConta
-      || '',
-  }
-}
+import { definirPinPessoal, obterSessao, selecionarContaBackend } from '../services/authService.js'
+import { restaurarIdentidade } from '../services/sessaoService.js'
+import { montarPerfilVisual } from '../utils/perfil.js'
 
 export default function SessaoProvider({ children }) {
+  const [usuarioIdentidade, setUsuarioIdentidade] = useState(null)
   const [perfil, setPerfil] = useState(null)
+  const [trocaPinObrigatoria, setTrocaPinObrigatoria] = useState(false)
   const [verificandoSessao, setVerificandoSessao] = useState(true)
+  const [erroSessao, setErroSessao] = useState('')
+  const versao = useRef(0)
 
-  useEffect(() => {
-    let ativo = true
-
-    async function restaurarSessao() {
-      try {
-        const resultado = await obterSessao()
-        if (ativo) setPerfil(montarPerfilVisual(resultado))
-      } catch {
-        if (ativo) setPerfil(null)
-      } finally {
-        if (ativo) setVerificandoSessao(false)
-      }
-    }
-
-    restaurarSessao()
-
-    return () => {
-      ativo = false
-    }
+  const limparSessao = useCallback(() => {
+    versao.current += 1
+    setUsuarioIdentidade(null)
+    setPerfil(null)
+    setTrocaPinObrigatoria(false)
+    setErroSessao('')
+    setVerificandoSessao(false)
   }, [])
 
-  function iniciarSessao(resultado, fallback) {
-    setPerfil(montarPerfilVisual(resultado, fallback))
+  const tratarErroSessao = useCallback((erro) => {
+    if (erro.dados?.troca_pin_obrigatoria) {
+      setTrocaPinObrigatoria(true)
+      setPerfil(null)
+    } else if (erro.status === 401) limparSessao()
+  }, [limparSessao])
+
+  const recarregarSessao = useCallback(() => {
+    const atual = ++versao.current
+    return restaurarIdentidade().then((estado) => {
+      if (atual !== versao.current) return
+      setUsuarioIdentidade(estado.identidade)
+      setTrocaPinObrigatoria(estado.trocaPinObrigatoria)
+      setPerfil(estado.resultado ? montarPerfilVisual(estado.resultado) : null)
+    }).catch((erro) => {
+      if (atual !== versao.current) return
+      if (erro.status === 401) limparSessao()
+      else setErroSessao(erro.message || 'Não foi possível restaurar sua sessão.')
+    }).finally(() => {
+      if (atual === versao.current) setVerificandoSessao(false)
+    })
+  }, [limparSessao])
+
+  useEffect(() => {
+    recarregarSessao()
+    return () => { versao.current += 1 }
+  }, [recarregarSessao])
+
+  function iniciarSessaoIdentidade(resultado) {
+    versao.current += 1
+    setUsuarioIdentidade(resultado.usuario)
+    setPerfil(null)
+    setTrocaPinObrigatoria(resultado.troca_pin_obrigatoria === true)
+    setVerificandoSessao(false)
+    setErroSessao('')
+  }
+
+  async function concluirPrimeiroAcesso(novoPin) {
+    await definirPinPessoal(novoPin)
+    setTrocaPinObrigatoria(false)
+  }
+
+  async function atualizarSessaoConta() {
+    // O cookie já foi atualizado pelo backend; nunca reaproveitar o perfil anterior.
+    setPerfil(null)
+    const resultado = await obterSessao()
+    setUsuarioIdentidade(resultado.usuario)
+    setPerfil(montarPerfilVisual(resultado))
+    setTrocaPinObrigatoria(false)
+    return resultado
+  }
+
+  async function selecionarConta(idConta) {
+    await selecionarContaBackend(idConta)
+    return atualizarSessaoConta()
   }
 
   function atualizarPerfil(dados) {
     setPerfil((atual) => montarPerfilVisual(dados, atual || {}))
+    setUsuarioIdentidade((atual) => ({ ...atual, ...(dados.usuario || {
+      nome: dados.nome, email: dados.email, telefone: dados.telefone,
+    }) }))
   }
 
-  function selecionarConta(tipoConta, dadosConta = {}) {
-    const tipoSelecionado = tipoContaPorExtenso(tipoConta)
-    let cnpj = ''
-    if (tipoSelecionado === 'PJ') cnpj = dadosConta.cnpj || ''
-
-    setPerfil((atual) => ({
-      ...(atual || { nome: 'Cliente' }),
-      tipoConta: tipoSelecionado,
-      cnpj,
-      nomeFantasia: dadosConta.nome_fantasia || dadosConta.nomeFantasia || '',
-      razaoSocial: dadosConta.razao_social || dadosConta.razaoSocial || '',
-      idConta: dadosConta.id_conta ?? null,
-      banco: dadosConta.banco || '',
-      agencia: dadosConta.agencia || '',
-      numeroConta: dadosConta.numero_conta || '',
-    }))
-  }
-
-  function limparSessao() {
-    setPerfil(null)
-  }
-
-  return (
-    <SessaoContext.Provider
-      value={{
-        perfil,
-        verificandoSessao,
-        iniciarSessao,
-        atualizarPerfil,
-        selecionarConta,
-        limparSessao,
-      }}
-    >
-      {children}
-    </SessaoContext.Provider>
-  )
+  return <SessaoContext.Provider value={{
+    usuarioIdentidade, perfil, trocaPinObrigatoria, verificandoSessao, erroSessao,
+    iniciarSessaoIdentidade, concluirPrimeiroAcesso, selecionarConta, atualizarSessaoConta,
+    atualizarPerfil, limparSessao, tratarErroSessao,
+    recarregarSessao: () => {
+      setVerificandoSessao(true)
+      setErroSessao('')
+      setPerfil(null)
+      return recarregarSessao()
+    },
+  }}>{children}</SessaoContext.Provider>
 }
