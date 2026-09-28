@@ -1,6 +1,6 @@
 import { somenteNumeros } from '../../utils/formatadores.js'
 
-const cabecalhoModelo = ['CPF', 'Nome completo', 'Salário mensal']
+const cabecalhoModelo = ['CPF', 'Nome completo', 'Salario mensal']
 const SEPARADOR_CSV = ';'
 
 function campoCsv(valor) {
