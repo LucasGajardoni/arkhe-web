@@ -1,6 +1,7 @@
 import { mascaraCpf } from '../../utils/formatadores.js'
 import { formatarDataHoraMovimentacao } from '../../utils/movimentacoes.js'
-import { competencia, moeda, podePagar, statusFolha, statusItem, tonsFolha } from './folhaUtils.js'
+import AcoesComprovante from '../../components/Comprovante/AcoesComprovante.jsx'
+import { competencia, formatarDataFolha, moeda, podePagar, statusFolha, statusItem, tonsFolha } from './folhaUtils.js'
 
 const tonsItem = ['pendente', 'positivo', 'positivo', 'erro']
 
@@ -8,9 +9,9 @@ export default function PreviaFolha({ folha, bloqueado, pagar, revalidar, atuali
   const status = Number(folha.status)
   const encerrada = status === 2 || status === 3
   return <>
-    <header className="folha-topo-painel">
-      <div><h2>Folha de {competencia(folha)}</h2><span className={`folha-badge ${tonsFolha[status] || 'neutro'}`}>{statusFolha[status] || 'Situação não informada'}</span></div>
-      <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={atualizar}>Atualizar folha</button><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={outraCompetencia}>Outra competência</button></div>
+    <header className="folha-topo-painel folha-cabecalho-previa">
+      <div><p className="rotulo-secao">FOLHA ABERTA AGORA</p><h2>Folha de {competencia(folha)}</h2><div className="folha-metadados"><span className={`folha-badge ${tonsFolha[status] || 'neutro'}`}>{statusFolha[status] || 'Situação não informada'}</span><span>Criada em {formatarDataFolha(folha.data_criacao) || 'data não informada'}</span>{folha.data_pagamento && <span>Último pagamento em {formatarDataFolha(folha.data_pagamento)}</span>}</div></div>
+      <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={atualizar}>Atualizar situação</button><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={outraCompetencia}>Criar outra folha</button></div>
     </header>
     <dl className="folha-resumos" aria-label="Resumo financeiro da folha">
       {[
@@ -22,7 +23,7 @@ export default function PreviaFolha({ folha, bloqueado, pagar, revalidar, atuali
     {status === 4 && <p className="folha-aviso">Os pagamentos disponíveis foram concluídos. {Number(folha.quantidade_pendentes) > 0 ? 'Ainda existem funcionários pendentes.' : 'Confira os itens restantes antes de continuar.'}</p>}
     {Number(folha.quantidade_pendentes) > 0 && <div className="folha-aviso folha-topo-painel"><p>Alguns funcionários ainda não possuem uma conta PF Arkhé vinculada.</p><button type="button" className="botao botao-secundario" disabled={bloqueado || encerrada} onClick={revalidar}>Verificar novamente</button></div>}
     <section className="bloco-dashboard folha-painel">
-      <header className="folha-topo-painel"><div><h2>Pagamentos da equipe</h2><p>{folha.quantidade_funcionarios} {Number(folha.quantidade_funcionarios) === 1 ? 'funcionário' : 'funcionários'} · {folha.quantidade_pagos} {Number(folha.quantidade_pagos) === 1 ? 'pago' : 'pagos'} · {folha.quantidade_validos} {Number(folha.quantidade_validos) === 1 ? 'pronto' : 'prontos'} · {folha.quantidade_pendentes} {Number(folha.quantidade_pendentes) === 1 ? 'pendente' : 'pendentes'}</p></div></header>
+      <header className="folha-topo-painel"><div><h2>Pagamentos da equipe</h2><p>{folha.quantidade_funcionarios} {Number(folha.quantidade_funcionarios) === 1 ? 'funcionário' : 'funcionários'} · {folha.quantidade_pagos} {Number(folha.quantidade_pagos) === 1 ? 'pago' : 'pagos'} · {folha.quantidade_validos} {Number(folha.quantidade_validos) === 1 ? 'pronto' : 'prontos'} · {folha.quantidade_pendentes} {Number(folha.quantidade_pendentes) === 1 ? 'pendente' : 'pendentes'}</p>{Number(folha.quantidade_pagos) > 0 && <p className="folha-ajuda-comprovante">Cada pagamento concluído possui seu próprio comprovante.</p>}</div></header>
       {folha.itens.length === 0 ? <p className="folha-estado">Esta folha não possui funcionários. Cadastre sua equipe na área Funcionários.</p> : <ul className="folha-lista">
         {folha.itens.map((item) => <li className="folha-item" key={item.id_item}>
           <div><h3>{item.nome}</h3><p>{mascaraCpf(item.cpf)}</p></div>
@@ -30,6 +31,7 @@ export default function PreviaFolha({ folha, bloqueado, pagar, revalidar, atuali
           <div><span className={`folha-badge ${tonsItem[Number(item.status)] || 'neutro'}`}>{statusItem[Number(item.status)] || 'Situação não informada'}</span>
             {item.erro && <p>{item.erro}</p>}
             {Number(item.status) === 2 && item.data_pagamento && <p>{formatarDataHoraMovimentacao({ data_movimentacao: item.data_pagamento })}</p>}
+            {Number(item.status) === 2 && item.id_movimentacao && <AcoesComprovante idMovimentacao={item.id_movimentacao} />}
           </div>
         </li>)}
       </ul>}

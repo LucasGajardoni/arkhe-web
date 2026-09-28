@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import Icone from '../../components/Dashboard/Icone.jsx'
 import { mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
+import { exportarFuncionarios } from './csvFuncionarios.js'
 import { moeda, possuiConta } from './folhaUtils.js'
 
-export default function Funcionarios({ funcionarios, carregando, erro, atualizar, editar, alterarStatus, bloqueado, adicionar, abrirFolha }) {
+export default function Funcionarios({ funcionarios, carregando, erro, atualizar, editar, alterarStatus, bloqueado, adicionar, importar, abrirFolha }) {
   const [busca, setBusca] = useState('')
   const [situacao, setSituacao] = useState('todos')
   const ativos = funcionarios.filter((item) => Number(item.status) === 1).length
@@ -29,7 +30,7 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
     </dl>
     <div className="funcionarios-layout">
       <section className="bloco-dashboard folha-painel funcionarios-painel">
-        <header className="folha-topo-painel"><div><p className="rotulo-secao">PESSOAS DA SUA EMPRESA</p><h2>Sua equipe</h2></div><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={atualizar}>Atualizar funcionários</button></header>
+        <header className="folha-topo-painel"><div><p className="rotulo-secao">PESSOAS DA SUA EMPRESA</p><h2>Sua equipe</h2></div><div className="funcionarios-acoes-lista"><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={importar}>Importar CSV</button><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={() => exportarFuncionarios(funcionarios)}>Exportar funcionários</button><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={atualizar}>Atualizar funcionários</button></div></header>
         {funcionarios.length === 0 ? <div className="folha-estado funcionarios-vazio">
           <span className="funcionarios-vazio-icone"><Icone nome="folha" tamanho={38} /></span>
           <h3>Nenhum funcionário cadastrado ainda.</h3><p>Adicione o primeiro funcionário para preparar sua folha de pagamento.</p>

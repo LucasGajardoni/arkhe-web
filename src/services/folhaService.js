@@ -12,6 +12,14 @@ export const editarFuncionario = ({ id_funcionario, nome, salario }) => requisit
 export const alterarStatusFuncionario = (idFuncionario, status) => requisitarApi('/alterar_status_funcionario', {
   method: 'PUT', dados: { id_funcionario: idFuncionario, status: Number(status) },
 })
+export const previewCsvFuncionarios = (arquivo) => {
+  const dados = new FormData()
+  dados.append('arquivo', arquivo)
+  return requisitarApi('/funcionarios/csv/preview', { method: 'POST', dados })
+}
+export const importarCsvFuncionarios = (itens) => requisitarApi('/funcionarios/csv/importar', {
+  method: 'POST', dados: { itens },
+})
 export const criarFolha = (mes, ano) => requisitarApi('/criar_folha', {
   method: 'POST', dados: { mes: Number(mes), ano: Number(ano) },
 })

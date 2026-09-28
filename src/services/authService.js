@@ -155,12 +155,13 @@ export async function obterSessao() {
 }
 
 export async function requisitarApi(caminho, { method = 'GET', dados } = {}) {
+  const formulario = typeof FormData !== 'undefined' && dados instanceof FormData
   const resposta = await requisitar(caminho, {
     method,
     credentials: 'include',
     ...(dados === undefined ? {} : {
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados),
+      ...(formulario ? {} : { headers: { 'Content-Type': 'application/json' } }),
+      body: formulario ? dados : JSON.stringify(dados),
     }),
   })
   return validarResposta(resposta, 'Não foi possível concluir a solicitação.')

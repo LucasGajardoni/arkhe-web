@@ -1,5 +1,5 @@
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
-import { competencia, moeda } from './folhaUtils.js'
+import { competencia, formatarDataFolha, moeda } from './folhaUtils.js'
 
 export default function ModalConfirmarPagamento({ folha, fechar, confirmar, processando, bloqueado, erro }) {
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
@@ -10,10 +10,11 @@ export default function ModalConfirmarPagamento({ folha, fechar, confirmar, proc
       <p>Confira os valores antes de confirmar o débito na conta da empresa.</p>
       <dl className="folha-confirmacao-resumo">
         <div><dt>Competência</dt><dd>{competencia(folha)}</dd></div>
+        <div><dt>Folha criada em</dt><dd>{formatarDataFolha(folha.data_criacao) || 'Data não informada'}</dd></div>
         <div><dt>Funcionários a pagar</dt><dd>{folha.quantidade_validos}</dd></div>
         <div><dt>Total</dt><dd>{moeda.format(folha.total_valido)}</dd></div>
       </dl>
-      <p>Somente os funcionários prontos para pagamento serão pagos.</p>
+      <p>Somente os funcionários prontos nesta competência serão pagos. Cada pagamento concluído terá um comprovante individual.</p>
       {erro && <p role="alert" className="mensagem-identidade erro">{erro}</p>}
       {processando && <p role="status">Processando pagamentos...</p>}
       <div className="acoes-identidade">

@@ -8,6 +8,23 @@ export const idFolhaValido = (id) => /^[1-9]\d*$/.test(String(id)) && Number.isS
 export const possuiConta = (funcionario) => funcionario.possui_conta_arkhe === true || Number(funcionario.possui_conta_arkhe) === 1
 export const podePagar = (folha) => Boolean(folha && [0, 1, 4].includes(Number(folha.status)) && Number(folha.quantidade_validos) > 0 && Number(folha.total_valido) > 0)
 
+export function centavosDeMoeda(valor) {
+  const digitos = String(valor ?? '').replace(/\D/g, '').slice(0, 13)
+  return Number(digitos) || 0
+}
+
+export function moedaDigitada(centavos) {
+  return moeda.format((Number(centavos) || 0) / 100)
+}
+
+export function formatarDataFolha(valor, incluirHora = true) {
+  if (!valor) return ''
+  const partes = String(valor).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/)
+  if (!partes) return ''
+  const [, ano, mes, dia, hora, minuto] = partes
+  return incluirHora && hora ? `${dia}/${mes}/${ano} às ${hora}:${minuto}` : `${dia}/${mes}/${ano}`
+}
+
 export function mensagemErroPagamento(erro) {
   let mensagem = erro.message || 'Não foi possível concluir o pagamento. Atualize a folha para conferir a situação.'
   const dados = erro.dados || {}

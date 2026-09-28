@@ -14,14 +14,20 @@ const base = process.env.ARKHE_TEST_URL || 'http://127.0.0.1:5173'
 const artifacts = join(tmpdir(), 'arkhe-migration-checks', 'folha')
 await mkdir(artifacts, { recursive: true })
 const visible = (locator) => locator.waitFor({ state: 'visible', timeout: 8000 })
-const historico = (page) => page.getByRole('region', { name: 'Folhas anteriores', exact: true })
+const historico = (page) => page.getByRole('region', { name: 'Escolha a folha que deseja acompanhar', exact: true })
 const statusPrevia = (page, texto) => page.locator('.folha-conteudo > .folha-topo-painel').getByText(texto, { exact: true })
+async function criarFolhaPelaTela(page) {
+  await page.getByRole('button', { name: 'Revisar e criar folha', exact: true }).click()
+  await visible(page.getByRole('heading', { name: /Criar folha de/ }))
+  await page.getByRole('button', { name: 'Confirmar e criar folha', exact: true }).click()
+}
 const usuario = { id_usuario: 57, nome: 'João Teste', cpf: '52998224725' }
 const conta = { id_conta: 2, id_titular: 57, tipo_conta: 1, vinculo: 'proprietario', nome_fantasia: 'Empresa Teste', cnpj: '11222333000181' }
 const funcionario = { id_funcionario: 1, nome: 'Ana Silva', cpf: '52998224725', salario: 2500, status: 1, possui_conta_arkhe: true }
 const pendente = { id_funcionario: 2, nome: 'Bruno Souza', cpf: '11144477735', salario: 1800, status: 1, possui_conta_arkhe: false }
 const folhaInicial = {
   id_folha: 15, mes: 9, ano: 2026, status: 1, total: 4300, total_valido: 2500, total_pendente: 1800, total_pago: 0,
+  data_criacao: '2026-09-01 08:30:00', data_pagamento: null,
   quantidade_funcionarios: 2, quantidade_validos: 1, quantidade_pendentes: 1, quantidade_pagos: 0,
   itens: [
     { ...funcionario, id_item: 1, valor: 2500, status: 1 },
@@ -69,6 +75,10 @@ async function ambiente(opcoes = {}) {
       if (state.sessaoExpirada) return reply({ mensagem: 'Sessão expirada.' }, 401)
       return state.erroEquipe ? reply({ mensagem: 'Não foi possível consultar a equipe.' }, 500) : reply(state.funcionarios)
     }
+    if (path === '/buscar_contas_usuario') {
+      assert.ok(body.busca)
+      return reply({ contas: [{ id_conta: 20, tipo_conta: 0, nome: 'Ana Silva', cpf: '52998224725', banco: 'Banco Arkhé', agencia: '0001', numero_conta: '000020' }] })
+    }
     if (path === '/adicionar_funcionario') {
       assert.match(body.cpf, /^\d{11}$/)
       assert.equal(typeof body.salario, 'number')
@@ -110,7 +120,7 @@ async function ambiente(opcoes = {}) {
       await new Promise((resolve) => setTimeout(resolve, 350))
       if (state.saldoInsuficiente) return reply({ mensagem: 'Saldo insuficiente.', saldo: 100, total_folha: 2500 }, 400)
       for (const item of state.folha.itens) if (item.status === 1) {
-        item.status = 2; item.data_pagamento = '2026-09-28T12:00:00'; state.folha.total_pago += item.valor
+        item.status = 2; item.data_pagamento = '2026-09-28T12:00:00'; item.id_movimentacao = 100 + item.id_item; state.folha.total_pago += item.valor
         state.folha.quantidade_pagos += 1
       }
       Object.assign(state.folha, { total_valido: 0, quantidade_validos: 0, status: state.folha.quantidade_pendentes > 0 ? 4 : 3 })
@@ -119,6 +129,7 @@ async function ambiente(opcoes = {}) {
       return reply({ mensagem: 'Folha processada.', status: state.folha.status })
     }
     if (path === '/buscar_movimentacoes') return reply({ movimentacoes: [{ tipo: state.conta.tipo_conta === 1 ? 'saida' : 'entrada', valor: 2500, origem: 'folha_pagamento', id_folha: 15, id_movimentacao: 100, data_movimentacao: '2026-09-28T12:00:00' }], cobrancas: [] })
+    if (path.startsWith('/comprovante/')) return route.fulfill({ status: 200, contentType: 'application/pdf', body: Buffer.from('%PDF-1.4\n% comprovante simulado') })
     if (path === '/cartao') return reply({ mensagem: 'Sem cartão.' }, 404)
     throw new Error(`Endpoint inesperado: ${path}`)
   })
@@ -144,6 +155,7 @@ try {
   await page.getByLabel('CPF', { exact: true }).fill('52998224725')
   assert.equal(await page.getByLabel('CPF', { exact: true }).inputValue(), '529.982.247-25')
   await page.getByLabel('Salário mensal (R$)', { exact: true }).fill('2.500,00')
+  assert.match(await page.getByLabel('Salário mensal (R$)', { exact: true }).inputValue(), /^R\$\s2\.500,00$/)
   await page.getByRole('button', { name: 'Salvar funcionário', exact: true }).click()
   await visible(page.getByRole('heading', { name: 'Ana Silva', exact: true }))
   assert.equal(state.funcionarios[0].salario, 2500)
@@ -159,9 +171,10 @@ try {
   await page.getByRole('button', { name: 'Reativar Ana Silva', exact: true }).click()
   await visible(page.getByText('Ativo', { exact: true }))
   await page.getByRole('button', { name: 'Folha do mês', exact: true }).click()
-  await page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await criarFolhaPelaTela(page)
   await page.waitForURL('**/dashboard/folha?folha=15')
   await visible(page.getByRole('heading', { name: 'Folha de setembro de 2026' }))
+  await visible(page.getByText('Criada em 01/09/2026 às 08:30', { exact: true }))
   await visible(page.getByText('Conta PF Arkhé não encontrada', { exact: true }))
   await page.getByRole('button', { name: 'Verificar novamente' }).click()
   await visible(page.getByText('Os funcionários pendentes ainda não possuem uma conta PF Arkhé.', { exact: true }))
@@ -172,6 +185,11 @@ try {
   await page.keyboard.press('Escape')
   assert.equal(await page.getByRole('dialog').isVisible(), true)
   await visible(statusPrevia(page, 'Pagamento parcial'))
+  await visible(page.getByRole('button', { name: 'Visualizar comprovante', exact: true }))
+  await page.getByRole('button', { name: 'Visualizar comprovante', exact: true }).click()
+  await visible(page.getByRole('dialog', { name: 'Comprovante da transação' }))
+  assert.ok(state.requests.some((r) => r.path === '/comprovante/101'))
+  await page.getByRole('button', { name: 'Fechar visualização' }).click()
   assert.equal(state.requests.filter((r) => r.path === '/pagar_folha').length, 1)
   assert.equal(state.folha.total_pago, 2500)
   assert.equal(state.folha.total_pendente, 1800)
@@ -269,14 +287,14 @@ try {
   await visible(equipe.page.getByRole('heading', { name: 'Ana Silva', exact: true }))
   await encerrar(equipe)
 
-  const vazia = await ambiente({ semFuncionarios: true })
+  const vazia = await ambiente({ semFuncionarios: true, funcionarios: [funcionario] })
   await vazia.page.goto(`${base}/dashboard/folha`)
-  await vazia.page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await criarFolhaPelaTela(vazia.page)
   await visible(vazia.page.getByRole('alert').filter({ hasText: /Nenhum funcionário ativo encontrado/ }))
   assert.equal(new URL(vazia.page.url()).search, '')
   vazia.state.semFuncionarios = false
   vazia.state.conflito = true
-  await vazia.page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await vazia.page.getByRole('button', { name: 'Confirmar e criar folha', exact: true }).click()
   await vazia.page.waitForURL('**/dashboard/folha?folha=15')
   await visible(vazia.page.getByRole('heading', { name: 'Folha de setembro de 2026' }))
   await encerrar(vazia)
@@ -300,7 +318,7 @@ try {
     { ...structuredClone(folhaInicial), id_folha: 13, mes: 7, status: 2 },
     { ...structuredClone(folhaInicial), id_folha: 12, mes: 6, status: 0 },
   ]
-  const h = await ambiente({ anteriores })
+  const h = await ambiente({ anteriores, funcionarios: [funcionario, pendente] })
   await h.page.goto(`${base}/dashboard/folha`)
   await visible(historico(h.page).getByText('Folhas criadas:'))
   assert.deepEqual(await historico(h.page).locator('h3').allTextContents(), ['Outubro de 2026', 'Setembro de 2026', 'Agosto de 2026', 'Julho de 2026', 'Junho de 2026'])
@@ -320,10 +338,10 @@ try {
   await visible(h.page.getByRole('heading', { name: 'Folha de agosto de 2026' }))
   await visible(historico(h.page).getByRole('heading', { name: 'Agosto de 2026' }))
   await h.page.screenshot({ path: join(artifacts, 'historico-desktop.png'), fullPage: true })
-  await h.page.getByRole('button', { name: 'Outra competência', exact: true }).click()
+  await h.page.getByRole('button', { name: 'Criar outra folha', exact: true }).click()
   h.state.conflito = true
   const consultasAntesConflito = h.state.requests.filter((r) => r.path === '/listar_folhas').length
-  await h.page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await criarFolhaPelaTela(h.page)
   await h.page.waitForURL('**/dashboard/folha?folha=15')
   await visible(h.page.getByRole('status').filter({ hasText: 'Essa competência já possui uma folha. Abrimos a folha existente.' }))
   await visible(h.page.getByRole('heading', { name: 'Folha de setembro de 2026' }))
@@ -334,7 +352,7 @@ try {
   await h.page.getByRole('button', { name: /^Pagar R/ }).click()
   await h.page.getByRole('button', { name: 'Confirmar pagamento', exact: true }).click()
   const setembro = historico(h.page).getByRole('listitem').filter({ has: h.page.getByRole('heading', { name: 'Setembro de 2026' }) })
-  await visible(setembro.getByRole('button', { name: 'Continuar de setembro de 2026', exact: true }))
+  await visible(setembro.getByRole('button', { name: 'Atualizar folha de setembro de 2026', exact: true }))
   await visible(setembro.getByText('Pagamento parcial', { exact: true }))
   await visible(setembro.getByText('Pago em 28/09/2026'))
   assert.match(await setembro.locator('dd').nth(1).innerText(), /^R\$\s2\.500,00$/)
@@ -347,17 +365,19 @@ try {
   assert.ok(h.state.requests.filter((r) => r.path === '/listar_folhas').length > consultasAntesRevalidacao)
   await h.page.getByRole('button', { name: /^Pagar R/ }).click()
   await h.page.getByRole('button', { name: 'Confirmar pagamento', exact: true }).click()
-  await visible(setembro.getByRole('button', { name: 'Ver folha de setembro de 2026', exact: true }))
-  assert.match(await setembro.locator('dd').nth(1).innerText(), /^R\$\s4\.300,00$/)
+  const pagoSetembro = setembro.locator('.folha-historico-valores > div').filter({ hasText: /^Pago/ })
+  await visible(pagoSetembro.getByText('R$ 4.300,00', { exact: true }))
+  const valorPagoSetembro = pagoSetembro.locator('dd')
+  assert.match(await valorPagoSetembro.innerText(), /^R\$\s4\.300,00$/)
   await encerrar(h)
   console.log('PASS K–P: histórico ordenado, cinco status/ações, GET pela URL, F5, aviso de 409, atualização após pagamento/revalidação e bloqueio PF.')
 
-  const vazioHistorico = await ambiente({ historicoVazio: true, atrasoHistorico: 500 })
+  const vazioHistorico = await ambiente({ historicoVazio: true, atrasoHistorico: 500, funcionarios: [funcionario] })
   await vazioHistorico.page.goto(`${base}/dashboard/folha`)
   await visible(historico(vazioHistorico.page).getByRole('status').filter({ hasText: 'Carregando folhas anteriores...' }))
   await visible(historico(vazioHistorico.page).getByText('Nenhuma folha criada ainda.'))
   await visible(historico(vazioHistorico.page).getByText('Quando você gerar a primeira folha de pagamento, ela aparecerá aqui.'))
-  await vazioHistorico.page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await criarFolhaPelaTela(vazioHistorico.page)
   await visible(historico(vazioHistorico.page).getByRole('heading', { name: 'Setembro de 2026' }))
   await encerrar(vazioHistorico)
 
@@ -381,9 +401,9 @@ try {
   await visible(historico(falhaHistorico.page).getByRole('heading', { name: 'Setembro de 2026' }))
   await encerrar(falhaHistorico)
 
-  const semId = await ambiente({ conflitoSemId: true })
+  const semId = await ambiente({ conflitoSemId: true, funcionarios: [funcionario] })
   await semId.page.goto(`${base}/dashboard/folha`)
-  await semId.page.getByRole('button', { name: 'Gerar prévia da folha' }).click()
+  await criarFolhaPelaTela(semId.page)
   await visible(semId.page.getByRole('alert').filter({ hasText: 'Conflito sem ID.' }))
   assert.equal(new URL(semId.page.url()).search, '')
   await encerrar(semId)
@@ -424,6 +444,21 @@ try {
     await visible(ui.page.getByRole('heading', { name: 'Funcionários', exact: true }))
     await encerrar(ui)
   }
+  const buscaConta = await ambiente()
+  await buscaConta.page.goto(`${base}/dashboard/funcionarios`)
+  await buscaConta.page.getByRole('button', { name: 'Adicionar funcionário', exact: true }).click()
+  await buscaConta.page.getByLabel('Nome, CPF, e-mail ou telefone').fill('529.982.247-25')
+  await buscaConta.page.getByRole('button', { name: 'Buscar conta', exact: true }).click()
+  await visible(buscaConta.page.getByText('Ana Silva', { exact: true }))
+  await buscaConta.page.getByRole('button', { name: /Ana Silva.*Usar conta/ }).click()
+  assert.equal(await buscaConta.page.getByLabel('Nome completo').inputValue(), 'Ana Silva')
+  assert.equal(await buscaConta.page.getByLabel('CPF', { exact: true }).inputValue(), '529.982.247-25')
+  await buscaConta.page.getByLabel('Salário mensal (R$)', { exact: true }).fill('570000')
+  assert.match(await buscaConta.page.getByLabel('Salário mensal (R$)', { exact: true }).inputValue(), /^R\$\s5\.700,00$/)
+  await visible(buscaConta.page.getByText('Conta PF Arkhé encontrada para Ana Silva.', { exact: true }))
+  assert.deepEqual(buscaConta.state.requests.find((r) => r.path === '/buscar_contas_usuario').body, { busca: '52998224725' })
+  await buscaConta.page.getByRole('button', { name: 'Cancelar', exact: true }).click()
+  await encerrar(buscaConta)
   console.log('PASS descoberta e gestão: atalhos PJ, tela própria de funcionários, F5/voltar, busca por CPF/nome, filtro e navegação para folha.')
 
   assert.equal(metadadosMovimentacao({ origem: 'folha_pagamento', tipo: 'entrada' }).descricao, 'Salário recebido')
