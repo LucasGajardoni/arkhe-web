@@ -1,21 +1,26 @@
 import { somenteNumeros } from '../../utils/formatadores.js'
 
 const cabecalhoModelo = ['cpf', 'nome', 'salario']
+const SEPARADOR_CSV = ';'
 
 function campoCsv(valor) {
   const texto = String(valor ?? '')
-  return /[",\r\n]/.test(texto) ? `"${texto.replaceAll('"', '""')}"` : texto
+  return /[";\r\n]/.test(texto) ? `"${texto.replaceAll('"', '""')}"` : texto
 }
 
 function montarCsv(linhas) {
-  return `\uFEFF${linhas.map((linha) => linha.map(campoCsv).join(',')).join('\r\n')}\r\n`
+  return `\uFEFF${linhas.map((linha) => linha.map(campoCsv).join(SEPARADOR_CSV)).join('\r\n')}\r\n`
+}
+
+function salarioCsv(valor) {
+  return Number(valor || 0).toFixed(2).replace('.', ',')
 }
 
 export function conteudoModeloFuncionarios() {
   return montarCsv([
     cabecalhoModelo,
-    ['12345678901', 'Ana Souza', '2500.00'],
-    ['98765432100', 'Carlos Lima', '3200.00'],
+    ['12345678901', 'Ana Souza', '2500,00'],
+    ['98765432100', 'Carlos Lima', '3200,00'],
   ])
 }
 
@@ -25,7 +30,7 @@ export function conteudoExportacaoFuncionarios(funcionarios) {
     ...funcionarios.map((funcionario) => [
       somenteNumeros(funcionario.cpf),
       funcionario.nome,
-      Number(funcionario.salario || 0).toFixed(2),
+      salarioCsv(funcionario.salario),
       Number(funcionario.status) === 1 ? 'ativo' : 'inativo',
     ]),
   ])
