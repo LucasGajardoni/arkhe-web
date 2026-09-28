@@ -1,34 +1,25 @@
 import { useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import CartaoVisual from './CartaoVisual.jsx'
-import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao, vencimentoTresDiasUteis } from './cartaoUtils.js'
+import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao } from './cartaoUtils.js'
 
-const dias = Array.from({ length: 28 }, (_, i) => i + 1)
+const diasFechamento = [10, 20]
 
 export default function ModalCartao({ usuario, dados, fechar }) {
   const { cartao, gerando, erroGeracao, gerarCartao } = dados
-  const sugestaoInicial = vencimentoTresDiasUteis(3)
-  const [vencimento, setVencimento] = useState(String(sugestaoInicial?.dia || 10))
-  const [fechamento, setFechamento] = useState('3')
+  const [fechamento, setFechamento] = useState('10')
   const [mostrarDados, setMostrarDados] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
-  const diasIguais = vencimento === fechamento
-  const sugestaoVencimento = vencimentoTresDiasUteis(fechamento)
-
-  function alterarFechamento(valor) {
-    setFechamento(valor)
-    const sugestao = vencimentoTresDiasUteis(valor)
-    if (sugestao) setVencimento(String(sugestao.dia))
-  }
+  const vencimento = Number(fechamento) + 3
 
   async function criar(evento) {
     evento.preventDefault()
-    if (gerando || diasIguais) return
-    const resultado = await gerarCartao({ dia_vencimento: Number(vencimento), dia_fechamento: Number(fechamento) })
+    if (gerando) return
+    const resultado = await gerarCartao({ dia_vencimento: vencimento, dia_fechamento: Number(fechamento) })
     if (resultado) { setMostrarDados(false); setMensagem(resultado) }
   }
 
@@ -66,13 +57,11 @@ export default function ModalCartao({ usuario, dados, fechar }) {
       </> : <form onSubmit={criar} className="cartao-formulario">
         <p>Cartão vinculado à conta atual, com limite inicial de <strong>R$ 5.000,00</strong> para usar em crédito e débito no ecossistema do projeto.</p>
         <div className="cartao-escolha-dias">
-          <div><label htmlFor="vencimento-fatura-cartao">Dia de vencimento da fatura</label><select id="vencimento-fatura-cartao" value={vencimento} disabled={gerando} onChange={(e) => setVencimento(e.target.value)}>{dias.map((dia) => <option key={dia} value={dia}>Dia {dia}</option>)}</select></div>
-          <div><label htmlFor="fechamento-fatura-cartao">Dia de fechamento da fatura</label><select id="fechamento-fatura-cartao" value={fechamento} disabled={gerando} onChange={(e) => alterarFechamento(e.target.value)}>{dias.map((dia) => <option key={dia} value={dia}>Dia {dia}</option>)}</select></div>
+          <div><label htmlFor="fechamento-fatura-cartao">Dia de fechamento da fatura</label><select id="fechamento-fatura-cartao" value={fechamento} disabled={gerando} onChange={(e) => setFechamento(e.target.value)}>{diasFechamento.map((dia) => <option key={dia} value={dia}>Dia {dia}</option>)}</select></div>
         </div>
-        {sugestaoVencimento && <p className="cartao-nota-regra">Ao escolher o fechamento, o Arkhé sugere automaticamente o vencimento 3 dias úteis depois, considerando segunda a sexta. Você ainda pode alterar o vencimento.</p>}
-        {diasIguais && <p className="cartao-mensagem erro" role="alert">Escolha dias diferentes para fechamento e vencimento.</p>}
+        <p className="cartao-nota-regra">Sua fatura fechará no dia {fechamento} e vencerá automaticamente no dia {vencimento}, 3 dias depois.</p>
         {erroGeracao && <p className="cartao-mensagem erro" role="alert">{erroGeracao}</p>}
-        <button type="submit" className="botao botao-principal" disabled={gerando || diasIguais}>{gerando ? 'Gerando cartão...' : 'Gerar cartão'}</button>
+        <button type="submit" className="botao botao-principal" disabled={gerando}>{gerando ? 'Gerando cartão...' : 'Gerar cartão'}</button>
       </form>}
       <p className="cartao-nota">Cartão próprio do Banco Arkhé para uso no projeto acadêmico.</p>
     </section>
