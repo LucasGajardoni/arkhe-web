@@ -136,13 +136,13 @@ caso('02-troca-pf-pj', { contas: [pf, pj] }, async ({ page }) => {
   await entrar(page, 'Empresa Própria')
   await visivel(page.getByText(/987,00/).first())
   assert.equal(await page.getByText(/123,00/).count(), 0)
-  await visivel(page.getByRole('button', { name: 'Equipe', exact: true }))
+  await visivel(page.getByRole('button', { name: 'Acessos', exact: true }))
 })
 caso('03-convite-usuario-existente', { convites: [convite] }, async ({ page }) => {
   await page.goto(`${base}/selecionar-conta`)
   await page.getByRole('button', { name: 'Aceitar', exact: true }).click()
   await entrar(page, 'Empresa XPTO')
-  assert.equal(await page.getByRole('button', { name: 'Equipe', exact: true }).count(), 0)
+  assert.equal(await page.getByRole('button', { name: 'Acessos', exact: true }).count(), 0)
   await visivel(page.getByText('Conta empresarial · Financeiro'))
 })
 caso('04-novo-convidado-enrollment', { autenticado: false, obrigatorio: true, semBiometria: true, contas: [], convites: [convite] }, async ({ page, state }) => {
@@ -276,7 +276,7 @@ caso('17-recusa-confirmada-mobile', { contas: [], convites: [convite], mobile: t
 })
 caso('18-equipe-mobile-e-logout', { contas: [pj], selecionada: pj, mobile: true }, async ({ page }) => {
   await page.goto(`${base}/dashboard`)
-  await page.getByRole('button', { name: 'Equipe', exact: true }).click()
+  await page.getByRole('button', { name: 'Acessos', exact: true }).click()
   await visivel(page.getByRole('heading', { name: 'Equipe e acessos' }))
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   await page.screenshot({ path: join(artifacts, 'equipe-mobile.png'), fullPage: true })

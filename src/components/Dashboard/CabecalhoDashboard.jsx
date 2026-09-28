@@ -15,7 +15,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
   }
 
   return (
-    <header className="cabecalho-dashboard">
+    <header className={`cabecalho-dashboard${usuario?.tipoConta === 'PJ' ? ' cabecalho-dashboard-pj' : ''}`}>
       <div className="conteudo-dashboard-largo barra-dashboard">
         <button className="marca-dashboard" type="button" aria-label="Arkhé, visão geral" onClick={() => navigate('/dashboard')}>
           <span><img src={arkheLogo} alt="" /></span>
@@ -31,11 +31,14 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           <button className={secao === 'extrato' ? 'ativo' : ''} type="button" aria-current={secao === 'extrato' ? 'page' : undefined} onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
           <button className={secao === 'boletos' ? 'ativo' : ''} type="button" aria-current={secao === 'boletos' ? 'page' : undefined} onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
           {usuario?.tipoConta === 'PJ' && (
+            <button aria-label="Abrir funcionários" className={['folha', 'funcionarios'].includes(secao) ? 'ativo' : ''} type="button" aria-current={secao === 'funcionarios' ? 'page' : undefined} onClick={() => navigate('/dashboard/funcionarios')}>Funcionários</button>
+          )}
+          {usuario?.tipoConta === 'PJ' && (
             <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>Integrações</button>
           )}
         </nav>
         <div className="perfil-topo-dashboard">
-          {proprietarioPJ(usuario) && <button className={`atalho-equipe ${secao === 'acessos' ? 'ativo' : ''}`} type="button" aria-current={secao === 'acessos' ? 'page' : undefined} onClick={() => navigate('/dashboard/acessos')}>Equipe</button>}
+          {proprietarioPJ(usuario) && <button className={`atalho-equipe ${secao === 'acessos' ? 'ativo' : ''}`} type="button" title="Gerenciar quem pode operar esta conta" aria-current={secao === 'acessos' ? 'page' : undefined} onClick={() => navigate('/dashboard/acessos')}>Acessos</button>}
           <button className="trocar-conta-dashboard" type="button" onClick={() => navigate('/selecionar-conta')}>Trocar conta</button>
           <button className="usuario-dashboard" type="button" aria-label={`Abrir perfil de ${usuario?.nome || 'cliente'}`} onClick={abrirPerfil}>
             <span>{iniciais}</span>

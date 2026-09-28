@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
@@ -22,7 +22,9 @@ export default function Folha() {
   const { perfil } = useSessao()
   const [parametros, setParametros] = useSearchParams()
   const location = useLocation()
+  const navigate = useNavigate()
   const id = parametros.get('folha')
+  const aba = location.pathname === '/dashboard/funcionarios' ? 'funcionarios' : 'folha'
   if (perfil?.tipoConta !== 'PJ') return <Navigate to="/dashboard" replace />
   function selecionarFolha(novoId, existente = false) {
     const proximos = new URLSearchParams(parametros)
@@ -30,14 +32,16 @@ export default function Folha() {
     else proximos.delete('folha')
     setParametros(proximos, { state: { folhaExistente: existente ? String(novoId) : null } })
   }
+  function selecionarAba(valor) {
+    navigate({ pathname: valor === 'funcionarios' ? '/dashboard/funcionarios' : '/dashboard/folha', search: location.search })
+  }
   // Cada conta/URL começa com dados e confirmações próprios.
-  return <CentralFolha key={`${perfil.idConta}:${id ?? 'nova'}`} id={id} selecionarFolha={selecionarFolha} existente={id !== null && location.state?.folhaExistente === id} />
+  return <CentralFolha key={`${perfil.idConta}:${id ?? 'nova'}`} id={id} aba={aba} setAba={selecionarAba} selecionarFolha={selecionarFolha} existente={id !== null && location.state?.folhaExistente === id} />
 }
 
-function CentralFolha({ id, selecionarFolha, existente }) {
+function CentralFolha({ id, aba, setAba, selecionarFolha, existente }) {
   const { perfil, atualizarPerfil, limparSessao, tratarErroSessao } = useSessao()
   const navigate = useNavigate()
-  const [aba, setAba] = useState('folha')
   const [funcionarios, setFuncionarios] = useState([])
   const [carregandoEquipe, setCarregandoEquipe] = useState(true)
   const [erroEquipe, setErroEquipe] = useState('')
@@ -187,16 +191,29 @@ function CentralFolha({ id, selecionarFolha, existente }) {
   }
 
   return <div className="pagina-dashboard pagina-folha">
-    <CabecalhoDashboard usuario={perfil} secao="folha" abrirPerfil={() => { if (!trava.current) setPerfilAberto(true) }} sair={sair} />
+    <CabecalhoDashboard usuario={perfil} secao={aba} abrirPerfil={() => { if (!trava.current) setPerfilAberto(true) }} sair={sair} />
     <main className="conteudo-dashboard-largo folha-conteudo">
-      <header className="folha-cabecalho"><div><p className="rotulo-secao">EMPRESA</p><h1>Folha de pagamento</h1><p>Gerencie sua equipe e processe os pagamentos mensais da empresa.</p></div><button type="button" className="botao botao-principal" disabled={bloqueado || carregandoEquipe} onClick={() => abrirModal({ tipo: 'funcionario' })}><Icone nome="mais" tamanho={18} />Adicionar funcionário</button></header>
+      <nav className="folha-caminho" aria-label="Localização"><Link to="/dashboard">Visão geral</Link><Icone nome="seta" tamanho={12} /><span>Sua empresa</span></nav>
+      <header className="folha-cabecalho">
+        <div><p className="rotulo-secao">PESSOAS & PAGAMENTOS</p>
+          <h1>{aba === 'funcionarios' ? 'Funcionários' : 'Folha de pagamento'}</h1>
+          <p>{aba === 'funcionarios' ? 'Sua equipe bem cuidada, do cadastro ao salário.' : 'Organize os pagamentos da sua equipe com clareza e tranquilidade.'}</p>
+        </div>
+        <button type="button" className="botao botao-principal" disabled={bloqueado || carregandoEquipe} onClick={() => abrirModal({ tipo: 'funcionario' })}><Icone nome="mais" tamanho={18} />Adicionar funcionário</button>
+      </header>
       <div className="folha-abas" role="group" aria-label="Áreas da folha de pagamento">
-        {[['folha', 'Folha do mês'], ['funcionarios', 'Funcionários']].map(([valor, texto]) => <button type="button" key={valor} aria-pressed={aba === valor} onClick={() => setAba(valor)} disabled={bloqueado}>{texto}</button>)}
+        {[
+          ['funcionarios', 'Funcionários', 'Cadastros, salários e situação da equipe', 'folha'],
+          ['folha', 'Folha do mês', 'Prévias, pagamentos e histórico', 'extrato'],
+        ].map(([valor, texto, descricao, icone]) => <button type="button" key={valor} aria-label={texto} aria-pressed={aba === valor} onClick={() => setAba(valor)} disabled={bloqueado}>
+          <span className="folha-aba-icone"><Icone nome={icone} tamanho={23} /></span>
+          <span><strong>{texto}</strong><small>{descricao}</small></span><Icone nome="seta" tamanho={16} />
+        </button>)}
       </div>
       {erro && !modal && <div className="mensagem-identidade erro" role="alert">{erro}{!id && <p>Confira a equipe na área Funcionários antes de gerar a folha.</p>}</div>}
       {sucesso && <p className="mensagem-identidade" role="status">{sucesso}</p>}
       {bloqueado && operacao !== 'pagamento' && <p role="status">{operacao === 'revalidacao' ? 'Verificando funcionários pendentes...' : 'Aguarde, concluindo solicitação...'}</p>}
-      {aba === 'funcionarios' ? <Funcionarios funcionarios={funcionarios} carregando={carregandoEquipe} erro={erroEquipe} atualizar={atualizarEquipe} bloqueado={bloqueado || carregandoEquipe} editar={(funcionario) => abrirModal({ tipo: 'funcionario', funcionario })} alterarStatus={(funcionario) => Number(funcionario.status) === 1 ? abrirModal({ tipo: 'status', funcionario }) : mudarStatus(funcionario)} /> : <>
+      {aba === 'funcionarios' ? <Funcionarios funcionarios={funcionarios} carregando={carregandoEquipe} erro={erroEquipe} atualizar={atualizarEquipe} bloqueado={bloqueado || carregandoEquipe} adicionar={() => abrirModal({ tipo: 'funcionario' })} abrirFolha={() => setAba('folha')} editar={(funcionario) => abrirModal({ tipo: 'funcionario', funcionario })} alterarStatus={(funcionario) => Number(funcionario.status) === 1 ? abrirModal({ tipo: 'status', funcionario }) : mudarStatus(funcionario)} /> : <>
         {id === null && <section className="bloco-dashboard folha-gerar"><div className="folha-icone"><Icone nome="folha" tamanho={30} /></div><h2>Prepare a folha do mês</h2><p>Selecione a competência para conferir os funcionários e valores antes de pagar.</p><form onSubmit={gerar}><fieldset disabled={bloqueado}><legend>Competência</legend><div className="folha-competencia"><div className="campo-identidade"><label htmlFor="folha-mes">Mês</label><select id="folha-mes" value={mes} onChange={(e) => setMes(e.target.value)}>{meses.map((nome, indice) => <option value={indice + 1} key={nome}>{nome}</option>)}</select></div><div className="campo-identidade"><label htmlFor="folha-ano">Ano</label><input id="folha-ano" type="number" inputMode="numeric" min="1" max="9999" step="1" value={ano} onChange={(e) => setAno(e.target.value)} required /></div></div><button className="botao botao-principal" type="submit" disabled={bloqueado}>{operacao === 'criacao' ? 'Gerando prévia...' : 'Gerar prévia da folha'}</button></fieldset></form><p className="folha-ajuda">Uma folha por competência. Apenas funcionários ativos serão incluídos.</p></section>}
         {carregandoFolha && <p className="folha-estado" role="status">Carregando folha de pagamento...</p>}
         {erroFolha && <div className="mensagem-identidade erro" role="alert"><p>{erroFolha}</p><div className="folha-acoes">{idFolhaValido(id) && <button className="botao botao-secundario" type="button" onClick={atualizarFolha} disabled={bloqueado || carregandoFolha}>Tentar novamente</button>}<button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={() => selecionarFolha(null)}>Outra competência</button></div></div>}

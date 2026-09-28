@@ -315,15 +315,7 @@
   margin-top: -24px;
 }
 
-.atalhos-dashboard-pj { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.atalhos-dashboard-pj > button { padding-inline: 12px; gap: 8px; }
-.atalhos-dashboard-pj .texto-atalho-dashboard small { white-space: normal; }
-@media (max-width: 1100px) and (min-width: 901px) {
-  .atalhos-dashboard-pj { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (max-width: 900px) {
-  .atalhos-dashboard-pj > button:last-child { grid-column: 1 / -1; }
-}
+.atalhos-dashboard-pj { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .atalhos-dashboard > button {
   display: flex;
@@ -383,6 +375,17 @@
 .atalhos-dashboard > button > svg {
   flex: 0 0 auto;
   color: #aaa392;
+}
+
+.atalhos-dashboard > .atalho-empresa-dashboard { grid-column: span 2; min-height: 106px; padding: 22px 24px; border-color: #d0dfd6; background: linear-gradient(110deg, #f0f6ef, #fffef8); }
+.atalhos-dashboard > .atalho-empresa-dashboard > span:first-child { width: 50px; height: 50px; background: var(--verde-escuro); color: var(--dourado-claro); border-radius: 15px; }
+.atalho-empresa-dashboard .texto-atalho-dashboard strong { color: var(--verde-escuro); font-size: 17px; white-space: normal; }
+.atalho-empresa-dashboard .texto-atalho-dashboard small { display: block; margin-top: 4px; color: #52645a; font-size: 12px; white-space: normal; }
+.cabecalho-dashboard-pj .barra-dashboard { gap: 18px; }
+.cabecalho-dashboard-pj .barra-dashboard > nav { gap: 16px; }
+.cabecalho-dashboard-pj .barra-dashboard > nav button { font-size: 12px; white-space: nowrap; }
+@media (min-width: 901px) and (max-width: 1100px) {
+  .cabecalho-dashboard-pj .barra-dashboard > nav { order: 3; width: 100%; justify-content: center; height: 44px; }
 }
 
 .grade-dashboard {
@@ -1226,6 +1229,10 @@
   .atalhos-dashboard > button > svg {
     display: none;
   }
+
+  .atalhos-dashboard > .atalho-empresa-dashboard { min-height: 100px; padding: 18px; flex-direction: row; align-items: center; }
+  .atalho-empresa-dashboard .texto-atalho-dashboard small { display: block; font-size: 11px; }
+  .atalho-empresa-dashboard .texto-atalho-dashboard strong { font-size: 16px; }
 
   .grade-dashboard {
     margin-top: 26px;

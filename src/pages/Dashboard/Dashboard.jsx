@@ -31,7 +31,8 @@ function atalhosPorTipo(contaPJ) {
       { icone: 'boleto', titulo: 'Emitir boleto', detalhe: 'Criar cobrança', destino: 'emitir' },
       { icone: 'extrato', titulo: 'Boletos emitidos', detalhe: 'Acompanhar clientes', destino: 'boletos' },
       { icone: 'transferir', titulo: 'Extrato', detalhe: 'Ver movimentações', destino: 'extrato' },
-      { icone: 'folha', titulo: 'Folha', detalhe: 'Funcionários e pagamentos', destino: 'folha' },
+      { icone: 'folha', titulo: 'Funcionários', detalhe: 'Cadastre sua equipe e gerencie salários', destino: 'funcionarios', empresa: true },
+      { icone: 'extrato', titulo: 'Folha de pagamento', detalhe: 'Prepare, pague e acompanhe suas folhas', destino: 'folha', empresa: true },
     ]
   }
 
@@ -91,6 +92,7 @@ export default function Dashboard() {
   }
 
   function abrirAtalho(destino) {
+    if (destino === 'funcionarios' && contaPJ) navigate('/dashboard/funcionarios')
     if (destino === 'folha' && contaPJ) navigate('/dashboard/folha')
     if (destino === 'pix') navigate('/dashboard/pix')
     if (destino === 'extrato') navigate('/dashboard/extrato')
@@ -169,7 +171,7 @@ export default function Dashboard() {
         <div className="conteudo-dashboard-largo corpo-dashboard">
           <section className={`atalhos-dashboard${contaPJ ? ' atalhos-dashboard-pj' : ''}`} aria-label="Ações rápidas">
             {atalhos.map((atalho) => (
-              <button type="button" key={atalho.titulo} onClick={() => abrirAtalho(atalho.destino)}>
+              <button className={atalho.empresa ? 'atalho-empresa-dashboard' : undefined} type="button" key={atalho.titulo} onClick={() => abrirAtalho(atalho.destino)}>
                 <span><Icone nome={atalho.icone} /></span>
                 <span className="texto-atalho-dashboard">
                   <strong>{atalho.titulo}</strong>

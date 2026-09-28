@@ -39,6 +39,7 @@ export default function App() {
             <Route path="/dashboard/integracoes" element={<Integracoes />} />
             <Route path="/dashboard/acessos" element={<Acessos />} />
             <Route path="/dashboard/folha" element={<Folha />} />
+            <Route path="/dashboard/funcionarios" element={<Folha />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
