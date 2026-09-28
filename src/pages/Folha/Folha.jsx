@@ -7,7 +7,7 @@ import Icone from '../../components/Dashboard/Icone.jsx'
 import Confirmacao from '../../components/Identidade/Confirmacao.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
-import { adicionarFuncionario, alterarStatusFuncionario, buscarFolha, criarFolha, editarFuncionario, listarFuncionarios, pagarFolha, revalidarFolha } from '../../services/folhaService.js'
+import { adicionarFuncionario, alterarStatusFuncionario, buscarFolha, criarFolha, editarFolha, editarFuncionario, excluirFolha, listarFuncionarios, pagarFolha, revalidarFolha } from '../../services/folhaService.js'
 import Funcionarios from './Funcionarios.jsx'
 import PreviaFolha from './PreviaFolha.jsx'
 import HistoricoFolhas from './HistoricoFolhas.jsx'
@@ -15,10 +15,20 @@ import ModalFuncionario from './ModalFuncionario.jsx'
 import ModalConfirmarPagamento from './ModalConfirmarPagamento.jsx'
 import ModalConfirmarGeracao from './ModalConfirmarGeracao.jsx'
 import ModalImportarFuncionarios from './ModalImportarFuncionarios.jsx'
+import ModalEditarFolha from './ModalEditarFolha.jsx'
 import { idFolhaValido, mensagemErroPagamento, meses, podePagar } from './folhaUtils.js'
 import '../Dashboard/Dashboard.css'
 import '../../components/Identidade/Identidade.css'
 import './Folha.css'
+
+function competenciaPermitida(mes, ano) {
+  const hoje = new Date()
+  const mesAtual = hoje.getMonth() + 1
+  const anoAtual = hoje.getFullYear()
+  const competenciaAno = Number(ano)
+  const competenciaMes = Number(mes)
+  return competenciaAno > anoAtual || (competenciaAno === anoAtual && competenciaMes >= mesAtual)
+}
 
 export default function Folha() {
   const { perfil } = useSessao()
@@ -149,7 +159,15 @@ function CentralFolha({ id, aba, setAba, selecionarFolha, existente }) {
   }
   function solicitarGeracao(evento) {
     evento.preventDefault()
-    if (!Number.isInteger(Number(ano)) || Number(ano) < 1 || Number(ano) > 9999) return
+    const anoNumero = Number(ano)
+    if (!Number.isInteger(anoNumero) || anoNumero < new Date().getFullYear() || anoNumero > 2200) {
+      setErro('Escolha um ano válido a partir do ano atual.')
+      return
+    }
+    if (!competenciaPermitida(mes, anoNumero)) {
+      setErro('Não é possível criar uma folha para um mês anterior ao atual.')
+      return
+    }
     abrirModal({ tipo: 'geracao' })
   }
   function gerar() {
@@ -169,6 +187,30 @@ function CentralFolha({ id, aba, setAba, selecionarFolha, existente }) {
       if (montado.current) selecionarFolha(resultado.id_folha, existente)
     })
   }
+  function salvarEdicaoFolha(novoMes, novoAno) {
+    if (!competenciaPermitida(novoMes, novoAno)) {
+      setErro('Não é possível mover a folha para um mês anterior ao atual.')
+      return
+    }
+    executar('edicao_folha', async () => {
+      const resultado = await editarFolha(id, novoMes, novoAno)
+      if (!montado.current) return
+      setModal(null)
+      setRevisaoHistorico((atual) => atual + 1)
+      await atualizarFolha()
+      if (montado.current) setSucesso(resultado.mensagem || 'Rascunho atualizado com sucesso.')
+    })
+  }
+
+  function excluirRascunho() {
+    executar('exclusao_folha', async () => {
+      await excluirFolha(id)
+      if (!montado.current) return
+      setModal(null)
+      selecionarFolha(null)
+    })
+  }
+
   function revalidar() {
     if (!folha || [2, 3].includes(Number(folha.status)) || carregandoFolha || erroFolha) return
     executar('revalidacao', async () => {
@@ -231,10 +273,10 @@ function CentralFolha({ id, aba, setAba, selecionarFolha, existente }) {
       {bloqueado && operacao !== 'pagamento' && <p role="status">{operacao === 'revalidacao' ? 'Verificando funcionários pendentes...' : 'Aguarde, concluindo solicitação...'}</p>}
       {aba === 'folha' && id !== null && <HistoricoFolhas revisao={revisaoHistorico} bloqueado={bloqueado || carregandoFolha} visivel idAtual={id} abrir={abrirFolhaHistorico} />}
       {aba === 'funcionarios' ? <Funcionarios funcionarios={funcionarios} carregando={carregandoEquipe} erro={erroEquipe} atualizar={atualizarEquipe} bloqueado={bloqueado || carregandoEquipe} adicionar={() => abrirModal({ tipo: 'funcionario' })} importar={() => abrirModal({ tipo: 'importacao' })} abrirFolha={() => setAba('folha')} editar={(funcionario) => abrirModal({ tipo: 'funcionario', funcionario })} alterarStatus={(funcionario) => Number(funcionario.status) === 1 ? abrirModal({ tipo: 'status', funcionario }) : mudarStatus(funcionario)} /> : <>
-        {id === null && <section className="bloco-dashboard folha-gerar"><div className="folha-icone"><Icone nome="folha" tamanho={30} /></div><h2>Crie uma folha mensal</h2><p>Selecione a competência. Antes de criar, você verá quantos funcionários e qual valor serão registrados.</p><form onSubmit={solicitarGeracao}><fieldset disabled={bloqueado}><legend>Competência</legend><div className="folha-competencia"><div className="campo-identidade"><label htmlFor="folha-mes">Mês</label><select id="folha-mes" value={mes} onChange={(e) => setMes(e.target.value)}>{meses.map((nome, indice) => <option value={indice + 1} key={nome}>{nome}</option>)}</select></div><div className="campo-identidade"><label htmlFor="folha-ano">Ano</label><input id="folha-ano" type="number" inputMode="numeric" min="1" max="9999" step="1" value={ano} onChange={(e) => setAno(e.target.value)} required /></div></div><button className="botao botao-principal" type="submit" disabled={bloqueado || carregandoEquipe}>Revisar e criar folha</button></fieldset></form><div className="folha-regra-cadastro"><Icone nome="conferir" tamanho={18} /><p><strong>Quem entra nesta folha?</strong> Os funcionários ativos e seus salários atuais. Depois de criada, esta competência não muda quando você altera o cadastro.</p></div></section>}
+        {id === null && <section className="bloco-dashboard folha-gerar"><div className="folha-icone"><Icone nome="folha" tamanho={30} /></div><h2>Crie uma folha mensal</h2><p>Selecione a competência. Antes de criar, você verá quantos funcionários e qual valor serão registrados.</p><form onSubmit={solicitarGeracao}><fieldset disabled={bloqueado}><legend>Competência</legend><div className="folha-competencia"><div className="campo-identidade"><label htmlFor="folha-mes">Mês</label><select id="folha-mes" value={mes} onChange={(e) => setMes(e.target.value)}>{meses.map((nome, indice) => { const numeroMes = indice + 1; const desabilitado = Number(ano) === new Date().getFullYear() && numeroMes < new Date().getMonth() + 1; return <option value={numeroMes} key={nome} disabled={desabilitado}>{nome}</option> })}</select></div><div className="campo-identidade"><label htmlFor="folha-ano">Ano</label><input id="folha-ano" type="number" inputMode="numeric" min={new Date().getFullYear()} max="2200" step="1" value={ano} onChange={(e) => { const novoAno = e.target.value; setAno(novoAno); if (Number(novoAno) === new Date().getFullYear() && Number(mes) < new Date().getMonth() + 1) setMes(new Date().getMonth() + 1) }} required /></div></div><button className="botao botao-principal" type="submit" disabled={bloqueado || carregandoEquipe}>Revisar e criar folha</button></fieldset></form><div className="folha-regra-cadastro"><Icone nome="conferir" tamanho={18} /><p><strong>Quem entra nesta folha?</strong> Os funcionários ativos e seus salários atuais. Depois de criada, esta competência não muda quando você altera o cadastro.</p></div></section>}
         {carregandoFolha && <p className="folha-estado" role="status">Carregando folha de pagamento...</p>}
         {erroFolha && <div className="mensagem-identidade erro" role="alert"><p>{erroFolha}</p><div className="folha-acoes">{idFolhaValido(id) && <button className="botao botao-secundario" type="button" onClick={atualizarFolha} disabled={bloqueado || carregandoFolha}>Tentar novamente</button>}<button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={() => selecionarFolha(null)}>Outra competência</button></div></div>}
-        {folha && <PreviaFolha folha={folha} bloqueado={bloqueado || carregandoFolha || Boolean(erroFolha)} pagar={() => abrirModal({ tipo: 'pagamento' })} revalidar={revalidar} atualizar={atualizarFolha} outraCompetencia={() => selecionarFolha(null)} />}
+        {folha && <PreviaFolha folha={folha} bloqueado={bloqueado || carregandoFolha || Boolean(erroFolha)} pagar={() => abrirModal({ tipo: 'pagamento' })} revalidar={revalidar} atualizar={atualizarFolha} outraCompetencia={() => selecionarFolha(null)} editarRascunho={() => abrirModal({ tipo: 'editar_folha' })} excluirRascunho={() => abrirModal({ tipo: 'excluir_folha' })} />}
       </>}
       {id === null && <HistoricoFolhas revisao={revisaoHistorico} bloqueado={bloqueado || carregandoFolha} visivel={aba === 'folha'} idAtual={id} abrir={abrirFolhaHistorico} />}
     </main>
@@ -245,5 +287,7 @@ function CentralFolha({ id, aba, setAba, selecionarFolha, existente }) {
     {modal?.tipo === 'pagamento' && folha && <ModalConfirmarPagamento folha={folha} fechar={fecharModal} confirmar={pagar} processando={bloqueado} bloqueado={carregandoFolha || Boolean(erroFolha) || !podePagar(folha)} erro={erro} />}
     {modal?.tipo === 'geracao' && <ModalConfirmarGeracao mes={mes} ano={ano} funcionarios={funcionarios} fechar={fecharModal} confirmar={gerar} processando={bloqueado} erro={erro} />}
     {modal?.tipo === 'importacao' && <ModalImportarFuncionarios fechar={fecharModal} aoImportar={concluirImportacao} />}
+    {modal?.tipo === 'editar_folha' && folha && <ModalEditarFolha folha={folha} fechar={fecharModal} salvar={salvarEdicaoFolha} processando={bloqueado} erro={erro} />}
+    {modal?.tipo === 'excluir_folha' && folha && <Confirmacao titulo={`Excluir rascunho de ${meses[Number(folha.mes) - 1]} de ${folha.ano}?`} descricao="A folha e seus itens serão apagados. Como este rascunho ainda não possui pagamentos, nenhuma movimentação financeira será removida." fechar={fecharModal} confirmar={excluirRascunho} processando={bloqueado} erro={erro} />}
   </div>
 }

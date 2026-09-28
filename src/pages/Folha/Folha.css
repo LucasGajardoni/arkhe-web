@@ -27,6 +27,8 @@
 .folha-topo-painel .folha-badge { margin-top: 8px; }
 .folha-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
 .pagina-folha .botao { min-height: 44px; font-size: 12px; }
+.pagina-folha .botao-perigo { min-height: 44px; padding: 9px 13px; border: 1px solid #d9a49d; border-radius: 10px; color: #8b342e; background: #fff7f5; font-size: 12px; font-weight: 800; cursor: pointer; }
+.pagina-folha .botao-perigo:hover { background: #faeae7; }
 .pagina-folha button:disabled, .modal-folha button:disabled { cursor: not-allowed; opacity: .55; }
 .folha-lista { list-style: none; padding: 0; margin-top: 22px; }
 .folha-lista > li { display: grid; align-items: center; gap: 20px; padding: 22px 0; border-top: 1px solid var(--borda); }

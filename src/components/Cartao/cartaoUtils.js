@@ -25,3 +25,22 @@ export function nomeNoCartao(usuario) {
 export function numeroCartao(cartao) {
   return String(cartao?.numero_cartao || cartao?.numero_formatado || '').replace(/\D/g, '')
 }
+
+export function vencimentoTresDiasUteis(diaFechamento, referencia = new Date()) {
+  const dia = Number(diaFechamento)
+  if (!Number.isInteger(dia) || dia < 1 || dia > 28) return null
+
+  const hoje = new Date(referencia.getFullYear(), referencia.getMonth(), referencia.getDate())
+  let fechamento = new Date(hoje.getFullYear(), hoje.getMonth(), dia)
+  if (fechamento < hoje) fechamento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, dia)
+
+  const vencimento = new Date(fechamento)
+  let restantes = 3
+  while (restantes > 0) {
+    vencimento.setDate(vencimento.getDate() + 1)
+    const semana = vencimento.getDay()
+    if (semana !== 0 && semana !== 6) restantes -= 1
+  }
+
+  return { dia: vencimento.getDate(), data: vencimento }
+}

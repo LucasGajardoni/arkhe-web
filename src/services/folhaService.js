@@ -24,6 +24,10 @@ export const criarFolha = (mes, ano) => requisitarApi('/criar_folha', {
   method: 'POST', dados: { mes: Number(mes), ano: Number(ano) },
 })
 export const buscarFolha = (idFolha) => requisitarApi(`/folha/${encodeURIComponent(idFolha)}`)
+export const editarFolha = (idFolha, mes, ano) => requisitarApi('/editar_folha', {
+  method: 'PUT', dados: { id_folha: Number(idFolha), mes: Number(mes), ano: Number(ano) },
+})
+export const excluirFolha = (idFolha) => requisitarApi(`/folha/${encodeURIComponent(idFolha)}`, { method: 'DELETE' })
 export const revalidarFolha = (idFolha) => requisitarApi('/revalidar_folha', {
   method: 'POST', dados: { id_folha: Number(idFolha) },
 })

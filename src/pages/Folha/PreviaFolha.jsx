@@ -5,13 +5,13 @@ import { competencia, formatarDataFolha, moeda, podePagar, statusFolha, statusIt
 
 const tonsItem = ['pendente', 'positivo', 'positivo', 'erro']
 
-export default function PreviaFolha({ folha, bloqueado, pagar, revalidar, atualizar, outraCompetencia }) {
+export default function PreviaFolha({ folha, bloqueado, pagar, revalidar, atualizar, outraCompetencia, editarRascunho, excluirRascunho }) {
   const status = Number(folha.status)
   const encerrada = status === 2 || status === 3
   return <>
     <header className="folha-topo-painel folha-cabecalho-previa">
       <div><p className="rotulo-secao">FOLHA ABERTA AGORA</p><h2>Folha de {competencia(folha)}</h2><div className="folha-metadados"><span className={`folha-badge ${tonsFolha[status] || 'neutro'}`}>{statusFolha[status] || 'Situação não informada'}</span><span>Criada em {formatarDataFolha(folha.data_criacao) || 'data não informada'}</span>{folha.data_pagamento && <span>Último pagamento em {formatarDataFolha(folha.data_pagamento)}</span>}</div></div>
-      <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={atualizar}>Atualizar situação</button><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={outraCompetencia}>Criar outra folha</button></div>
+      <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={atualizar}>Atualizar situação</button>{status === 0 && <button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={editarRascunho}>Editar rascunho</button>}{status === 0 && <button className="botao botao-perigo" type="button" disabled={bloqueado} onClick={excluirRascunho}>Excluir rascunho</button>}<button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={outraCompetencia}>Criar outra folha</button></div>
     </header>
     <dl className="folha-resumos" aria-label="Resumo financeiro da folha">
       {[
