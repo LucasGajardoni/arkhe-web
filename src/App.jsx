@@ -14,6 +14,7 @@ import IdentityRoute from './components/ProtectedRoute/IdentityRoute.jsx'
 import PrimeiroAcesso from './pages/PrimeiroAcesso/PrimeiroAcesso.jsx'
 import SelecionarConta from './pages/SelecionarConta/SelecionarConta.jsx'
 import Acessos from './pages/Acessos/Acessos.jsx'
+import Folha from './pages/Folha/Folha.jsx'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/dashboard/boletos" element={<Boletos />} />
             <Route path="/dashboard/integracoes" element={<Integracoes />} />
             <Route path="/dashboard/acessos" element={<Acessos />} />
+            <Route path="/dashboard/folha" element={<Folha />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

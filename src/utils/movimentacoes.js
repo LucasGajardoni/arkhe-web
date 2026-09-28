@@ -93,6 +93,15 @@ export function metadadosMovimentacao(item) {
   const entrada = item?.tipo === 'entrada'
   const origem = String(item?.origem || '').toLowerCase()
 
+  if (origem === 'folha_pagamento') {
+    return {
+      entrada,
+      descricao: entrada ? 'Salário recebido' : 'Folha de pagamento',
+      icone: 'folha',
+      detalhe: item.id_folha ? `Folha #${item.id_folha}` : '',
+    }
+  }
+
   if (origem === 'pix' || origem === 'pix_qrcode') {
     return {
       entrada,

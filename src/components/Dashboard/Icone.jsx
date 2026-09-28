@@ -1,4 +1,10 @@
 const caminhos = {
+  folha: (
+    <>
+      <circle cx="9" cy="7" r="3" />
+      <path d="M3 20v-2a6 6 0 0 1 12 0v2M16 4a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2" />
+    </>
+  ),
   inicio: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="2" />

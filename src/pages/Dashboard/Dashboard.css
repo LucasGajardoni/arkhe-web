@@ -315,6 +315,16 @@
   margin-top: -24px;
 }
 
+.atalhos-dashboard-pj { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.atalhos-dashboard-pj > button { padding-inline: 12px; gap: 8px; }
+.atalhos-dashboard-pj .texto-atalho-dashboard small { white-space: normal; }
+@media (max-width: 1100px) and (min-width: 901px) {
+  .atalhos-dashboard-pj { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .atalhos-dashboard-pj > button:last-child { grid-column: 1 / -1; }
+}
+
 .atalhos-dashboard > button {
   display: flex;
   min-width: 0;

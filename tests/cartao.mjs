@@ -165,6 +165,7 @@ caso('dashboard-limita-movimentacoes-a-tres', {
 }, async ({ page }) => {
   await page.goto(`${base}/dashboard`)
   await visible(page.getByRole('heading', { name: 'Movimentações recentes' }))
+  await visible(page.locator('.lista-dashboard[aria-busy="false"]'))
   assert.equal(await page.locator('.lista-dashboard article').count(), 3)
 })
 for (const [nome, total, usado, esperado] of [['zero', 0, 10, 0], ['nulos', null, null, 0], ['excedido', 5000, 8000, 100]]) {

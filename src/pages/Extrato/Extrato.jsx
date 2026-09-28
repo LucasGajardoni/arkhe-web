@@ -24,6 +24,8 @@ const LIMITE_INICIAL = 15
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function ModalDetalhesMovimentacao({ item, fechar }) {
+  const { perfil } = useSessao()
+  const navigate = useNavigate()
   const meta = metadadosMovimentacao(item)
   const contraparte = nomeContraparteMovimentacao(item)
   const detalheData = formatarDataHoraMovimentacao(item)
@@ -61,6 +63,9 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
           )}
 
           <footer>
+            {perfil.tipoConta === 'PJ' && item.origem === 'folha_pagamento' && item.id_folha && (
+              <button className="botao botao-secundario" type="button" onClick={() => navigate(`/dashboard/folha?folha=${encodeURIComponent(item.id_folha)}`)}>Ver folha</button>
+            )}
             <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
           </footer>
         </div>
