@@ -168,12 +168,12 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
           <div><strong>1</strong><span>Baixe o modelo</span></div><div><strong>2</strong><span>Preencha no Excel</span></div><div><strong>3</strong><span>Salve como CSV</span></div><div><strong>4</strong><span>Envie o arquivo aqui</span></div>
         </div>
         <button className="botao botao-secundario" type="button" onClick={baixarModeloFuncionarios}>Baixar modelo CSV</button>
-        <p className="importacao-ajuda">O modelo já é preparado para abrir no Excel em colunas separadas. Preencha os funcionários e salve ou exporte novamente como CSV UTF-8.</p>
+        <p className="importacao-ajuda">O modelo abre no Excel com CPF, nome e salário em colunas separadas. O CPF é preservado como texto para não virar notação científica.</p>
         <div className={`importacao-dropzone${arrastando ? ' arrastando' : ''}`} onDragEnter={(e) => { e.preventDefault(); setArrastando(true) }} onDragOver={(e) => e.preventDefault()} onDragLeave={() => setArrastando(false)} onDrop={soltarArquivo}>
           <input ref={arquivoRef} id="arquivo-funcionarios" type="file" accept=".csv,text/csv" onChange={(e) => escolherArquivo(e.target.files?.[0])} disabled={processando} />
           {!arquivo ? <><strong>Arraste seu arquivo CSV aqui</strong><span>ou selecione no computador</span><label className="botao botao-secundario" htmlFor="arquivo-funcionarios">Selecionar arquivo</label></> : <div className="importacao-arquivo"><span>CSV</span><div><strong>{arquivo.name}</strong><small>{tamanhoArquivo(arquivo.size)}</small></div><button type="button" onClick={removerArquivo} disabled={processando}>Remover</button></div>}
         </div>
-        <details className="importacao-como-preparar"><summary>Como preparar o arquivo</summary><ul><li>Não altere os nomes das colunas.</li><li>Use um funcionário por linha.</li><li>CPF pode ser digitado com ou sem pontuação.</li><li>Use salário no formato brasileiro, por exemplo 2500,00.</li><li>Salve em CSV UTF-8.</li></ul></details>
+        <details className="importacao-como-preparar"><summary>Como preparar o arquivo</summary><ul><li>Mantenha as colunas CPF, Nome completo e Salário mensal.</li><li>Use um funcionário por linha.</li><li>CPF pode ser digitado com ou sem pontuação.</li><li>Se o CPF começar com zero, mantenha a célula como texto no Excel.</li><li>Use salário no formato brasileiro, por exemplo 2500,00.</li><li>Salve em CSV UTF-8.</li></ul></details>
         {erro && <p className="mensagem-identidade erro" role="alert">{erro}</p>}
         <div className="acoes-identidade"><button className="botao botao-secundario" type="button" onClick={fechar} disabled={processando}>Cancelar</button><button className="botao botao-principal" type="button" onClick={analisar} disabled={!arquivo || processando}>{processando ? 'Analisando arquivo...' : 'Analisar arquivo'}</button></div>
       </div>}

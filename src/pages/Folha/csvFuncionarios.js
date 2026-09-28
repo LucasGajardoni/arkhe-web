@@ -1,6 +1,6 @@
 import { somenteNumeros } from '../../utils/formatadores.js'
 
-const cabecalhoModelo = ['cpf', 'nome', 'salario']
+const cabecalhoModelo = ['CPF', 'Nome completo', 'Salário mensal']
 const SEPARADOR_CSV = ';'
 
 function campoCsv(valor) {
@@ -8,8 +8,18 @@ function campoCsv(valor) {
   return /[";\r\n]/.test(texto) ? `"${texto.replaceAll('"', '""')}"` : texto
 }
 
+function cpfParaExcel(valor) {
+  const cpf = somenteNumeros(valor)
+  return cpf ? `="${cpf}"` : ''
+}
+
+function textoSeguroExcel(valor) {
+  const texto = String(valor ?? '')
+  return /^[=+\-@]/.test(texto) ? `'${texto}` : texto
+}
+
 function montarCsv(linhas) {
-  return `\uFEFF${linhas.map((linha) => linha.map(campoCsv).join(SEPARADOR_CSV)).join('\r\n')}\r\n`
+  return `\uFEFFsep=;\r\n${linhas.map((linha) => linha.map(campoCsv).join(SEPARADOR_CSV)).join('\r\n')}\r\n`
 }
 
 function salarioCsv(valor) {
@@ -19,19 +29,19 @@ function salarioCsv(valor) {
 export function conteudoModeloFuncionarios() {
   return montarCsv([
     cabecalhoModelo,
-    ['12345678901', 'Ana Souza', '2500,00'],
-    ['98765432100', 'Carlos Lima', '3200,00'],
+    [cpfParaExcel('12345678901'), 'Ana Souza', '2500,00'],
+    [cpfParaExcel('98765432100'), 'Carlos Lima', '3200,00'],
   ])
 }
 
 export function conteudoExportacaoFuncionarios(funcionarios) {
   return montarCsv([
-    [...cabecalhoModelo, 'status'],
+    [...cabecalhoModelo, 'Status'],
     ...funcionarios.map((funcionario) => [
-      somenteNumeros(funcionario.cpf),
-      funcionario.nome,
+      cpfParaExcel(funcionario.cpf),
+      textoSeguroExcel(funcionario.nome),
       salarioCsv(funcionario.salario),
-      Number(funcionario.status) === 1 ? 'ativo' : 'inativo',
+      Number(funcionario.status) === 1 ? 'Ativo' : 'Inativo',
     ]),
   ])
 }
