@@ -7,6 +7,7 @@ import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import CartaoResumo from '../../components/Cartao/CartaoResumo.jsx'
+import ArkhePay from '../../components/Maquininha/ArkhePay.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
@@ -260,6 +261,9 @@ export default function Dashboard() {
 
             <CartaoResumo usuario={usuario} />
 
+            {contaPJ ? (
+              <ArkhePay aoPagamentoAprovado={movimentacoes.carregar} />
+            ) : (
             <section className="bloco-dashboard panorama-dashboard">
               <div className="titulo-bloco-dashboard">
                 <div>
@@ -307,6 +311,7 @@ export default function Dashboard() {
                 </>
               )}
             </section>
+            )}
           </div>
         </div>
       </main>
