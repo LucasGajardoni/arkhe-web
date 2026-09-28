@@ -102,6 +102,15 @@ export function metadadosMovimentacao(item) {
     }
   }
 
+  if (origem === 'compra_cartao') {
+    return {
+      entrada,
+      descricao: entrada ? 'Venda no cartão' : 'Compra no cartão',
+      icone: 'cartao',
+      detalhe: 'Débito',
+    }
+  }
+
   if (origem === 'pix' || origem === 'pix_qrcode') {
     return {
       entrada,
