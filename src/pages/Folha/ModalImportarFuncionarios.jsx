@@ -51,6 +51,7 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
     existente: Number(previa?.existentes ?? itens.filter((item) => item.situacao === 'existente').length),
     erro: Number(previa?.erros ?? itens.filter((item) => item.situacao === 'erro').length),
   }), [itens, previa])
+  const colunasAusentes = useMemo(() => Array.isArray(previa?.colunas_ausentes) ? previa.colunas_ausentes : [], [previa])
   const resumo = useMemo(() => ({
     criar: itens.filter((item) => item.situacao === 'novo').length,
     atualizar: itens.filter((item) => item.situacao === 'existente' && acoes[chaveItem(item)] === 'atualizar').length,
@@ -163,7 +164,7 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
       </ol>}
 
       {etapa === 'arquivo' && <div className="importacao-inicio">
-        <p>Baixe o modelo, preencha nome, CPF e salário dos funcionários e envie o arquivo novamente.</p>
+        <p>Baixe o modelo, preencha CPF, nome e salário dos funcionários e envie o arquivo novamente. A análise confere campos ausentes, CPF inválido, duplicidades e salário antes de qualquer importação.</p>
         <div className="importacao-preparo">
           <div><strong>1</strong><span>Baixe o modelo</span></div><div><strong>2</strong><span>Preencha no Excel</span></div><div><strong>3</strong><span>Salve como CSV</span></div><div><strong>4</strong><span>Envie o arquivo aqui</span></div>
         </div>
@@ -173,13 +174,14 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
           <input ref={arquivoRef} id="arquivo-funcionarios" type="file" accept=".csv,text/csv" onChange={(e) => escolherArquivo(e.target.files?.[0])} disabled={processando} />
           {!arquivo ? <><strong>Arraste seu arquivo CSV aqui</strong><span>ou selecione no computador</span><label className="botao botao-secundario" htmlFor="arquivo-funcionarios">Selecionar arquivo</label></> : <div className="importacao-arquivo"><span>CSV</span><div><strong>{arquivo.name}</strong><small>{tamanhoArquivo(arquivo.size)}</small></div><button type="button" onClick={removerArquivo} disabled={processando}>Remover</button></div>}
         </div>
-        <details className="importacao-como-preparar"><summary>Como preparar o arquivo</summary><ul><li>Mantenha as colunas CPF, Nome completo e Salário mensal.</li><li>Use um funcionário por linha.</li><li>CPF pode ser digitado com ou sem pontuação.</li><li>Se o CPF começar com zero, mantenha a célula como texto no Excel.</li><li>Use salário no formato brasileiro, por exemplo 2500,00.</li><li>Salve em CSV UTF-8.</li></ul></details>
+        <details className="importacao-como-preparar"><summary>Como preparar o arquivo</summary><ul><li>As colunas CPF, Nome completo e Salário mensal são necessárias para importar.</li><li>Se uma coluna ou valor estiver faltando, a prévia aponta exatamente o problema e não importa aquela linha.</li><li>O CPF pode ser digitado com ou sem pontuação e os dígitos verificadores são validados.</li><li>Se o CPF começar com zero, mantenha a célula como texto no Excel.</li><li>Use um funcionário por linha e salário no formato brasileiro, por exemplo 2500,00.</li><li>Salve em CSV UTF-8.</li></ul></details>
         {erro && <p className="mensagem-identidade erro" role="alert">{erro}</p>}
         <div className="acoes-identidade"><button className="botao botao-secundario" type="button" onClick={fechar} disabled={processando}>Cancelar</button><button className="botao botao-principal" type="button" onClick={analisar} disabled={!arquivo || processando}>{processando ? 'Analisando arquivo...' : 'Analisar arquivo'}</button></div>
       </div>}
 
       {etapa === 'previa' && <div className="importacao-previa">
         <p>Revise os dados antes de importar. Funcionários já cadastrados estão marcados para ignorar.</p>
+        {colunasAusentes.length > 0 && <div className="importacao-colunas-ausentes" role="alert"><strong>O arquivo está incompleto.</strong><span>Colunas ausentes: {colunasAusentes.join(', ')}. As linhas afetadas foram marcadas com erro e não serão importadas.</span></div>}
         <dl className="importacao-resumo"><div><dt>Total de linhas</dt><dd>{contagens.total}</dd></div><div><dt>Novos</dt><dd>{contagens.novo}</dd></div><div><dt>Já cadastrados</dt><dd>{contagens.existente}</dd></div><div><dt>Com erro</dt><dd>{contagens.erro}</dd></div></dl>
         {contagens.existente > 0 && <div className="importacao-massa">
           {!confirmarMassa ? <><p>Escolha o que fazer com os funcionários existentes.</p><div><button className="botao botao-secundario" type="button" onClick={() => setConfirmarMassa(true)}>Atualizar todos os existentes</button><button className="botao botao-secundario" type="button" onClick={ignorarTodos}>Ignorar todos</button></div></> : <div className="importacao-confirmacao-massa" role="alertdialog" aria-label="Confirmar atualização em massa"><strong>Atualizar todos os existentes?</strong><p>Isso atualizará nome e salário dos funcionários existentes usando os dados do CSV. O status ativo ou inativo não será alterado.</p><div><button className="botao botao-secundario" type="button" onClick={() => setConfirmarMassa(false)}>Cancelar</button><button className="botao botao-principal" type="button" onClick={atualizarTodos}>Confirmar atualização</button></div></div>}
@@ -190,10 +192,10 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
           {itensFiltrados.map((item) => {
             const [situacao, tom] = descricaoSituacao(item)
             return <div className={`importacao-linha ${item.situacao}`} role="row" key={chaveItem(item)}>
-              <div role="cell" data-label="Funcionário"><strong>{item.nome || 'Nome não informado'}</strong><small>{item.cpf ? mascaraCpf(item.cpf) : `Linha ${item.linha}`}</small>{item.situacao === 'erro' && item.cpf && <small>Linha {item.linha}</small>}</div>
+              <div role="cell" data-label="Funcionário"><strong>{item.nome || 'Nome não informado'}</strong><small>{item.cpf ? mascaraCpf(item.cpf) : 'CPF não informado'}</small>{item.situacao !== 'erro' && item.cpf_valido && <small className="importacao-cpf-valido">CPF válido</small>}{item.situacao === 'erro' && <small>Linha {item.linha}</small>}</div>
               <div role="cell" data-label="Salário">{item.situacao === 'existente' ? <><small>Atual: {moeda.format(item.salario_atual)}</small><strong>No arquivo: {moeda.format(item.salario)}</strong></> : item.salario ? <strong>{moeda.format(item.salario)}</strong> : <span>—</span>}</div>
               <div role="cell" data-label="Situação"><span className={`folha-badge ${tom}`}>{situacao}</span>{item.erro && <small className="importacao-erro-item">{item.erro}</small>}</div>
-              <div role="cell" data-label="Conta Arkhé">{item.situacao === 'erro' ? <span>—</span> : <span className={`folha-badge ${possuiConta(item) ? 'positivo' : 'neutro'}`}>{possuiConta(item) ? 'Conta Arkhé' : 'Não encontrada'}</span>}</div>
+              <div role="cell" data-label="Conta Arkhé">{item.situacao === 'erro' ? <span>Não verificada</span> : <span className={`folha-badge ${possuiConta(item) ? 'positivo' : 'neutro'}`}>{possuiConta(item) ? 'Conta Arkhé' : 'Não encontrada'}</span>}</div>
               <div role="cell" data-label="Ação">{item.situacao === 'novo' ? <strong>Importar</strong> : item.situacao === 'existente' ? <div className="importacao-escolha"><button type="button" aria-pressed={acoes[chaveItem(item)] === 'atualizar'} onClick={() => atualizarAcao(item, 'atualizar')}>Atualizar</button><button type="button" aria-pressed={acoes[chaveItem(item)] !== 'atualizar'} onClick={() => atualizarAcao(item, 'ignorar')}>Ignorar</button></div> : <small>Não importar</small>}</div>
             </div>
           })}
