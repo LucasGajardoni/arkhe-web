@@ -51,7 +51,6 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
     existente: Number(previa?.existentes ?? itens.filter((item) => item.situacao === 'existente').length),
     erro: Number(previa?.erros ?? itens.filter((item) => item.situacao === 'erro').length),
   }), [itens, previa])
-  const colunasAusentes = useMemo(() => Array.isArray(previa?.colunas_ausentes) ? previa.colunas_ausentes : [], [previa])
   const resumo = useMemo(() => ({
     criar: itens.filter((item) => item.situacao === 'novo').length,
     atualizar: itens.filter((item) => item.situacao === 'existente' && acoes[chaveItem(item)] === 'atualizar').length,
@@ -181,7 +180,6 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
 
       {etapa === 'previa' && <div className="importacao-previa">
         <p>Revise os dados antes de importar. Funcionários já cadastrados estão marcados para ignorar.</p>
-        {colunasAusentes.length > 0 && <div className="importacao-colunas-ausentes" role="alert"><strong>O arquivo está incompleto.</strong><span>Colunas ausentes: {colunasAusentes.join(', ')}. As linhas afetadas foram marcadas com erro e não serão importadas.</span></div>}
         <dl className="importacao-resumo"><div><dt>Total de linhas</dt><dd>{contagens.total}</dd></div><div><dt>Novos</dt><dd>{contagens.novo}</dd></div><div><dt>Já cadastrados</dt><dd>{contagens.existente}</dd></div><div><dt>Com erro</dt><dd>{contagens.erro}</dd></div></dl>
         {contagens.existente > 0 && <div className="importacao-massa">
           {!confirmarMassa ? <><p>Escolha o que fazer com os funcionários existentes.</p><div><button className="botao botao-secundario" type="button" onClick={() => setConfirmarMassa(true)}>Atualizar todos os existentes</button><button className="botao botao-secundario" type="button" onClick={ignorarTodos}>Ignorar todos</button></div></> : <div className="importacao-confirmacao-massa" role="alertdialog" aria-label="Confirmar atualização em massa"><strong>Atualizar todos os existentes?</strong><p>Isso atualizará nome e salário dos funcionários existentes usando os dados do CSV. O status ativo ou inativo não será alterado.</p><div><button className="botao botao-secundario" type="button" onClick={() => setConfirmarMassa(false)}>Cancelar</button><button className="botao botao-principal" type="button" onClick={atualizarTodos}>Confirmar atualização</button></div></div>}
