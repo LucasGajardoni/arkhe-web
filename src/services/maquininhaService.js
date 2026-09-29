@@ -11,7 +11,7 @@ export function comprarMaquininha({ uid, pin, valor, tipo = 'DEBITO', parcelas =
   const qtdParcelas = Number(parcelas)
   if (!/^\d{6}$/.test(pin) || !Number.isFinite(valor) || valor <= 0
     || !['DEBITO', 'CREDITO'].includes(modalidade)
-    || !Number.isInteger(qtdParcelas) || qtdParcelas < 1 || qtdParcelas > 12) {
+    || !Number.isInteger(qtdParcelas) || qtdParcelas < 1 || qtdParcelas > 15) {
     throw new ErroApi('Confira os dados do pagamento.', 0, { codigo: 'DADOS_INVALIDOS' })
   }
   return requisitarApi('/maquininha/comprar', {
