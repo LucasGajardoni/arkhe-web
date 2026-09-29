@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { useSessao } from '../../hooks/useSessao.js'
 import { importarCsvFuncionarios, previewCsvFuncionarios } from '../../services/folhaService.js'
-import { mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
+import { cpfValido, mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
 import { baixarModeloFuncionarios } from './csvFuncionarios.js'
 import { moeda, possuiConta } from './folhaUtils.js'
 
@@ -89,8 +89,43 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
     try {
       const resposta = await previewCsvFuncionarios(arquivo)
       if (!Array.isArray(resposta.itens)) throw new Error('O servidor retornou uma prévia inválida.')
-      setPrevia(resposta)
-      setAcoes(Object.fromEntries(resposta.itens.filter((item) => item.situacao !== 'erro').map((item) => [chaveItem(item), item.situacao === 'novo' ? 'criar' : 'ignorar'])))
+
+      const itensValidados = resposta.itens.map((item) => {
+        const problemas = []
+        const cpf = somenteNumeros(item.cpf)
+        const nome = String(item.nome || '').trim()
+        const salario = Number(item.salario)
+
+        if (cpf.length !== 11 || !cpfValido(cpf)) problemas.push('CPF inválido')
+        if (!nome) problemas.push('Nome não informado')
+        if (!Number.isFinite(salario) || salario <= 0) problemas.push('Salário inválido')
+
+        if (problemas.length === 0) return { ...item, cpf, nome, salario, cpf_valido: true, importavel: true }
+
+        const errosServidor = String(item.erro || '').split(';').map((erro) => erro.trim()).filter(Boolean)
+        const erros = [...new Set([...errosServidor, ...problemas])]
+        return {
+          ...item,
+          cpf,
+          nome,
+          salario: Number.isFinite(salario) && salario > 0 ? salario : null,
+          cpf_valido: cpf.length === 11 && cpfValido(cpf),
+          importavel: false,
+          situacao: 'erro',
+          erro: erros.join('; '),
+        }
+      })
+
+      const previaValidada = {
+        ...resposta,
+        itens: itensValidados,
+        novos: itensValidados.filter((item) => item.situacao === 'novo').length,
+        existentes: itensValidados.filter((item) => item.situacao === 'existente').length,
+        erros: itensValidados.filter((item) => item.situacao === 'erro').length,
+      }
+
+      setPrevia(previaValidada)
+      setAcoes(Object.fromEntries(itensValidados.filter((item) => item.situacao !== 'erro' && item.importavel !== false).map((item) => [chaveItem(item), item.situacao === 'novo' ? 'criar' : 'ignorar'])))
       setFiltro('todos'); setBusca(''); setEtapa('previa')
     } catch (falha) {
       setErro(falha.message || 'Não foi possível analisar o arquivo.')
@@ -120,7 +155,17 @@ export default function ModalImportarFuncionarios({ fechar, aoImportar }) {
 
   async function importar() {
     if (processando) return
-    const selecionados = itens.filter((item) => item.situacao !== 'erro').map((item) => ({
+    const selecionados = itens.filter((item) => {
+      const cpf = somenteNumeros(item.cpf)
+      const salario = Number(item.salario)
+      return item.situacao !== 'erro'
+        && item.importavel !== false
+        && cpf.length === 11
+        && cpfValido(cpf)
+        && String(item.nome || '').trim()
+        && Number.isFinite(salario)
+        && salario > 0
+    }).map((item) => ({
       linha: item.linha,
       cpf: somenteNumeros(item.cpf),
       nome: String(item.nome || '').trim(),
