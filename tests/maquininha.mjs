@@ -159,6 +159,20 @@ caso('credito-parcelado', {}, async ({ page, state }) => {
     { uid: '0D94A4A5', pin: '123456', valor: 120, tipo: 'CREDITO', parcelas: 3 })
   assert(await panel(page).getByText('Crédito · 3x', { exact: true }).isVisible())
 })
+caso('credito-quinze-parcelas', {}, async ({ page, state }) => {
+  await conectar(page)
+  await page.getByLabel('VALOR DA VENDA').fill('15000')
+  await panel(page).getByRole('button', { name: /Crédito/ }).click()
+  await page.getByLabel('Parcelamento').selectOption('15')
+  await panel(page).getByRole('button', { name: /Cobrar/ }).click()
+  await visible(panel(page).getByRole('heading', { name: 'Aproxime o cartão', exact: true }))
+  await identificar(page)
+  assert(await page.getByRole('dialog').getByText(/Crédito 15x/).isVisible())
+  await pagar(page)
+  await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
+  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json,
+    { uid: '0D94A4A5', pin: '123456', valor: 150, tipo: 'CREDITO', parcelas: 15 })
+})
 caso('pf-preserva-panorama', { pf: true }, async ({ page }) => {
   await visible(page.getByRole('heading', { name: 'Panorama do mês' }))
   assert.equal(await panel(page).count(), 0)
