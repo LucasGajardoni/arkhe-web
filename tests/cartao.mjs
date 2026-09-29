@@ -14,7 +14,7 @@ await mkdir(artifacts, { recursive: true })
 const pessoa = { id_usuario: 57, nome: 'João Teste', cpf: '52998224725' }
 const pf = { id_conta: 1, id_usuario: 57, id_titular: 57, tipo_conta: 0, vinculo: 'titular', numero_conta: '000001', agencia: '0001' }
 const pj = { ...pf, id_conta: 9, id_titular: 12, tipo_conta: 1, vinculo: 'acesso', cargo: 1, nome_fantasia: 'Empresa XPTO', razao_social: 'Empresa XPTO Ltda', cnpj: '11222333000181' }
-const cartao = { id_cartao: 7, id_conta: 1, numero_cartao: '2481234567890123', numero_formatado: '2481 2345 6789 0123', cvv: '082', vencimento: '2031-09-01', limite_total: 5000, limite_utilizado: 1200, limite_disponivel: 3800, dia_vencimento: 10, dia_fechamento: 3 }
+const cartao = { id_cartao: 7, id_conta: 1, numero_cartao: '2481234567890123', numero_formatado: '2481 2345 6789 0123', cvv: '082', vencimento: '2031-09-01', limite_total: 5000, limite_utilizado: 1200, limite_disponivel: 3800, dia_vencimento: 13, dia_fechamento: 10 }
 const credito = {
   compras: [
     { id_compra: 31, valor_total: 120, valor_parcela: 40, qtd_parcelas: 3, data_compra: '2026-09-29 10:00:00', parcelas: [
@@ -122,19 +122,17 @@ async function abrir(page, existe = false) {
 caso('geracao-dias-privacidade-copia', { delayPost: 300 }, async ({ page, state }) => {
   const modal = await abrir(page)
   assert.equal(state.requests.filter((r) => r.path === '/adicionar_cartao').length, 0)
-  assert.equal(await page.getByLabel('Dia de vencimento da fatura').inputValue(), '10')
-  assert.equal(await page.getByLabel('Dia de fechamento da fatura').inputValue(), '3')
-  await page.getByLabel('Dia de fechamento da fatura').selectOption('10')
-  assert(await page.getByRole('button', { name: 'Gerar cartão', exact: true }).isDisabled())
-  await page.getByLabel('Dia de vencimento da fatura').selectOption('15')
-  await page.getByLabel('Dia de fechamento da fatura').selectOption('8')
+  assert.equal(await page.getByLabel('Dia de fechamento da fatura').inputValue(), '10')
+  assert((await modal.innerText()).includes('vencerá automaticamente no dia 13'))
+  await page.getByLabel('Dia de fechamento da fatura').selectOption('20')
+  assert((await modal.innerText()).includes('vencerá automaticamente no dia 23'))
   await page.getByRole('button', { name: 'Gerar cartão', exact: true }).click()
   await visible(page.getByRole('button', { name: 'Gerando cartão...' }))
   await page.keyboard.press('Escape')
   assert(await modal.isVisible())
   await visible(page.getByText('Seu cartão foi criado.', { exact: true }))
   assert.equal(state.requests.filter((r) => r.path === '/adicionar_cartao').length, 1)
-  assert.deepEqual(state.requests.find((r) => r.path === '/adicionar_cartao').json, { dia_vencimento: 15, dia_fechamento: 8 })
+  assert.deepEqual(state.requests.find((r) => r.path === '/adicionar_cartao').json, { dia_vencimento: 23, dia_fechamento: 20 })
   assert(!(await modal.innerText()).includes(cartao.numero_formatado))
   assert(!(await modal.innerText()).includes(cartao.cvv))
   await page.getByRole('button', { name: 'Mostrar dados' }).click()
@@ -267,7 +265,7 @@ caso('criacao-responsiva-390', { width: 390 }, async ({ page }) => {
   const modal = await abrir(page)
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   assert(await modal.evaluate((elemento) => elemento.scrollWidth <= elemento.clientWidth))
-  await visible(page.getByLabel('Dia de vencimento da fatura'))
+  await visible(page.getByLabel('Dia de fechamento da fatura'))
   await modal.screenshot({ path: join(artifacts, 'criacao-390.png') })
 })
 for (const width of [390, 1440]) {
