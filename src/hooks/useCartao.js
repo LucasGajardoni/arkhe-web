@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buscarCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
+import { buscarCartao, buscarComprasCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
 
 function cartaoDaConta(resultado, idConta) {
   if (!resultado.possui_cartao) return null
@@ -16,6 +16,10 @@ export function useCartao(idConta) {
   const [gerando, setGerando] = useState(false)
   const [erro, setErro] = useState('')
   const [erroGeracao, setErroGeracao] = useState('')
+  const [comprasCartao, setComprasCartao] = useState({ compras: [], parcelas: [], resumo: null })
+  const [carregandoCompras, setCarregandoCompras] = useState(false)
+  const [erroCompras, setErroCompras] = useState('')
+  const [comprasCarregadas, setComprasCarregadas] = useState(false)
   const ativo = useRef(false)
   const requisicao = useRef(0)
   const enviando = useRef(false)
@@ -43,6 +47,25 @@ export function useCartao(idConta) {
     setCarregando(true)
     setCartao(null)
     return consultar()
+  }
+
+  async function carregarComprasCartao({ forcar = false } = {}) {
+    if (!cartao || carregandoCompras || (comprasCarregadas && !forcar)) return comprasCartao
+    setCarregandoCompras(true)
+    setErroCompras('')
+    try {
+      const resultado = await buscarComprasCartao()
+      if (ativo.current) {
+        setComprasCartao(resultado)
+        setComprasCarregadas(true)
+      }
+      return resultado
+    } catch (falha) {
+      if (ativo.current) setErroCompras(falha.message || 'Não foi possível carregar as compras do cartão.')
+      return null
+    } finally {
+      if (ativo.current) setCarregandoCompras(false)
+    }
   }
 
   async function gerarCartao(dados) {
@@ -80,5 +103,7 @@ export function useCartao(idConta) {
   }
 
   return { cartao, possuiCartao: Boolean(cartao), carregando, gerando, erro, erroGeracao,
-    carregarCartao, gerarCartao, limparErroGeracao: () => setErroGeracao('') }
+    comprasCartao, carregandoCompras, erroCompras, comprasCarregadas,
+    carregarCartao, carregarComprasCartao, gerarCartao,
+    limparErroGeracao: () => setErroGeracao('') }
 }
