@@ -10,7 +10,7 @@ const mensagens = {
   CARTAO_BLOQUEADO: 'Este cartão está bloqueado.',
   DADOS_INVALIDOS: 'Confira os dados e tente novamente.',
   MODALIDADE_INDISPONIVEL: 'Esta modalidade está indisponível para este cartão.',
-  PARCELAS_INVALIDAS: 'Escolha entre 1 e 12 parcelas.',
+  PARCELAS_INVALIDAS: 'Escolha entre 1 e 15 parcelas.',
   LIMITE_INSUFICIENTE: 'Limite insuficiente para esta compra.',
   CONTA_INVALIDA: 'Não foi possível realizar esta venda.',
   PIN_INVALIDO: 'PIN incorreto. Tente novamente.',
@@ -110,7 +110,7 @@ export function useMaquininha(aoPagamentoAprovado) {
         const qtdParcelas = Number(parcelas)
         if (!conectada || ocupada || venda || !Number.isSafeInteger(centavos) || centavos <= 0 || centavos > 99999999
           || !['DEBITO', 'CREDITO'].includes(modalidade)
-          || !Number.isInteger(qtdParcelas) || qtdParcelas < 1 || qtdParcelas > 12) return
+          || !Number.isInteger(qtdParcelas) || qtdParcelas < 1 || qtdParcelas > 15) return
         const atual = {
           valor: centavos / 100,
           tipo: modalidade,
