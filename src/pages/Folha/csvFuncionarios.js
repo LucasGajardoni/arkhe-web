@@ -23,7 +23,8 @@ function montarCsv(linhas) {
 }
 
 function salarioCsv(valor) {
-  return Number(valor || 0).toFixed(2).replace('.', ',')
+  const numero = Number(valor)
+  return Number.isFinite(numero) && numero > 0 ? numero.toFixed(2).replace('.', ',') : ''
 }
 
 export function conteudoModeloFuncionarios() {
