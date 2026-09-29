@@ -13,6 +13,7 @@ const mensagens = {
   CONTA_INVALIDA: 'Não foi possível realizar esta venda.',
   PIN_INVALIDO: 'PIN incorreto. Tente novamente.',
   SALDO_INSUFICIENTE: 'Saldo insuficiente.',
+  COMPRA_DUPLICADA: 'Uma compra com este mesmo valor já foi realizada neste estabelecimento nos últimos 5 minutos.',
   ERRO_INTERNO: 'Não foi possível processar o pagamento agora.',
 }
 const inicial = { etapa: 'PRONTA', conectada: false, conectando: false, aviso: '', mensagem: '', valor: 0, cartao: null }
