@@ -15,7 +15,7 @@ const visible = (locator) => locator.waitFor({ state: 'visible', timeout: 8000 }
 const usuario = { id_usuario: 57, nome: 'João Teste', cpf: '52998224725' }
 const contaPJ = { id_conta: 2, id_titular: 57, tipo_conta: 1, vinculo: 'proprietario', nome_fantasia: 'Empresa Teste', cnpj: '11222333000181' }
 const contaPF = { id_conta: 1, id_titular: 57, tipo_conta: 0, vinculo: 'proprietario' }
-const ana = { id_funcionario: 7, id_usuario: 90, id_conta: 2, nome: 'Ana Souza', cpf: '12345678901', salario: 3000, status: 1, possui_conta_arkhe: true }
+const ana = { id_funcionario: 7, id_usuario: 90, id_conta: 2, nome: 'Ana Souza', cpf: '39053344705', salario: 3000, status: 1, possui_conta_arkhe: true }
 const bia = { id_funcionario: 8, id_usuario: null, id_conta: 2, nome: 'Bia Lima', cpf: '98765432100', salario: 2100, status: 0, possui_conta_arkhe: false }
 const itensPreview = [
   { linha: 2, cpf: '11144477735', cpf_valido: true, nome: 'Carla Nova', salario: 2500, situacao: 'novo', possui_conta_arkhe: true },
@@ -103,7 +103,7 @@ try {
 
   const exportado = await conteudoDownload(h.page, h.page.getByRole('button', { name: 'Exportar funcionários', exact: true }), 'funcionarios_arkhe.csv')
   assert.ok(exportado.startsWith('cpf,nome,salario,status\r\n'))
-  assert.match(exportado, /12345678901,Ana Souza,3000\.00,ativo/)
+  assert.match(exportado, /39053344705,Ana Souza,3000\.00,ativo/)
   assert.match(exportado, /98765432100,Bia Lima,2100\.00,inativo/)
   assert.doesNotMatch(exportado, /id_funcionario|id_usuario|id_conta/)
 
