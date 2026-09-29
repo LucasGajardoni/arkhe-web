@@ -6,8 +6,8 @@ export const listarFolhas = () => requisitarApi('/listar_folhas')
 export const adicionarFuncionario = ({ cpf, nome, salario }) => requisitarApi('/adicionar_funcionario', {
   method: 'POST', dados: { cpf: somenteNumeros(cpf), nome: nome.trim(), salario: Number(salario) },
 })
-export const editarFuncionario = ({ id_funcionario, nome, salario }) => requisitarApi('/editar_funcionario', {
-  method: 'PUT', dados: { id_funcionario, nome: nome.trim(), salario: Number(salario) },
+export const editarFuncionario = ({ id_funcionario, cpf, nome, salario }) => requisitarApi('/editar_funcionario', {
+  method: 'PUT', dados: { id_funcionario, cpf: somenteNumeros(cpf), nome: nome.trim(), salario: Number(salario) },
 })
 export const alterarStatusFuncionario = (idFuncionario, status) => requisitarApi('/alterar_status_funcionario', {
   method: 'PUT', dados: { id_funcionario: idFuncionario, status: Number(status) },
