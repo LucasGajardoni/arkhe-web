@@ -12,6 +12,7 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
   const [porPagina, setPorPagina] = useState(5)
   const ativos = funcionarios.filter((item) => Number(item.status) === 1).length
   const comConta = funcionarios.filter(possuiConta).length
+  const cadastrosInvalidos = funcionarios.filter((item) => item.cadastro_valido === false).length
   const salarios = funcionarios.filter((item) => Number(item.status) === 1).reduce((total, item) => total + Number(item.salario || 0), 0)
   const normalizar = (texto) => String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const lista = funcionarios.filter((item) => {
@@ -50,6 +51,10 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
         ['Sem conta Arkhé', funcionarios.length - comConta, 'Aguardando abertura de conta', 'chave'],
       ].map(([rotulo, valor, detalhe, icone]) => <div key={rotulo}><dt>{rotulo}<Icone nome={icone} tamanho={18} /></dt><dd>{valor}</dd><dd className="funcionarios-resumo-detalhe">{detalhe}</dd></div>)}
     </dl>
+    {cadastrosInvalidos > 0 && <div className="mensagem-identidade erro funcionarios-aviso-cadastro" role="alert">
+      <strong>{cadastrosInvalidos} {cadastrosInvalidos === 1 ? 'cadastro precisa' : 'cadastros precisam'} de correção.</strong>
+      <span>Esses registros antigos não entram em novas folhas enquanto CPF, nome e salário não estiverem válidos. Use “Editar” para corrigir.</span>
+    </div>}
     <div className="funcionarios-layout">
       <section className="bloco-dashboard folha-painel funcionarios-painel">
         <header className="folha-topo-painel"><div><p className="rotulo-secao">PESSOAS DA SUA EMPRESA</p><h2>Sua equipe</h2></div><div className="funcionarios-acoes-lista"><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={importar}>Importar CSV</button><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={() => exportarFuncionarios(funcionarios)}>Exportar funcionários</button><button type="button" className="botao botao-secundario" disabled={bloqueado} onClick={atualizar}>Atualizar funcionários</button></div></header>
@@ -67,12 +72,13 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
           {lista.length === 0 ? <div className="folha-estado"><h3>Nenhum funcionário encontrado.</h3><p>Tente outro nome, CPF ou situação.</p><button type="button" className="botao botao-secundario" onClick={() => { setBusca(''); setSituacao('todos'); setPagina(1) }}>Limpar filtros</button></div> : <ul className="folha-lista funcionarios-lista">
             {listaPaginada.map((funcionario) => {
               const ativo = Number(funcionario.status) === 1
+              const cadastroValido = funcionario.cadastro_valido !== false
               const iniciais = String(funcionario.nome || '').trim().split(/\s+/).slice(0, 2).map((nome) => nome[0]).join('')
               return <li className="folha-funcionario" key={funcionario.id_funcionario}>
                 <div className="funcionario-identidade"><span className="funcionario-avatar" aria-hidden="true">{iniciais}</span><div><h3>{funcionario.nome}</h3><p>{mascaraCpf(funcionario.cpf)}</p></div></div>
                 <div className="funcionario-salario"><small>Salário mensal</small><strong>{moeda.format(funcionario.salario)}</strong></div>
-                <div className="folha-badges"><span className={`folha-badge ${ativo ? 'positivo' : 'neutro'}`}>{ativo ? 'Ativo' : 'Inativo'}</span><span className={`folha-badge ${possuiConta(funcionario) ? 'positivo' : 'pendente'}`}>{possuiConta(funcionario) ? 'Conta Arkhé' : 'Conta não encontrada'}</span></div>
-                <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={() => editar(funcionario)} aria-label={`Editar ${funcionario.nome}`}>Editar</button><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={() => alterarStatus(funcionario)} aria-label={`${ativo ? 'Desativar' : 'Reativar'} ${funcionario.nome}`}>{ativo ? 'Desativar' : 'Reativar'}</button></div>
+                <div className="folha-badges"><span className={`folha-badge ${ativo ? 'positivo' : 'neutro'}`}>{ativo ? 'Ativo' : 'Inativo'}</span>{!cadastroValido && <span className="folha-badge erro">Cadastro inválido</span>}<span className={`folha-badge ${possuiConta(funcionario) ? 'positivo' : 'pendente'}`}>{possuiConta(funcionario) ? 'Conta Arkhé' : 'Conta não encontrada'}</span></div>
+                <div className="folha-acoes"><button className="botao botao-secundario" type="button" disabled={bloqueado} onClick={() => editar(funcionario)} aria-label={`Editar ${funcionario.nome || 'funcionário'}`}>Editar</button><button className="botao botao-secundario" type="button" disabled={bloqueado || (!ativo && !cadastroValido)} title={!ativo && !cadastroValido ? 'Corrija o cadastro antes de reativar.' : undefined} onClick={() => alterarStatus(funcionario)} aria-label={`${ativo ? 'Desativar' : 'Reativar'} ${funcionario.nome || 'funcionário'}`}>{ativo ? 'Desativar' : 'Reativar'}</button></div>
               </li>
             })}
           </ul>}
