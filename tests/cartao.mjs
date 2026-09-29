@@ -15,10 +15,25 @@ const pessoa = { id_usuario: 57, nome: 'João Teste', cpf: '52998224725' }
 const pf = { id_conta: 1, id_usuario: 57, id_titular: 57, tipo_conta: 0, vinculo: 'titular', numero_conta: '000001', agencia: '0001' }
 const pj = { ...pf, id_conta: 9, id_titular: 12, tipo_conta: 1, vinculo: 'acesso', cargo: 1, nome_fantasia: 'Empresa XPTO', razao_social: 'Empresa XPTO Ltda', cnpj: '11222333000181' }
 const cartao = { id_cartao: 7, id_conta: 1, numero_cartao: '2481234567890123', numero_formatado: '2481 2345 6789 0123', cvv: '082', vencimento: '2031-09-01', limite_total: 5000, limite_utilizado: 1200, limite_disponivel: 3800, dia_vencimento: 10, dia_fechamento: 3 }
+const credito = {
+  compras: [
+    { id_compra: 31, valor_total: 120, valor_parcela: 40, qtd_parcelas: 3, data_compra: '2026-09-29 10:00:00', parcelas: [
+      { id_fatura_compra: 81, id_compra: 31, numero: 1, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-09-29', id_fatura: null, data_vencimento: null },
+      { id_fatura_compra: 82, id_compra: 31, numero: 2, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-10-29', id_fatura: null, data_vencimento: null },
+      { id_fatura_compra: 83, id_compra: 31, numero: 3, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-11-29', id_fatura: null, data_vencimento: null },
+    ] },
+  ],
+  parcelas: [
+    { id_fatura_compra: 81, id_compra: 31, numero: 1, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-09-29', id_fatura: null, data_vencimento: null },
+    { id_fatura_compra: 82, id_compra: 31, numero: 2, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-10-29', id_fatura: null, data_vencimento: null },
+    { id_fatura_compra: 83, id_compra: 31, numero: 3, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-11-29', id_fatura: null, data_vencimento: null },
+  ],
+  resumo: { compras_credito: 1, parcelas_pendentes: 3, valor_pendente: 120, proxima_parcela: { id_fatura_compra: 81, id_compra: 31, numero: 1, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-09-29', id_fatura: null, data_vencimento: null } },
+}
 const visible = (locator) => locator.waitFor({ state: 'visible', timeout: 8000 })
 
 async function ambiente(options = {}) {
-  const state = { conta: pf, cartao: null, movimentacoes: [], statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
+  const state = { conta: pf, cartao: null, credito, movimentacoes: [], statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
   const context = await browser.newContext({ viewport: { width: options.width || 1440, height: 1000 } })
   const page = await context.newPage()
   page.on('pageerror', (error) => state.erros.push(error.message))
@@ -27,7 +42,7 @@ async function ambiente(options = {}) {
     const original = window.fetch
     window.fetch = (url, options = {}) => {
       const path = new URL(url, location.href).pathname
-      if (path === '/cartao' || path === '/adicionar_cartao') window.__cartaoFetches.push({ path, credentials: options.credentials })
+      if (path.startsWith('/cartao') || path === '/adicionar_cartao') window.__cartaoFetches.push({ path, credentials: options.credentials })
       return original(url, options)
     }
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (value) => { window.__copia = value } }, configurable: true })
@@ -54,6 +69,7 @@ async function ambiente(options = {}) {
       if (state.delayGet) await new Promise((resolve) => setTimeout(resolve, state.delayGet))
       return state.statusGet === 200 ? reply(payload) : reply({ mensagem: 'Consulta de cartão indisponível' }, state.statusGet)
     }
+    if (path === '/cartao/compras') return reply(state.credito)
     if (path === '/adicionar_cartao') {
       if (state.delayPost) await new Promise((resolve) => setTimeout(resolve, state.delayPost))
       if (state.statusPost === 201 || state.statusPost === 409) {
@@ -108,6 +124,21 @@ caso('geracao-dias-privacidade-copia', { delayPost: 300 }, async ({ page, state 
   assert(!(await modal.innerText()).includes(cartao.numero_formatado))
   await page.getByRole('button', { name: 'Fechar cartão' }).click()
   assert.equal(await page.getByRole('dialog').count(), 0)
+})
+caso('historico-credito-e-parcelas', { cartao }, async ({ page }) => {
+  const modal = await abrir(page, true)
+  await visible(modal.getByText('Crédito comprometido', { exact: true }))
+  assert((await modal.innerText()).includes('R$ 120,00'))
+  assert((await modal.innerText()).includes('Parcela 1/3'))
+
+  await modal.getByRole('button', { name: /Compras 1/ }).click()
+  await visible(modal.getByRole('heading', { name: 'Compras no crédito', exact: true }))
+  await visible(modal.getByText('3x de R$ 40,00', { exact: true }))
+
+  await modal.getByRole('button', { name: /Parcelas 3/ }).click()
+  await visible(modal.getByRole('heading', { name: 'Todas as parcelas', exact: true }))
+  assert.equal(await modal.locator('.cartao-parcela-item').count(), 3)
+  await visible(modal.getByText('Parcela 1/3', { exact: true }))
 })
 caso('erro-consulta-retry', { statusGet: 500 }, async ({ page, state }) => {
   await page.goto(`${base}/dashboard`)
