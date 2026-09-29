@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
-import { mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
+import { cpfValido, mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
 import { buscarContasUsuario } from '../../services/pixService.js'
 import { centavosDeMoeda, moedaDigitada } from './folhaUtils.js'
 
@@ -21,12 +21,27 @@ export default function ModalFuncionario({ funcionario, fechar, salvar, processa
     evento.preventDefault()
     if (processando) return
     const valor = centavos / 100
-    if (!nome.trim() || (!funcionario && somenteNumeros(cpf).length !== 11) || !Number.isFinite(valor) || valor <= 0) {
-      setValidacao(funcionario ? 'Informe o nome e um salário maior que zero.' : 'Informe o nome, um CPF com 11 dígitos e um salário maior que zero.')
+    const cpfNumeros = somenteNumeros(cpf)
+
+    if (!nome.trim()) {
+      setValidacao('Informe o nome completo do funcionário.')
       return
     }
+    if (!funcionario && cpfNumeros.length !== 11) {
+      setValidacao('Informe um CPF com 11 dígitos.')
+      return
+    }
+    if (!funcionario && !cpfValido(cpfNumeros)) {
+      setValidacao('CPF inválido. Confira os números informados.')
+      return
+    }
+    if (!Number.isFinite(valor) || valor <= 0) {
+      setValidacao('Informe um salário maior que zero.')
+      return
+    }
+
     setValidacao('')
-    salvar({ ...(funcionario ? { id_funcionario: funcionario.id_funcionario } : { cpf }), nome: nome.trim(), salario: valor })
+    salvar({ ...(funcionario ? { id_funcionario: funcionario.id_funcionario } : { cpf: cpfNumeros }), nome: nome.trim(), salario: valor })
   }
 
   async function buscarConta(evento) {
