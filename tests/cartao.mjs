@@ -30,10 +30,36 @@ const credito = {
   ],
   resumo: { compras_credito: 1, parcelas_pendentes: 3, valor_pendente: 120, proxima_parcela: { id_fatura_compra: 81, id_compra: 31, numero: 1, total_parcelas: 3, status: 0, valor: 40, data_parcela: '2026-09-29', id_fatura: null, data_vencimento: null } },
 }
+const faturas = {
+  faturas: [{
+    id_fatura: 12, valor_total: 80, status: 0, situacao: 'FECHADA',
+    data_fechamento: '2026-09-29', data_vencimento: '2026-10-13',
+    itens: [
+      { id_fatura_compra: 81, id_compra: 31, numero_parcela: 1, total_parcelas: 3, valor: 40, status: 0, data_parcela: '2026-09-28', data_compra: '2026-09-29 10:00:00', valor_compra: 120 },
+      { id_fatura_compra: 84, id_compra: 32, numero_parcela: 1, total_parcelas: 2, valor: 40, status: 0, data_parcela: '2026-09-28', data_compra: '2026-09-29 10:30:00', valor_compra: 80 },
+    ],
+  }],
+  proximas_faturas: [{
+    data_fechamento: '2026-10-29', data_vencimento: '2026-11-13', valor_total: 40, situacao: 'PREVISTA',
+    itens: [{ id_fatura_compra: 82, id_compra: 31, numero_parcela: 2, total_parcelas: 3, valor: 40, status: 0, data_parcela: '2026-10-29', data_compra: '2026-09-29 10:00:00', valor_compra: 120 }],
+  }],
+  fatura_atual: {
+    id_fatura: 12, valor_total: 80, status: 0, situacao: 'FECHADA',
+    data_fechamento: '2026-09-29', data_vencimento: '2026-10-13',
+    itens: [
+      { id_fatura_compra: 81, id_compra: 31, numero_parcela: 1, total_parcelas: 3, valor: 40, status: 0, data_parcela: '2026-09-28', data_compra: '2026-09-29 10:00:00', valor_compra: 120 },
+      { id_fatura_compra: 84, id_compra: 32, numero_parcela: 1, total_parcelas: 2, valor: 40, status: 0, data_parcela: '2026-09-28', data_compra: '2026-09-29 10:30:00', valor_compra: 80 },
+    ],
+  },
+  proxima_fatura: {
+    data_fechamento: '2026-10-29', data_vencimento: '2026-11-13', valor_total: 40, situacao: 'PREVISTA',
+    itens: [{ id_fatura_compra: 82, id_compra: 31, numero_parcela: 2, total_parcelas: 3, valor: 40, status: 0, data_parcela: '2026-10-29', data_compra: '2026-09-29 10:00:00', valor_compra: 120 }],
+  },
+}
 const visible = (locator) => locator.waitFor({ state: 'visible', timeout: 8000 })
 
 async function ambiente(options = {}) {
-  const state = { conta: pf, cartao: null, credito, movimentacoes: [], statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
+  const state = { conta: pf, cartao: null, credito, faturas, movimentacoes: [], statusGet: 200, statusPost: 201, requests: [], erros: [], ...options }
   const context = await browser.newContext({ viewport: { width: options.width || 1440, height: 1000 } })
   const page = await context.newPage()
   page.on('pageerror', (error) => state.erros.push(error.message))
@@ -70,6 +96,7 @@ async function ambiente(options = {}) {
       return state.statusGet === 200 ? reply(payload) : reply({ mensagem: 'Consulta de cartão indisponível' }, state.statusGet)
     }
     if (path === '/cartao/compras') return reply(state.credito)
+    if (path === '/cartao/faturas') return reply(state.faturas)
     if (path === '/adicionar_cartao') {
       if (state.delayPost) await new Promise((resolve) => setTimeout(resolve, state.delayPost))
       if (state.statusPost === 201 || state.statusPost === 409) {
@@ -139,6 +166,19 @@ caso('historico-credito-e-parcelas', { cartao }, async ({ page }) => {
   await visible(modal.getByRole('heading', { name: 'Todas as parcelas', exact: true }))
   assert.equal(await modal.locator('.cartao-parcela-item').count(), 3)
   await visible(modal.getByText('Parcela 1/3', { exact: true }))
+})
+caso('faturas-fechadas-e-previsoes', { cartao }, async ({ page }) => {
+  const modal = await abrir(page, true)
+  await visible(modal.locator('.cartao-fatura-destaque'))
+  assert((await modal.locator('.cartao-fatura-destaque').innerText()).includes('R$ 80,00'))
+
+  await modal.getByRole('button', { name: /Faturas 1/ }).click()
+  await visible(modal.getByRole('heading', { name: 'Suas faturas', exact: true }))
+  assert.equal(await modal.locator('.cartao-fatura-card').count(), 2)
+  assert((await modal.locator('.cartao-fatura-card').first().innerText()).includes('Setembro 2026'))
+  assert((await modal.locator('.cartao-fatura-card').first().innerText()).includes('Parcela 1/3'))
+  assert((await modal.locator('.cartao-fatura-card').nth(1).innerText()).includes('Outubro 2026'))
+  assert((await modal.locator('.cartao-fatura-card').nth(1).innerText()).includes('Prevista'))
 })
 caso('erro-consulta-retry', { statusGet: 500 }, async ({ page, state }) => {
   await page.goto(`${base}/dashboard`)
