@@ -4,10 +4,17 @@ import CartaoVisual from './CartaoVisual.jsx'
 import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao } from './cartaoUtils.js'
 
 const diasFechamento = [10, 20]
+const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
 function formatarData(valor) {
   const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(valor || ''))
   return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : '—'
+}
+
+function mesFatura(valor) {
+  const partes = /^(\d{4})-(\d{2})/.exec(String(valor || ''))
+  if (!partes) return 'Fatura'
+  return `${meses[Number(partes[2]) - 1]} ${partes[1]}`
 }
 
 function statusParcela(status) {
@@ -16,17 +23,50 @@ function statusParcela(status) {
   return ['Em análise', 'neutro']
 }
 
+function statusFatura(situacao) {
+  if (situacao === 'PAGA') return ['Paga', 'paga']
+  if (situacao === 'VENCIDA') return ['Vencida', 'vencida']
+  if (situacao === 'PREVISTA') return ['Prevista', 'prevista']
+  return ['Fechada', 'fechada']
+}
+
+function ItemFatura({ item }) {
+  return <div className="cartao-fatura-item">
+    <div><strong>Compra #{item.id_compra}</strong><small>{formatarData(item.data_compra)} · Parcela {item.numero_parcela}/{item.total_parcelas}</small></div>
+    <b>{formatarLimite(item.valor)}</b>
+  </div>
+}
+
+function FaturaCard({ fatura, prevista = false, aberta = false }) {
+  const [rotulo, classe] = statusFatura(prevista ? 'PREVISTA' : fatura.situacao)
+  return <details className="cartao-fatura-card" open={aberta}>
+    <summary>
+      <div className="cartao-fatura-identidade">
+        <span className={`cartao-status-fatura ${classe}`}>{rotulo}</span>
+        <div><strong>{mesFatura(fatura.data_fechamento)}</strong><small>{prevista ? `Fecha em ${formatarData(fatura.data_fechamento)}` : `Fechada em ${formatarData(fatura.data_fechamento)}`}</small></div>
+      </div>
+      <div className="cartao-fatura-total"><strong>{formatarLimite(fatura.valor_total)}</strong><small>Vence {formatarData(fatura.data_vencimento)}</small></div>
+    </summary>
+    <div className="cartao-fatura-itens">
+      {(fatura.itens || []).length > 0
+        ? fatura.itens.map((item) => <ItemFatura key={item.id_fatura_compra} item={item} />)
+        : <p>Nenhum lançamento nesta fatura.</p>}
+    </div>
+  </details>
+}
+
 export default function ModalCartao({ usuario, dados, fechar }) {
   const {
     cartao, gerando, erroGeracao, gerarCartao,
-    comprasCartao, carregandoCompras, erroCompras, comprasCarregadas, carregarComprasCartao,
+    comprasCartao, carregandoCompras, erroCompras, carregarComprasCartao,
+    faturasCartao, carregandoFaturas, erroFaturas, carregarFaturasCartao,
   } = dados
   const [fechamento, setFechamento] = useState('10')
   const [mostrarDados, setMostrarDados] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const [aba, setAba] = useState('resumo')
-  const [tentouCarregarCompras, setTentouCarregarCompras] = useState(false)
+  const [tentouCarregarCredito, setTentouCarregarCredito] = useState(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
@@ -34,6 +74,10 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const compras = comprasCartao?.compras || []
   const parcelas = comprasCartao?.parcelas || []
   const resumoCredito = comprasCartao?.resumo || {}
+  const faturas = faturasCartao?.faturas || []
+  const proximasFaturas = faturasCartao?.proximas_faturas || []
+  const faturaAtual = faturasCartao?.fatura_atual || null
+  const proximaFatura = faturasCartao?.proxima_fatura || null
   const parcelasOrdenadas = useMemo(() => [...parcelas].sort((a, b) => {
     const pendenteA = Number(a.status) === 0 ? 0 : 1
     const pendenteB = Number(b.status) === 0 ? 0 : 1
@@ -42,10 +86,18 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   }), [parcelas])
 
   useEffect(() => {
-    if (!cartao || tentouCarregarCompras) return
-    setTentouCarregarCompras(true)
-    void carregarComprasCartao({ forcar: true })
-  }, [cartao, tentouCarregarCompras, carregarComprasCartao])
+    if (!cartao || tentouCarregarCredito) return
+    setTentouCarregarCredito(true)
+    void (async () => {
+      await carregarFaturasCartao({ forcar: true })
+      await carregarComprasCartao({ forcar: true })
+    })()
+  }, [cartao, tentouCarregarCredito, carregarFaturasCartao, carregarComprasCartao])
+
+  async function atualizarCredito() {
+    await carregarFaturasCartao({ forcar: true })
+    await carregarComprasCartao({ forcar: true })
+  }
 
   async function criar(evento) {
     evento.preventDefault()
@@ -69,9 +121,11 @@ export default function ModalCartao({ usuario, dados, fechar }) {
     return <div className="cartao-credito-vazio"><span aria-hidden="true">✓</span><h4>{titulo}</h4><p>{texto}</p></div>
   }
 
+  const carregandoCredito = carregandoCompras || carregandoFaturas
+
   return <div className="fundo-modal-cartao" role="presentation" onMouseDown={fecharAoClicarFora}>
     <section ref={modalRef} className="modal-cartao" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-cartao" tabIndex={-1} aria-busy={gerando}>
-      <header className="modal-cartao-cabecalho"><div><p>CARTÃO ARKHÉ</p><h2 id="titulo-modal-cartao">Seu cartão Arkhé</h2><span>{cartao ? 'Cartão, limite, compras e parcelas em um só lugar.' : 'Feito para acompanhar a sua conta.'}</span></div>
+      <header className="modal-cartao-cabecalho"><div><p>CARTÃO ARKHÉ</p><h2 id="titulo-modal-cartao">Seu cartão Arkhé</h2><span>{cartao ? 'Cartão, faturas, compras e parcelas em um só lugar.' : 'Feito para acompanhar a sua conta.'}</span></div>
         <button type="button" className="cartao-fechar" aria-label="Fechar cartão" disabled={gerando} onClick={fechar}>×</button>
       </header>
       {mensagem && <p className="cartao-mensagem" role="status">{mensagem}</p>}
@@ -86,6 +140,7 @@ export default function ModalCartao({ usuario, dados, fechar }) {
 
         <nav className="cartao-abas" aria-label="Informações do cartão">
           <button type="button" aria-pressed={aba === 'resumo'} onClick={() => setAba('resumo')}>Resumo</button>
+          <button type="button" aria-pressed={aba === 'faturas'} onClick={() => setAba('faturas')}>Faturas <span>{faturas.length}</span></button>
           <button type="button" aria-pressed={aba === 'compras'} onClick={() => setAba('compras')}>Compras <span>{compras.length}</span></button>
           <button type="button" aria-pressed={aba === 'parcelas'} onClick={() => setAba('parcelas')}>Parcelas <span>{Number(resumoCredito.parcelas_pendentes || 0)}</span></button>
         </nav>
@@ -97,11 +152,17 @@ export default function ModalCartao({ usuario, dados, fechar }) {
             <p>{Math.round(percentual)}% utilizado</p>
           </section>
 
+          {(faturaAtual || proximaFatura) && <section className="cartao-fatura-destaque">
+            <div><p>{faturaAtual ? 'FATURA FECHADA' : 'PRÓXIMA FATURA'}</p><h3>{mesFatura((faturaAtual || proximaFatura).data_fechamento)}</h3>
+              <span>{faturaAtual ? `Vence em ${formatarData(faturaAtual.data_vencimento)}` : `Fecha em ${formatarData(proximaFatura.data_fechamento)}`}</span></div>
+            <div><strong>{formatarLimite((faturaAtual || proximaFatura).valor_total)}</strong><button type="button" onClick={() => setAba('faturas')}>Ver fatura →</button></div>
+          </section>}
+
           <section className="cartao-credito-resumo" aria-labelledby="titulo-credito-cartao">
             <div className="cartao-secao-cabecalho"><div><p>CRÉDITO</p><h3 id="titulo-credito-cartao">Compras parceladas</h3></div>
               {compras.length > 0 && <button type="button" onClick={() => setAba('compras')}>Ver detalhes →</button>}</div>
-            {carregandoCompras && !comprasCarregadas ? <p className="cartao-credito-carregando" role="status">Carregando suas compras no crédito...</p>
-              : erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
+            {carregandoCredito && compras.length === 0 ? <p className="cartao-credito-carregando" role="status">Carregando seus dados de crédito...</p>
+              : erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={atualizarCredito}>Tentar novamente</button></div>
                 : compras.length === 0 ? conteudoCreditoVazio('Nenhuma compra no crédito ainda', 'Quando você parcelar uma compra no Arkhé Pay, ela aparecerá aqui com todas as parcelas.')
                   : <><dl className="cartao-credito-numeros">
                     <div><dt>Crédito comprometido</dt><dd>{formatarLimite(resumoCredito.valor_pendente)}</dd></div>
@@ -114,10 +175,29 @@ export default function ModalCartao({ usuario, dados, fechar }) {
           <dl className="cartao-datas"><div><dt>Fechamento da fatura</dt><dd>{cartao.dia_fechamento != null ? `Dia ${cartao.dia_fechamento}` : '—'}</dd></div><div><dt>Vencimento da fatura</dt><dd>{cartao.dia_vencimento != null ? `Dia ${cartao.dia_vencimento}` : '—'}</dd></div><div><dt>Validade do cartão</dt><dd>{validadeCartao(cartao.vencimento)}</dd></div></dl>
         </div>}
 
+        {aba === 'faturas' && <section className="cartao-aba-conteudo cartao-faturas" aria-labelledby="titulo-faturas-cartao">
+          <div className="cartao-secao-cabecalho"><div><p>FATURAMENTO</p><h3 id="titulo-faturas-cartao">Suas faturas</h3></div><button type="button" disabled={carregandoCredito} onClick={atualizarCredito}>{carregandoCredito ? 'Atualizando...' : 'Atualizar'}</button></div>
+          {erroFaturas ? <div className="cartao-credito-erro" role="alert"><span>{erroFaturas}</span><button type="button" onClick={atualizarCredito}>Tentar novamente</button></div>
+            : carregandoFaturas && faturas.length === 0 && proximasFaturas.length === 0 ? <p className="cartao-credito-carregando" role="status">Organizando suas faturas...</p>
+              : <>
+                {faturaAtual && <div className="cartao-fatura-hero">
+                  <div><span>FATURA MAIS RECENTE</span><h4>{mesFatura(faturaAtual.data_fechamento)}</h4><small>Fechou {formatarData(faturaAtual.data_fechamento)} · vence {formatarData(faturaAtual.data_vencimento)}</small></div>
+                  <div><strong>{formatarLimite(faturaAtual.valor_total)}</strong><span className={`cartao-status-fatura ${statusFatura(faturaAtual.situacao)[1]}`}>{statusFatura(faturaAtual.situacao)[0]}</span></div>
+                </div>}
+
+                {faturas.length > 0 ? <div className="cartao-faturas-grupo"><div className="cartao-faturas-titulo"><h4>Faturas fechadas</h4><span>{faturas.length} {faturas.length === 1 ? 'fatura' : 'faturas'}</span></div>
+                  <div className="cartao-faturas-lista">{faturas.map((fatura, indice) => <FaturaCard key={fatura.id_fatura} fatura={fatura} aberta={indice === 0} />)}</div></div>
+                  : conteudoCreditoVazio('Nenhuma fatura fechada ainda', 'Assim que chegar o dia de fechamento, as parcelas daquele ciclo serão reunidas em uma fatura.')}
+
+                {proximasFaturas.length > 0 && <div className="cartao-faturas-grupo futuras"><div className="cartao-faturas-titulo"><h4>Próximas faturas</h4><span>Previsão das parcelas futuras</span></div>
+                  <div className="cartao-faturas-lista">{proximasFaturas.map((fatura, indice) => <FaturaCard key={fatura.data_fechamento} fatura={fatura} prevista aberta={faturas.length === 0 && indice === 0} />)}</div></div>}
+              </>}
+        </section>}
+
         {aba === 'compras' && <section className="cartao-aba-conteudo cartao-historico" aria-labelledby="titulo-compras-credito">
-          <div className="cartao-secao-cabecalho"><div><p>HISTÓRICO</p><h3 id="titulo-compras-credito">Compras no crédito</h3></div><button type="button" disabled={carregandoCompras} onClick={() => carregarComprasCartao({ forcar: true })}>{carregandoCompras ? 'Atualizando...' : 'Atualizar'}</button></div>
-          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
-            : carregandoCompras && !comprasCarregadas ? <p className="cartao-credito-carregando" role="status">Carregando compras...</p>
+          <div className="cartao-secao-cabecalho"><div><p>HISTÓRICO</p><h3 id="titulo-compras-credito">Compras no crédito</h3></div><button type="button" disabled={carregandoCredito} onClick={atualizarCredito}>{carregandoCredito ? 'Atualizando...' : 'Atualizar'}</button></div>
+          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={atualizarCredito}>Tentar novamente</button></div>
+            : carregandoCompras && compras.length === 0 ? <p className="cartao-credito-carregando" role="status">Carregando compras...</p>
               : compras.length === 0 ? conteudoCreditoVazio('Nenhuma compra encontrada', 'As compras realizadas no crédito serão organizadas aqui.')
                 : <div className="cartao-compras-lista">{compras.map((compra) => {
                   const pagas = compra.parcelas.filter((parcela) => Number(parcela.status) === 1).length
@@ -129,8 +209,8 @@ export default function ModalCartao({ usuario, dados, fechar }) {
         </section>}
 
         {aba === 'parcelas' && <section className="cartao-aba-conteudo cartao-historico" aria-labelledby="titulo-parcelas-credito">
-          <div className="cartao-secao-cabecalho"><div><p>PARCELAMENTO</p><h3 id="titulo-parcelas-credito">Todas as parcelas</h3></div><button type="button" disabled={carregandoCompras} onClick={() => carregarComprasCartao({ forcar: true })}>{carregandoCompras ? 'Atualizando...' : 'Atualizar'}</button></div>
-          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
+          <div className="cartao-secao-cabecalho"><div><p>PARCELAMENTO</p><h3 id="titulo-parcelas-credito">Todas as parcelas</h3></div><button type="button" disabled={carregandoCredito} onClick={atualizarCredito}>{carregandoCredito ? 'Atualizando...' : 'Atualizar'}</button></div>
+          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={atualizarCredito}>Tentar novamente</button></div>
             : parcelasOrdenadas.length === 0 ? conteudoCreditoVazio('Nenhuma parcela encontrada', 'Quando uma compra for feita no crédito, as parcelas aparecerão aqui.')
               : <div className="cartao-parcelas-lista">{parcelasOrdenadas.map((parcela) => {
                 const [rotulo, classe] = statusParcela(parcela.status)
