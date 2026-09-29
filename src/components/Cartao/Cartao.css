@@ -184,3 +184,70 @@
   .cartao-proxima-parcela, .cartao-compra-principal, .cartao-compra-rodape, .cartao-credito-erro { align-items: flex-start; flex-direction: column; }
   .cartao-proxima-parcela b, .cartao-compra-principal > b { font-size: 16px; }
 }
+
+
+.cartao-fatura-destaque { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 24px 0 0; padding: 22px; border-radius: 18px; color: #fff; background: linear-gradient(135deg, #0b3f3e, #17665d); box-shadow: 0 14px 28px #0b413d1c; }
+.cartao-fatura-destaque > div { display: grid; gap: 4px; }
+.cartao-fatura-destaque p { margin: 0; color: #d4dfd9; font-size: 8px; font-weight: 800; letter-spacing: 1.5px; }
+.cartao-fatura-destaque h3 { font-size: 21px; }
+.cartao-fatura-destaque span { color: #d7e3dc; font-size: 10px; }
+.cartao-fatura-destaque > div:last-child { justify-items: end; }
+.cartao-fatura-destaque strong { font-size: 25px; }
+.cartao-fatura-destaque button { border: 0; color: #f4e4a2; background: transparent; font-size: 10px; font-weight: 800; cursor: pointer; }
+
+.cartao-faturas { display: grid; gap: 18px; }
+.cartao-fatura-hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px; border: 1px solid #cfdcd4; border-radius: 18px; background: linear-gradient(145deg, #eef5f0, #f9fbf7); }
+.cartao-fatura-hero > div { display: grid; gap: 4px; }
+.cartao-fatura-hero > div:last-child { justify-items: end; }
+.cartao-fatura-hero > div > span:first-child { color: var(--verde-medio); font-size: 8px; font-weight: 800; letter-spacing: 1.3px; }
+.cartao-fatura-hero h4 { color: var(--verde-escuro); font-size: 24px; }
+.cartao-fatura-hero small { color: #69736c; font-size: 10px; }
+.cartao-fatura-hero strong { color: var(--verde-escuro); font-size: 27px; }
+
+.cartao-faturas-grupo { display: grid; gap: 10px; }
+.cartao-faturas-grupo.futuras { margin-top: 4px; padding-top: 18px; border-top: 1px solid #e1e6df; }
+.cartao-faturas-titulo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cartao-faturas-titulo h4 { color: var(--verde-escuro); font-size: 14px; }
+.cartao-faturas-titulo span { color: #7b847d; font-size: 9px; }
+.cartao-faturas-lista { display: grid; gap: 9px; }
+
+.cartao-fatura-card { overflow: hidden; border: 1px solid #dfe5dd; border-radius: 14px; background: #fff; }
+.cartao-fatura-card > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 16px; list-style: none; cursor: pointer; }
+.cartao-fatura-card > summary::-webkit-details-marker { display: none; }
+.cartao-fatura-card > summary::after { content: '⌄'; grid-column: 2; grid-row: 1; align-self: end; margin-bottom: -2px; color: #7d887f; font-size: 15px; transform-origin: center; transition: transform .18s ease; }
+.cartao-fatura-card[open] > summary::after { transform: rotate(180deg); }
+.cartao-fatura-identidade { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.cartao-fatura-identidade > div { display: grid; gap: 2px; }
+.cartao-fatura-identidade strong { color: var(--verde-escuro); font-size: 13px; }
+.cartao-fatura-identidade small { color: #7a817b; font-size: 9px; }
+.cartao-fatura-total { grid-column: 2; grid-row: 1; display: grid; justify-items: end; gap: 3px; padding-right: 24px; }
+.cartao-fatura-total strong { color: var(--verde-escuro); font-size: 15px; }
+.cartao-fatura-total small { color: #7a817b; font-size: 8px; }
+
+.cartao-status-fatura { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 4px 8px; border-radius: 999px; font-size: 8px; font-weight: 800; white-space: nowrap; }
+.cartao-status-fatura.fechada { color: #695315; background: #fff1c9; }
+.cartao-status-fatura.paga { color: #2d684f; background: #dff0e5; }
+.cartao-status-fatura.vencida { color: #8c3b33; background: #fae6e2; }
+.cartao-status-fatura.prevista { color: #45615a; background: #e6eeea; }
+
+.cartao-fatura-itens { display: grid; padding: 0 16px 14px; border-top: 1px solid #edf0eb; }
+.cartao-fatura-itens > p { padding: 14px 0 2px; color: #7a817b; font-size: 10px; }
+.cartao-fatura-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #eef1ed; }
+.cartao-fatura-item:last-child { border-bottom: 0; }
+.cartao-fatura-item > div { display: grid; gap: 2px; }
+.cartao-fatura-item strong { color: var(--verde-escuro); font-size: 11px; }
+.cartao-fatura-item small { color: #7a817b; font-size: 9px; }
+.cartao-fatura-item > b { color: var(--verde-escuro); font-size: 12px; }
+
+@media (max-width: 650px) {
+  .cartao-fatura-destaque, .cartao-fatura-hero { align-items: flex-start; }
+  .cartao-fatura-card > summary { grid-template-columns: 1fr auto; }
+}
+
+@media (max-width: 430px) {
+  .cartao-fatura-destaque, .cartao-fatura-hero { flex-direction: column; }
+  .cartao-fatura-destaque > div:last-child, .cartao-fatura-hero > div:last-child { justify-items: start; }
+  .cartao-fatura-card > summary { grid-template-columns: 1fr; gap: 10px; }
+  .cartao-fatura-total { grid-column: 1; grid-row: 2; justify-items: start; padding-right: 0; }
+  .cartao-fatura-card > summary::after { grid-column: 1; grid-row: 2; justify-self: end; align-self: center; margin: 0; }
+}
