@@ -183,6 +183,9 @@
 .importacao-como-preparar { margin-top: 18px; padding: 15px 17px; border: 1px solid #dce3d9; border-radius: 12px; color: #52645a; background: #fff; font-size: 12px; }
 .importacao-como-preparar summary { color: var(--verde-escuro); font-weight: 800; cursor: pointer; }
 .importacao-como-preparar ul { display: grid; gap: 5px; margin: 12px 0 0 18px; }
+.importacao-colunas-ausentes { display: grid; gap: 4px; margin-top: 16px; padding: 13px 15px; border: 1px solid #e5d8b7; border-radius: 11px; color: #6b5725; background: #fff9ec; font-size: 11px; line-height: 1.5; }
+.importacao-colunas-ausentes strong { color: #5d4a1d; font-size: 12px; }
+.importacao-cpf-valido { color: #2f6d54 !important; font-weight: 800; }
 .importacao-resumo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
 .importacao-resumo > div { padding: 15px; border: 1px solid var(--borda); border-radius: 12px; background: #fff; }
 .importacao-resumo dt { color: #6a7269; font-size: 10px; }
