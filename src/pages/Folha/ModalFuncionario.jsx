@@ -7,7 +7,7 @@ import { centavosDeMoeda, moedaDigitada } from './folhaUtils.js'
 export default function ModalFuncionario({ funcionario, fechar, salvar, processando, erro }) {
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
   const [nome, setNome] = useState(funcionario?.nome || '')
-  const [cpf, setCpf] = useState('')
+  const [cpf, setCpf] = useState(funcionario?.cpf ? mascaraCpf(funcionario.cpf) : '')
   const [centavos, setCentavos] = useState(funcionario ? Math.round(Number(funcionario.salario) * 100) : 0)
   const [validacao, setValidacao] = useState('')
   const [busca, setBusca] = useState('')
@@ -27,12 +27,12 @@ export default function ModalFuncionario({ funcionario, fechar, salvar, processa
       setValidacao('Informe o nome completo do funcionário.')
       return
     }
-    if (!funcionario && cpfNumeros.length !== 11) {
+    if (cpfNumeros.length !== 11) {
       setValidacao('Informe um CPF com 11 dígitos.')
       return
     }
-    if (!funcionario && !cpfValido(cpfNumeros)) {
-      setValidacao('CPF inválido. Confira os números informados.')
+    if (!cpfValido(cpfNumeros)) {
+      setValidacao('CPF inválido. Confira os dígitos verificadores.')
       return
     }
     if (!Number.isFinite(valor) || valor <= 0) {
@@ -41,7 +41,7 @@ export default function ModalFuncionario({ funcionario, fechar, salvar, processa
     }
 
     setValidacao('')
-    salvar({ ...(funcionario ? { id_funcionario: funcionario.id_funcionario } : { cpf: cpfNumeros }), nome: nome.trim(), salario: valor })
+    salvar({ ...(funcionario ? { id_funcionario: funcionario.id_funcionario } : {}), cpf: cpfNumeros, nome: nome.trim(), salario: valor })
   }
 
   async function buscarConta(evento) {
@@ -87,7 +87,7 @@ export default function ModalFuncionario({ funcionario, fechar, salvar, processa
       </div>}
       <form onSubmit={enviar}>
         <div className="campo-identidade"><label htmlFor="funcionario-nome">Nome completo</label><input id="funcionario-nome" value={nome} onChange={(e) => setNome(e.target.value)} required disabled={processando} autoComplete="name" /></div>
-        {!funcionario && <div className="campo-identidade"><label htmlFor="funcionario-cpf">CPF</label><input id="funcionario-cpf" value={cpf} onChange={(e) => setCpf(mascaraCpf(e.target.value))} inputMode="numeric" maxLength={14} required disabled={processando} /></div>}
+        <div className="campo-identidade"><label htmlFor="funcionario-cpf">CPF</label><input id="funcionario-cpf" value={cpf} onChange={(e) => setCpf(mascaraCpf(e.target.value))} inputMode="numeric" maxLength={14} required disabled={processando} aria-describedby={funcionario && funcionario.cadastro_valido === false ? 'ajuda-cpf-invalido' : undefined} />{funcionario && funcionario.cadastro_valido === false && <small id="ajuda-cpf-invalido">Este cadastro veio com dados inválidos. Corrija o CPF para salvar.</small>}</div>
         <div className="campo-identidade"><label htmlFor="funcionario-salario">Salário mensal (R$)</label><input id="funcionario-salario" className="campo-moeda-funcionario" value={moedaDigitada(centavos)} onChange={(e) => setCentavos(centavosDeMoeda(e.target.value))} inputMode="numeric" required disabled={processando} aria-describedby="ajuda-salario" /><small id="ajuda-salario">O valor é formatado automaticamente em reais.</small></div>
         {!funcionario && <p className={`vinculo-conta-funcionario ${contaSelecionada ? 'encontrada' : ''}`}>{contaSelecionada ? `Conta PF Arkhé encontrada para ${contaSelecionada.nome}.` : 'Se não houver conta PF Arkhé, o funcionário será cadastrado e ficará pendente na folha até abrir uma conta.'}</p>}
         {(validacao || erro) && <p className="mensagem-identidade erro" role="alert">{validacao || erro}</p>}
