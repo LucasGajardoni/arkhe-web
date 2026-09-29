@@ -29,8 +29,8 @@ function salarioCsv(valor) {
 export function conteudoModeloFuncionarios() {
   return montarCsv([
     cabecalhoModelo,
-    [cpfParaExcel('12345678901'), 'Ana Souza', '2500,00'],
-    [cpfParaExcel('98765432100'), 'Carlos Lima', '3200,00'],
+    [cpfParaExcel('52998224725'), 'Ana Souza', '2500,00'],
+    [cpfParaExcel('11144477735'), 'Carlos Lima', '3200,00'],
   ])
 }
 
