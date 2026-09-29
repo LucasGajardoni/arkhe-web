@@ -1,20 +1,48 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import CartaoVisual from './CartaoVisual.jsx'
 import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao } from './cartaoUtils.js'
 
 const diasFechamento = [10, 20]
 
+function formatarData(valor) {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(valor || ''))
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : '—'
+}
+
+function statusParcela(status) {
+  if (Number(status) === 1) return ['Paga', 'paga']
+  if (Number(status) === 0) return ['Pendente', 'pendente']
+  return ['Em análise', 'neutro']
+}
+
 export default function ModalCartao({ usuario, dados, fechar }) {
-  const { cartao, gerando, erroGeracao, gerarCartao } = dados
+  const {
+    cartao, gerando, erroGeracao, gerarCartao,
+    comprasCartao, carregandoCompras, erroCompras, comprasCarregadas, carregarComprasCartao,
+  } = dados
   const [fechamento, setFechamento] = useState('10')
   const [mostrarDados, setMostrarDados] = useState(false)
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
+  const [aba, setAba] = useState('resumo')
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
   const vencimento = Number(fechamento) + 3
+  const compras = comprasCartao?.compras || []
+  const parcelas = comprasCartao?.parcelas || []
+  const resumoCredito = comprasCartao?.resumo || {}
+  const parcelasOrdenadas = useMemo(() => [...parcelas].sort((a, b) => {
+    const pendenteA = Number(a.status) === 0 ? 0 : 1
+    const pendenteB = Number(b.status) === 0 ? 0 : 1
+    if (pendenteA !== pendenteB) return pendenteA - pendenteB
+    return String(a.data_parcela || '').localeCompare(String(b.data_parcela || ''))
+  }), [parcelas])
+
+  useEffect(() => {
+    if (cartao && !comprasCarregadas && !carregandoCompras) void carregarComprasCartao()
+  }, [cartao, comprasCarregadas, carregandoCompras, carregarComprasCartao])
 
   async function criar(evento) {
     evento.preventDefault()
@@ -34,9 +62,13 @@ export default function ModalCartao({ usuario, dados, fechar }) {
     }
   }
 
+  function conteudoCreditoVazio(titulo, texto) {
+    return <div className="cartao-credito-vazio"><span aria-hidden="true">✓</span><h4>{titulo}</h4><p>{texto}</p></div>
+  }
+
   return <div className="fundo-modal-cartao" role="presentation" onMouseDown={fecharAoClicarFora}>
     <section ref={modalRef} className="modal-cartao" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-cartao" tabIndex={-1} aria-busy={gerando}>
-      <header className="modal-cartao-cabecalho"><div><p>CARTÃO ARKHÉ</p><h2 id="titulo-modal-cartao">Seu cartão Arkhé</h2><span>{cartao ? 'Seus dados e limites, em um só lugar.' : 'Feito para acompanhar a sua conta.'}</span></div>
+      <header className="modal-cartao-cabecalho"><div><p>CARTÃO ARKHÉ</p><h2 id="titulo-modal-cartao">Seu cartão Arkhé</h2><span>{cartao ? 'Cartão, limite, compras e parcelas em um só lugar.' : 'Feito para acompanhar a sua conta.'}</span></div>
         <button type="button" className="cartao-fechar" aria-label="Fechar cartão" disabled={gerando} onClick={fechar}>×</button>
       </header>
       {mensagem && <p className="cartao-mensagem" role="status">{mensagem}</p>}
@@ -48,12 +80,64 @@ export default function ModalCartao({ usuario, dados, fechar }) {
           <button type="button" className="botao botao-secundario" onClick={copiar} disabled={!numero}>Copiar número</button>
         </div>
         {erroCopia && <p className="cartao-mensagem erro" role="alert">{erroCopia}</p>}
-        <section className="cartao-limite" aria-labelledby="titulo-limite-cartao"><h3 id="titulo-limite-cartao">Limite</h3>
-          <dl className="cartao-limites"><div><dt>Limite total</dt><dd>{formatarLimite(cartao.limite_total)}</dd></div><div><dt>Limite utilizado</dt><dd>{formatarLimite(cartao.limite_utilizado)}</dd></div><div><dt>Limite disponível</dt><dd>{formatarLimite(cartao.limite_disponivel)}</dd></div></dl>
-          <progress max="100" value={percentual} aria-label="Percentual do limite utilizado" />
-          <p>{Math.round(percentual)}% utilizado</p>
-        </section>
-        <dl className="cartao-datas"><div><dt>Fechamento da fatura</dt><dd>{cartao.dia_fechamento != null ? `Dia ${cartao.dia_fechamento}` : '—'}</dd></div><div><dt>Vencimento da fatura</dt><dd>{cartao.dia_vencimento != null ? `Dia ${cartao.dia_vencimento}` : '—'}</dd></div><div><dt>Validade do cartão</dt><dd>{validadeCartao(cartao.vencimento)}</dd></div></dl>
+
+        <nav className="cartao-abas" aria-label="Informações do cartão">
+          <button type="button" aria-pressed={aba === 'resumo'} onClick={() => setAba('resumo')}>Resumo</button>
+          <button type="button" aria-pressed={aba === 'compras'} onClick={() => setAba('compras')}>Compras <span>{compras.length}</span></button>
+          <button type="button" aria-pressed={aba === 'parcelas'} onClick={() => setAba('parcelas')}>Parcelas <span>{Number(resumoCredito.parcelas_pendentes || 0)}</span></button>
+        </nav>
+
+        {aba === 'resumo' && <div className="cartao-aba-conteudo">
+          <section className="cartao-limite" aria-labelledby="titulo-limite-cartao"><h3 id="titulo-limite-cartao">Limite</h3>
+            <dl className="cartao-limites"><div><dt>Limite total</dt><dd>{formatarLimite(cartao.limite_total)}</dd></div><div><dt>Limite utilizado</dt><dd>{formatarLimite(cartao.limite_utilizado)}</dd></div><div><dt>Limite disponível</dt><dd>{formatarLimite(cartao.limite_disponivel)}</dd></div></dl>
+            <progress max="100" value={percentual} aria-label="Percentual do limite utilizado" />
+            <p>{Math.round(percentual)}% utilizado</p>
+          </section>
+
+          <section className="cartao-credito-resumo" aria-labelledby="titulo-credito-cartao">
+            <div className="cartao-secao-cabecalho"><div><p>CRÉDITO</p><h3 id="titulo-credito-cartao">Compras parceladas</h3></div>
+              {compras.length > 0 && <button type="button" onClick={() => setAba('compras')}>Ver detalhes →</button>}</div>
+            {carregandoCompras && !comprasCarregadas ? <p className="cartao-credito-carregando" role="status">Carregando suas compras no crédito...</p>
+              : erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
+                : compras.length === 0 ? conteudoCreditoVazio('Nenhuma compra no crédito ainda', 'Quando você parcelar uma compra no Arkhé Pay, ela aparecerá aqui com todas as parcelas.')
+                  : <><dl className="cartao-credito-numeros">
+                    <div><dt>Crédito comprometido</dt><dd>{formatarLimite(resumoCredito.valor_pendente)}</dd></div>
+                    <div><dt>Parcelas pendentes</dt><dd>{Number(resumoCredito.parcelas_pendentes || 0)}</dd></div>
+                    <div><dt>Compras no crédito</dt><dd>{Number(resumoCredito.compras_credito || compras.length)}</dd></div>
+                  </dl>
+                  {resumoCredito.proxima_parcela && <div className="cartao-proxima-parcela"><div><span>PRÓXIMA PARCELA</span><strong>Parcela {resumoCredito.proxima_parcela.numero}/{resumoCredito.proxima_parcela.total_parcelas}</strong><small>{resumoCredito.proxima_parcela.id_fatura ? `Vencimento ${formatarData(resumoCredito.proxima_parcela.data_vencimento)}` : `Prevista para ${formatarData(resumoCredito.proxima_parcela.data_parcela)}`}</small></div><b>{formatarLimite(resumoCredito.proxima_parcela.valor)}</b></div>}</>}
+          </section>
+
+          <dl className="cartao-datas"><div><dt>Fechamento da fatura</dt><dd>{cartao.dia_fechamento != null ? `Dia ${cartao.dia_fechamento}` : '—'}</dd></div><div><dt>Vencimento da fatura</dt><dd>{cartao.dia_vencimento != null ? `Dia ${cartao.dia_vencimento}` : '—'}</dd></div><div><dt>Validade do cartão</dt><dd>{validadeCartao(cartao.vencimento)}</dd></div></dl>
+        </div>}
+
+        {aba === 'compras' && <section className="cartao-aba-conteudo cartao-historico" aria-labelledby="titulo-compras-credito">
+          <div className="cartao-secao-cabecalho"><div><p>HISTÓRICO</p><h3 id="titulo-compras-credito">Compras no crédito</h3></div><button type="button" disabled={carregandoCompras} onClick={() => carregarComprasCartao({ forcar: true })}>{carregandoCompras ? 'Atualizando...' : 'Atualizar'}</button></div>
+          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
+            : carregandoCompras && !comprasCarregadas ? <p className="cartao-credito-carregando" role="status">Carregando compras...</p>
+              : compras.length === 0 ? conteudoCreditoVazio('Nenhuma compra encontrada', 'As compras realizadas no crédito serão organizadas aqui.')
+                : <div className="cartao-compras-lista">{compras.map((compra) => {
+                  const pagas = compra.parcelas.filter((parcela) => Number(parcela.status) === 1).length
+                  return <article className="cartao-compra-item" key={compra.id_compra}>
+                    <div className="cartao-compra-principal"><div><span>{formatarData(compra.data_compra)}</span><strong>Compra no crédito</strong><small>{compra.qtd_parcelas}x de {formatarLimite(compra.valor_parcela)}</small></div><b>{formatarLimite(compra.valor_total)}</b></div>
+                    <div className="cartao-compra-rodape"><span>{pagas} de {compra.qtd_parcelas} parcelas pagas</span><button type="button" onClick={() => setAba('parcelas')}>Ver parcelas →</button></div>
+                  </article>
+                })}</div>}
+        </section>}
+
+        {aba === 'parcelas' && <section className="cartao-aba-conteudo cartao-historico" aria-labelledby="titulo-parcelas-credito">
+          <div className="cartao-secao-cabecalho"><div><p>PARCELAMENTO</p><h3 id="titulo-parcelas-credito">Todas as parcelas</h3></div><button type="button" disabled={carregandoCompras} onClick={() => carregarComprasCartao({ forcar: true })}>{carregandoCompras ? 'Atualizando...' : 'Atualizar'}</button></div>
+          {erroCompras ? <div className="cartao-credito-erro" role="alert"><span>{erroCompras}</span><button type="button" onClick={() => carregarComprasCartao({ forcar: true })}>Tentar novamente</button></div>
+            : parcelasOrdenadas.length === 0 ? conteudoCreditoVazio('Nenhuma parcela encontrada', 'Quando uma compra for feita no crédito, as parcelas aparecerão aqui.')
+              : <div className="cartao-parcelas-lista">{parcelasOrdenadas.map((parcela) => {
+                const [rotulo, classe] = statusParcela(parcela.status)
+                return <article className="cartao-parcela-item" key={parcela.id_fatura_compra}>
+                  <div className="cartao-parcela-identidade"><span className={`cartao-status-parcela ${classe}`}>{rotulo}</span><div><strong>Parcela {parcela.numero}/{parcela.total_parcelas}</strong><small>Compra #{parcela.id_compra}</small></div></div>
+                  <div className="cartao-parcela-data"><small>{parcela.id_fatura ? 'Vencimento da fatura' : 'Previsão da parcela'}</small><strong>{formatarData(parcela.id_fatura ? parcela.data_vencimento : parcela.data_parcela)}</strong>{parcela.id_fatura && <span>Fatura #{parcela.id_fatura}</span>}</div>
+                  <b>{formatarLimite(parcela.valor)}</b>
+                </article>
+              })}</div>}
+        </section>}
       </> : <form onSubmit={criar} className="cartao-formulario">
         <p>Cartão vinculado à conta atual, com limite inicial de <strong>R$ 5.000,00</strong> para usar em crédito e débito no ecossistema do projeto.</p>
         <div className="cartao-escolha-dias">
