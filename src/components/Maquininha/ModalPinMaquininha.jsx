@@ -5,7 +5,7 @@ import TecladoNumerico from './TecladoNumerico.jsx'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
-export default function ModalPinMaquininha({ cartao, valor, confirmar, cancelar }) {
+export default function ModalPinMaquininha({ cartao, valor, tipo = 'DEBITO', parcelas = 1, confirmar, cancelar }) {
   const [pin, setPin] = useState('')
   const enviado = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar)
@@ -42,7 +42,7 @@ export default function ModalPinMaquininha({ cartao, valor, confirmar, cancelar 
       <p className="pay-rotulo">ARKHÉ PAY</p>
       <h2 id="pay-pin-titulo">Digite o PIN</h2>
       <p id="pay-pin-descricao">Insira o PIN de 6 dígitos do cartão.</p>
-      <div className="pay-pin-resumo"><strong>{moeda.format(valor)} <small>· Débito</small></strong><span>{cartao.nome}</span><span>Cartão final {cartao.final || '••••'}</span></div>
+      <div className="pay-pin-resumo"><strong>{moeda.format(valor)} <small>· {tipo === 'CREDITO' ? `Crédito ${parcelas}x` : 'Débito'}</small></strong><span>{cartao.nome}</span><span>Cartão final {cartao.final || '••••'}</span></div>
       <form onSubmit={enviar} autoComplete="off">
         <label className="pay-pin-campo">
           <span className="pay-somente-leitor">PIN de 6 dígitos</span>
