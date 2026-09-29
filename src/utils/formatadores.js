@@ -2,6 +2,20 @@ export function somenteNumeros(valor = '') {
   return String(valor).replace(/\D/g, '')
 }
 
+export function cpfValido(valor) {
+  const cpf = somenteNumeros(valor)
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false
+
+  for (const tamanho of [9, 10]) {
+    let soma = 0
+    for (let indice = 0; indice < tamanho; indice += 1) soma += Number(cpf[indice]) * (tamanho + 1 - indice)
+    let digito = (soma * 10) % 11
+    if (digito === 10) digito = 0
+    if (digito !== Number(cpf[tamanho])) return false
+  }
+  return true
+}
+
 export function mascaraCpf(valor) {
   return somenteNumeros(valor)
     .slice(0, 11)
