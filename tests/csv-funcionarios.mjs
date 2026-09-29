@@ -18,8 +18,8 @@ const contaPF = { id_conta: 1, id_titular: 57, tipo_conta: 0, vinculo: 'propriet
 const ana = { id_funcionario: 7, id_usuario: 90, id_conta: 2, nome: 'Ana Souza', cpf: '12345678901', salario: 3000, status: 1, possui_conta_arkhe: true }
 const bia = { id_funcionario: 8, id_usuario: null, id_conta: 2, nome: 'Bia Lima', cpf: '98765432100', salario: 2100, status: 0, possui_conta_arkhe: false }
 const itensPreview = [
-  { linha: 2, cpf: '11144477735', nome: 'Carla Nova', salario: 2500, situacao: 'novo', possui_conta_arkhe: true },
-  { linha: 3, cpf: ana.cpf, nome: 'Ana Souza Atualizada', salario: 3200, situacao: 'existente', id_funcionario: 7, nome_atual: ana.nome, salario_atual: ana.salario, status_atual: 1, possui_conta_arkhe: true },
+  { linha: 2, cpf: '11144477735', cpf_valido: true, nome: 'Carla Nova', salario: 2500, situacao: 'novo', possui_conta_arkhe: true },
+  { linha: 3, cpf: ana.cpf, cpf_valido: true, nome: 'Ana Souza Atualizada', salario: 3200, situacao: 'existente', id_funcionario: 7, nome_atual: ana.nome, salario_atual: ana.salario, status_atual: 1, possui_conta_arkhe: true },
   { linha: 4, cpf: '123', nome: 'Pedro', salario: null, situacao: 'erro', erro: 'CPF deve possuir 11 digitos' },
 ]
 
@@ -50,7 +50,7 @@ async function ambiente({ tipo = 'PJ', width = 1440 } = {}) {
       assert.equal(req.headers()['content-type'].includes('application/json'), false)
       assert.ok(req.postDataBuffer().includes(Buffer.from('equipe.csv')))
       if (state.falharPreview) return reply({ mensagem: 'Serviço de importação indisponível.' }, 503)
-      return reply({ mensagem: 'CSV analisado com sucesso', total_linhas: 3, novos: 1, existentes: 1, erros: 1, itens: itensPreview })
+      return reply({ mensagem: 'CSV analisado com sucesso', total_linhas: 3, novos: 1, existentes: 1, erros: 1, colunas_ausentes: [], itens: itensPreview })
     }
     if (path === '/funcionarios/csv/importar') {
       assert.equal(req.method(), 'POST')
@@ -111,7 +111,9 @@ try {
   let dialogo = h.page.getByRole('dialog', { name: 'Importe sua equipe em poucos minutos' })
   await visible(dialogo)
   const modelo = await conteudoDownload(h.page, dialogo.getByRole('button', { name: 'Baixar modelo CSV', exact: true }), 'modelo_funcionarios_arkhe.csv')
-  assert.equal(modelo, 'cpf,nome,salario\r\n12345678901,Ana Souza,2500.00\r\n98765432100,Carlos Lima,3200.00\r\n')
+  assert.match(modelo, /52998224725/)
+  assert.match(modelo, /11144477735/)
+  assert.doesNotMatch(modelo, /12345678901/)
 
   const previewsAntesInvalido = h.state.requests.filter((item) => item.path === '/funcionarios/csv/preview').length
   await dialogo.locator('input[type="file"]').setInputFiles({ name: 'equipe.txt', mimeType: 'text/plain', buffer: Buffer.from('invalido') })
