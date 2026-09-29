@@ -26,3 +26,12 @@ export async function buscarComprasCartao() {
   }
   return resultado
 }
+
+
+export async function buscarFaturasCartao() {
+  const resultado = await requisitarApi('/cartao/faturas')
+  if (!Array.isArray(resultado?.faturas) || !Array.isArray(resultado?.proximas_faturas)) {
+    throw new ErroApi('Não foi possível carregar as faturas do cartão.', 0, {})
+  }
+  return resultado
+}
