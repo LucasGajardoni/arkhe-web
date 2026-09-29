@@ -129,7 +129,7 @@ caso('fluxo-completo-fragmentos-duplicados-privacidade', {}, async ({ page, stat
   await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
   await page.waitForFunction(() => window.__pay.comandos.includes('APROVADO|10.00\n'))
   assert(state.requests.filter((r) => r.path === '/buscar_movimentacoes').length > antes)
-  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json, { uid: '0D94A4A5', pin: '123456', valor: 10, tipo: 'DEBITO' })
+  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json, { uid: '0D94A4A5', pin: '123456', valor: 10, tipo: 'DEBITO', parcelas: 1 })
   assert.deepEqual(await page.evaluate(() => window.__pay.comandos), ['INICIAR|10.00|DEBITO\n', 'PROCESSANDO\n', 'APROVADO|10.00\n'])
   assert.deepEqual(await page.evaluate(() => window.__pay.aberturas), [{ baudRate: 115200 }])
   assert.equal(await page.evaluate(() => window.__pay.semGesto), false)
@@ -142,6 +142,22 @@ caso('fluxo-completo-fragmentos-duplicados-privacidade', {}, async ({ page, stat
   await page.waitForFunction(() => window.__pay.fechamentos === 1)
   assert.deepEqual(await page.evaluate(() => window.__pay.locksAoFechar), [false, false])
   await conectar(page)
+})
+caso('credito-parcelado', {}, async ({ page, state }) => {
+  await conectar(page)
+  await page.getByLabel('VALOR DA VENDA').fill('12000')
+  await panel(page).getByRole('button', { name: /Crédito/ }).click()
+  await page.getByLabel('Parcelamento').selectOption('3')
+  await panel(page).getByRole('button', { name: /Cobrar/ }).click()
+  await visible(panel(page).getByRole('heading', { name: 'Aproxime o cartão', exact: true }))
+  assert((await page.evaluate(() => window.__pay.comandos)).includes('INICIAR|120.00|CREDITO\n'))
+  await identificar(page)
+  assert(await page.getByRole('dialog').getByText(/Crédito 3x/).isVisible())
+  await pagar(page)
+  await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
+  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json,
+    { uid: '0D94A4A5', pin: '123456', valor: 120, tipo: 'CREDITO', parcelas: 3 })
+  assert(await panel(page).getByText('Crédito · 3x', { exact: true }).isVisible())
 })
 caso('pf-preserva-panorama', { pf: true }, async ({ page }) => {
   await visible(page.getByRole('heading', { name: 'Panorama do mês' }))
@@ -192,7 +208,7 @@ caso('duplo-clique-cobrar-e-confirmar', { delayComprar: 500 }, async ({ page, st
   assert.equal(state.requests.filter((r) => r.path === '/maquininha/comprar').length, 1)
   assert.equal((await page.evaluate(() => window.__pay.comandos)).filter((c) => c.startsWith('INICIAR')).length, 1)
 })
-for (const codigo of ['PIN_INVALIDO', 'SALDO_INSUFICIENTE', 'CARTAO_BLOQUEADO', 'CONTA_INVALIDA', 'ERRO_INTERNO', 'EMPRESA_NAO_AUTENTICADA', 'CONTA_NAO_PJ', 'MODALIDADE_INDISPONIVEL', 'DADOS_INVALIDOS']) {
+for (const codigo of ['PIN_INVALIDO', 'SALDO_INSUFICIENTE', 'LIMITE_INSUFICIENTE', 'PARCELAS_INVALIDAS', 'COMPRA_DUPLICADA', 'CARTAO_BLOQUEADO', 'CONTA_INVALIDA', 'ERRO_INTERNO', 'EMPRESA_NAO_AUTENTICADA', 'CONTA_NAO_PJ', 'MODALIDADE_INDISPONIVEL', 'DADOS_INVALIDOS']) {
   caso(`negado-${codigo}`, { codigo, http: codigo === 'PIN_INVALIDO' ? 200 : 400 }, async ({ page }) => {
     await iniciar(page)
     await identificar(page)
