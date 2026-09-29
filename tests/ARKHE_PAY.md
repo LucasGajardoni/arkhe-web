@@ -9,7 +9,9 @@ continua com o panorama mensal. Não há alteração no backend ou nos contratos
    e entre em uma conta PJ. Feche outros programas que estejam usando a porta USB.
 2. Clique em **Conectar maquininha** e selecione a ESP32. A porta abre a 115200 baud.
 3. Digite `1000` no valor ou no teclado visual: o resultado é **R$ 10,00**.
-4. Clique em **Cobrar**. A maquininha recebe `INICIAR|10.00|DEBITO\n`.
+4. Escolha **Débito** ou **Crédito**. No crédito, selecione de 1x a 12x. Ao clicar em
+   **Cobrar**, a maquininha recebe `INICIAR|10.00|DEBITO\n` ou
+   `INICIAR|10.00|CREDITO\n`.
 5. Aproxime o cartão. `PRONTO` é reconhecido sem reiniciar a venda. A linha
    `CARTAO|UID` inicia a identificação, inclusive quando recebida em fragmentos.
 6. Confira nome e final do cartão no modal e informe o PIN de seis dígitos.
@@ -49,8 +51,11 @@ em 320, 390, 650, 900 e 1440 px. As capturas ficam em
 
 - É necessário validar a comunicação final com a ESP32 e o backend reais;
   a automação não substitui o teste físico.
-- A entrada aceita até R$ 999.999,99. Há apenas débito. Para repetir um PIN
-  recusado, inicie uma nova venda e aproxime o cartão novamente.
+- A entrada aceita até R$ 999.999,99. Débito usa saldo; crédito valida o limite
+  disponível e aceita de 1x a 12x. Nesta etapa, a compra no crédito cria
+  COMPRA/FATURA_COMPRA, mas não movimenta o saldo da conta do comprador nem faz
+  o repasse ao estabelecimento; esse acerto pertence ao fluxo de fatura/repasse.
+- Para repetir um PIN recusado, inicie uma nova venda e aproxime o cartão novamente.
 - Se a conexão USB cair durante uma compra já enviada, a tela continua aguardando
   o banco. Uma aprovação não é convertida em recusa porque a notificação USB falhou.
 - Se a API não confirmar o resultado de uma compra, a tela orienta conferir o
