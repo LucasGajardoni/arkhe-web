@@ -9,14 +9,16 @@ const mensagens = {
   CARTAO_NAO_RECONHECIDO: 'Cartão não reconhecido.',
   CARTAO_BLOQUEADO: 'Este cartão está bloqueado.',
   DADOS_INVALIDOS: 'Confira os dados e tente novamente.',
-  MODALIDADE_INDISPONIVEL: 'A modalidade débito está indisponível para este cartão.',
+  MODALIDADE_INDISPONIVEL: 'Esta modalidade está indisponível para este cartão.',
+  PARCELAS_INVALIDAS: 'Escolha entre 1 e 12 parcelas.',
+  LIMITE_INSUFICIENTE: 'Limite insuficiente para esta compra.',
   CONTA_INVALIDA: 'Não foi possível realizar esta venda.',
   PIN_INVALIDO: 'PIN incorreto. Tente novamente.',
   SALDO_INSUFICIENTE: 'Saldo insuficiente.',
   COMPRA_DUPLICADA: 'Uma compra com este mesmo valor já foi realizada neste estabelecimento nos últimos 5 minutos.',
   ERRO_INTERNO: 'Não foi possível processar o pagamento agora.',
 }
-const inicial = { etapa: 'PRONTA', conectada: false, conectando: false, aviso: '', mensagem: '', valor: 0, cartao: null }
+const inicial = { etapa: 'PRONTA', conectada: false, conectando: false, aviso: '', mensagem: '', valor: 0, cartao: null, tipo: 'DEBITO', parcelas: 1 }
 
 export function useMaquininha(aoPagamentoAprovado) {
   const [estado, setEstado] = useState(inicial)
@@ -103,12 +105,23 @@ export function useMaquininha(aoPagamentoAprovado) {
         ocupada = false
         atualizar({ conectando: false })
       },
-      async cobrar(centavos) {
-        if (!conectada || ocupada || venda || !Number.isSafeInteger(centavos) || centavos <= 0 || centavos > 99999999) return
-        const atual = { valor: centavos / 100, etapa: 'AGUARDANDO_CARTAO', uid: '', cartao: null }
+      async cobrar(centavos, tipo = 'DEBITO', parcelas = 1) {
+        const modalidade = String(tipo).toUpperCase()
+        const qtdParcelas = Number(parcelas)
+        if (!conectada || ocupada || venda || !Number.isSafeInteger(centavos) || centavos <= 0 || centavos > 99999999
+          || !['DEBITO', 'CREDITO'].includes(modalidade)
+          || !Number.isInteger(qtdParcelas) || qtdParcelas < 1 || qtdParcelas > 12) return
+        const atual = {
+          valor: centavos / 100,
+          tipo: modalidade,
+          parcelas: modalidade === 'CREDITO' ? qtdParcelas : 1,
+          etapa: 'AGUARDANDO_CARTAO',
+          uid: '',
+          cartao: null,
+        }
         venda = atual
-        atualizar({ etapa: atual.etapa, valor: atual.valor, cartao: null, mensagem: '', aviso: '' })
-        try { await serial.enviar(`INICIAR|${atual.valor.toFixed(2)}|DEBITO`) } catch { /* A desconexão atualiza a interface. */ }
+        atualizar({ etapa: atual.etapa, valor: atual.valor, tipo: atual.tipo, parcelas: atual.parcelas, cartao: null, mensagem: '', aviso: '' })
+        try { await serial.enviar(`INICIAR|${atual.valor.toFixed(2)}|${atual.tipo}`) } catch { /* A desconexão atualiza a interface. */ }
       },
       async cancelar() {
         if (!venda || venda.etapa === 'PROCESSANDO' || ocupada) return
@@ -117,7 +130,7 @@ export function useMaquininha(aoPagamentoAprovado) {
         atualizar({ etapa: 'CANCELANDO', cartao: null })
         await notificar('CANCELAR')
         ocupada = false
-        atualizar({ etapa: 'PRONTA', valor: 0, mensagem: '' })
+        atualizar({ etapa: 'PRONTA', valor: 0, tipo: 'DEBITO', parcelas: 1, mensagem: '' })
       },
       async confirmar(pin) {
         const atual = venda
@@ -129,13 +142,19 @@ export function useMaquininha(aoPagamentoAprovado) {
         } catch {
           if (vigente(atual)) {
             venda = null
-            atualizar({ etapa: 'PRONTA', cartao: null, valor: 0 })
+            atualizar({ etapa: 'PRONTA', cartao: null, valor: 0, tipo: 'DEBITO', parcelas: 1 })
           }
           return
         }
         if (!vigente(atual)) return
         try {
-          const requisicao = comprarMaquininha({ uid: atual.uid, pin, valor: atual.valor })
+          const requisicao = comprarMaquininha({
+            uid: atual.uid,
+            pin,
+            valor: atual.valor,
+            tipo: atual.tipo,
+            parcelas: atual.parcelas,
+          })
           // Descarta a referência antes de aguardar a resposta; o modal já foi desmontado.
           pin = ''
           const resultado = await requisicao
@@ -163,7 +182,7 @@ export function useMaquininha(aoPagamentoAprovado) {
       novaVenda() {
         if (ocupada || !['APROVADO', 'NEGADO', 'INCERTO'].includes(venda?.etapa)) return
         venda = null
-        atualizar({ etapa: 'PRONTA', valor: 0, cartao: null, mensagem: '' })
+        atualizar({ etapa: 'PRONTA', valor: 0, tipo: 'DEBITO', parcelas: 1, cartao: null, mensagem: '' })
       },
     }
     return () => {
@@ -177,7 +196,7 @@ export function useMaquininha(aoPagamentoAprovado) {
   return { ...estado, suportada,
     conectar: () => acoes.current?.conectar(),
     desconectar: () => acoes.current?.desconectar(),
-    cobrar: (valor) => acoes.current?.cobrar(valor),
+    cobrar: (valor, tipo, parcelas) => acoes.current?.cobrar(valor, tipo, parcelas),
     cancelar: () => acoes.current?.cancelar(),
     confirmar: (pin) => acoes.current?.confirmar(pin),
     novaVenda: () => acoes.current?.novaVenda(),
