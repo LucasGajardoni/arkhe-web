@@ -26,6 +26,7 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const [aba, setAba] = useState('resumo')
+  const [tentouCarregarCompras, setTentouCarregarCompras] = useState(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
@@ -41,8 +42,10 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   }), [parcelas])
 
   useEffect(() => {
-    if (cartao && !comprasCarregadas && !carregandoCompras) void carregarComprasCartao()
-  }, [cartao, comprasCarregadas, carregandoCompras, carregarComprasCartao])
+    if (!cartao || comprasCarregadas || tentouCarregarCompras) return
+    setTentouCarregarCompras(true)
+    void carregarComprasCartao()
+  }, [cartao, comprasCarregadas, tentouCarregarCompras, carregarComprasCartao])
 
   async function criar(evento) {
     evento.preventDefault()
