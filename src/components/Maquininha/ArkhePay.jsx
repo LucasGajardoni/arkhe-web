@@ -87,7 +87,7 @@ export default function ArkhePay({ aoPagamentoAprovado }) {
         {modalidade === 'CREDITO' && <div className="pay-parcelamento">
           <label htmlFor="pay-parcelas">Parcelamento</label>
           <select id="pay-parcelas" value={parcelas} onChange={(evento) => setParcelas(Number(evento.target.value))}>
-            {Array.from({ length: 12 }, (_, indice) => indice + 1).map((qtd) =>
+            {Array.from({ length: 15 }, (_, indice) => indice + 1).map((qtd) =>
               <option key={qtd} value={qtd}>{qtd}x de {moeda.format(valor / qtd)}</option>)}
           </select>
           <small>O valor será lançado no crédito e não será descontado do saldo da conta no momento da compra.</small>
