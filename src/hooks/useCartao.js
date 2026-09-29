@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buscarCartao, buscarComprasCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
+import { buscarCartao, buscarComprasCartao, buscarFaturasCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
 
 function cartaoDaConta(resultado, idConta) {
   if (!resultado.possui_cartao) return null
@@ -20,6 +20,10 @@ export function useCartao(idConta) {
   const [carregandoCompras, setCarregandoCompras] = useState(false)
   const [erroCompras, setErroCompras] = useState('')
   const [comprasCarregadas, setComprasCarregadas] = useState(false)
+  const [faturasCartao, setFaturasCartao] = useState({ faturas: [], proximas_faturas: [], fatura_atual: null, proxima_fatura: null })
+  const [carregandoFaturas, setCarregandoFaturas] = useState(false)
+  const [erroFaturas, setErroFaturas] = useState('')
+  const [faturasCarregadas, setFaturasCarregadas] = useState(false)
   const ativo = useRef(false)
   const requisicao = useRef(0)
   const enviando = useRef(false)
@@ -68,6 +72,25 @@ export function useCartao(idConta) {
     }
   }
 
+  async function carregarFaturasCartao({ forcar = false } = {}) {
+    if (!cartao || carregandoFaturas || (faturasCarregadas && !forcar)) return faturasCartao
+    setCarregandoFaturas(true)
+    setErroFaturas('')
+    try {
+      const resultado = await buscarFaturasCartao()
+      if (ativo.current) {
+        setFaturasCartao(resultado)
+        setFaturasCarregadas(true)
+      }
+      return resultado
+    } catch (falha) {
+      if (ativo.current) setErroFaturas(falha.message || 'Não foi possível carregar as faturas do cartão.')
+      return null
+    } finally {
+      if (ativo.current) setCarregandoFaturas(false)
+    }
+  }
+
   async function gerarCartao(dados) {
     if (enviando.current || cartao || carregando || erro) return null
     enviando.current = true
@@ -104,6 +127,7 @@ export function useCartao(idConta) {
 
   return { cartao, possuiCartao: Boolean(cartao), carregando, gerando, erro, erroGeracao,
     comprasCartao, carregandoCompras, erroCompras, comprasCarregadas,
-    carregarCartao, carregarComprasCartao, gerarCartao,
+    faturasCartao, carregandoFaturas, erroFaturas, faturasCarregadas,
+    carregarCartao, carregarComprasCartao, carregarFaturasCartao, gerarCartao,
     limparErroGeracao: () => setErroGeracao('') }
 }
