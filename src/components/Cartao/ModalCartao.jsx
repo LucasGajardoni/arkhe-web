@@ -58,6 +58,7 @@ function FaturaCard({ fatura, prevista = false, aberta = false }) {
 export default function ModalCartao({ usuario, dados, fechar }) {
   const {
     cartao, gerando, erroGeracao, gerarCartao,
+    alterandoBloqueio, erroBloqueio, alternarBloqueioCartao,
     comprasCartao, carregandoCompras, erroCompras, carregarComprasCartao,
     faturasCartao, carregandoFaturas, erroFaturas, carregarFaturasCartao,
   } = dados
@@ -69,6 +70,7 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const [tentouCarregarCredito, setTentouCarregarCredito] = useState(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
+  const bloqueado = Number(cartao?.status) === 1
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
   const vencimento = Number(fechamento) + 3
   const compras = comprasCartao?.compras || []
@@ -106,6 +108,13 @@ export default function ModalCartao({ usuario, dados, fechar }) {
     if (resultado) { setMostrarDados(false); setMensagem(resultado) }
   }
 
+  async function alterarBloqueio() {
+    if (alterandoBloqueio) return
+    setMensagem('')
+    const resultado = await alternarBloqueioCartao()
+    if (resultado) setMensagem(resultado)
+  }
+
   async function copiar() {
     setErroCopia('')
     try {
@@ -135,8 +144,11 @@ export default function ModalCartao({ usuario, dados, fechar }) {
         <div className="cartao-acoes-dados">
           <button type="button" className="botao botao-secundario" aria-pressed={mostrarDados} onClick={() => setMostrarDados(!mostrarDados)}>{mostrarDados ? 'Ocultar dados' : 'Mostrar dados'}</button>
           <button type="button" className="botao botao-secundario" onClick={copiar} disabled={!numero}>Copiar número</button>
+          <button type="button" className="botao botao-secundario" aria-pressed={bloqueado} onClick={alterarBloqueio} disabled={alterandoBloqueio}>{alterandoBloqueio ? 'Alterando...' : bloqueado ? 'Desbloquear cartão' : 'Bloquear cartão'}</button>
         </div>
+        {bloqueado && <p className="cartao-mensagem erro" role="status">Cartão bloqueado. Novas compras serão recusadas até você desbloquear.</p>}
         {erroCopia && <p className="cartao-mensagem erro" role="alert">{erroCopia}</p>}
+        {erroBloqueio && <p className="cartao-mensagem erro" role="alert">{erroBloqueio}</p>}
 
         <nav className="cartao-abas" aria-label="Informações do cartão">
           <button type="button" aria-pressed={aba === 'resumo'} onClick={() => setAba('resumo')}>Resumo</button>
