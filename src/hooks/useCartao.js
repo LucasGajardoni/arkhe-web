@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { buscarCartao, buscarComprasCartao, buscarFaturasCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
+import { alterarBloqueioCartao, buscarCartao, buscarComprasCartao, buscarFaturasCartao, gerarCartao as gerarCartaoBackend } from '../services/cartaoService.js'
 
 function cartaoDaConta(resultado, idConta) {
   if (!resultado.possui_cartao) return null
@@ -16,6 +16,8 @@ export function useCartao(idConta) {
   const [gerando, setGerando] = useState(false)
   const [erro, setErro] = useState('')
   const [erroGeracao, setErroGeracao] = useState('')
+  const [alterandoBloqueio, setAlterandoBloqueio] = useState(false)
+  const [erroBloqueio, setErroBloqueio] = useState('')
   const [comprasCartao, setComprasCartao] = useState({ compras: [], parcelas: [], resumo: null })
   const [carregandoCompras, setCarregandoCompras] = useState(false)
   const [erroCompras, setErroCompras] = useState('')
@@ -27,6 +29,7 @@ export function useCartao(idConta) {
   const ativo = useRef(false)
   const requisicao = useRef(0)
   const enviando = useRef(false)
+  const bloqueando = useRef(false)
 
   const consultar = useCallback(() => {
     const atual = ++requisicao.current
@@ -91,6 +94,27 @@ export function useCartao(idConta) {
     }
   }
 
+  async function alternarBloqueioCartao() {
+    if (!cartao || bloqueando.current) return null
+    bloqueando.current = true
+    setAlterandoBloqueio(true)
+    setErroBloqueio('')
+
+    try {
+      const resultado = await alterarBloqueioCartao()
+      if (ativo.current) {
+        setCartao((atual) => atual ? { ...atual, status: Number(resultado.status) } : atual)
+      }
+      return resultado.mensagem || (Number(resultado.status) === 1 ? 'Cartão bloqueado.' : 'Cartão desbloqueado.')
+    } catch (falha) {
+      if (ativo.current) setErroBloqueio(falha.message || 'Não foi possível alterar o status do cartão.')
+      return null
+    } finally {
+      bloqueando.current = false
+      if (ativo.current) setAlterandoBloqueio(false)
+    }
+  }
+
   async function gerarCartao(dados) {
     if (enviando.current || cartao || carregando || erro) return null
     enviando.current = true
@@ -126,8 +150,9 @@ export function useCartao(idConta) {
   }
 
   return { cartao, possuiCartao: Boolean(cartao), carregando, gerando, erro, erroGeracao,
+    alterandoBloqueio, erroBloqueio,
     comprasCartao, carregandoCompras, erroCompras, comprasCarregadas,
     faturasCartao, carregandoFaturas, erroFaturas, faturasCarregadas,
-    carregarCartao, carregarComprasCartao, carregarFaturasCartao, gerarCartao,
+    carregarCartao, carregarComprasCartao, carregarFaturasCartao, gerarCartao, alternarBloqueioCartao,
     limparErroGeracao: () => setErroGeracao('') }
 }
