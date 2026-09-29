@@ -20,7 +20,7 @@ const bia = { id_funcionario: 8, id_usuario: null, id_conta: 2, nome: 'Bia Lima'
 const itensPreview = [
   { linha: 2, cpf: '11144477735', cpf_valido: true, nome: 'Carla Nova', salario: 2500, situacao: 'novo', possui_conta_arkhe: true },
   { linha: 3, cpf: ana.cpf, cpf_valido: true, nome: 'Ana Souza Atualizada', salario: 3200, situacao: 'existente', id_funcionario: 7, nome_atual: ana.nome, salario_atual: ana.salario, status_atual: 1, possui_conta_arkhe: true },
-  { linha: 4, cpf: '123', nome: 'Pedro', salario: null, situacao: 'erro', erro: 'CPF deve possuir 11 digitos' },
+  { linha: 4, cpf: '12345678901', cpf_valido: true, nome: 'Pedro', salario: 2000, situacao: 'novo', possui_conta_arkhe: false },
 ]
 
 async function ambiente({ tipo = 'PJ', width = 1440 } = {}) {
@@ -126,7 +126,7 @@ try {
   assert.deepEqual(await dialogo.locator('.importacao-resumo dd').allTextContents(), ['3', '1', '1', '1'])
   await visible(dialogo.getByText('Carla Nova', { exact: true }))
   await visible(dialogo.getByText('Ana Souza Atualizada', { exact: true }))
-  await visible(dialogo.getByText('CPF deve possuir 11 digitos', { exact: true }))
+  await visible(dialogo.getByText('CPF inválido', { exact: true }))
   const linhaAna = dialogo.locator('.importacao-linha.existente')
   assert.equal(await linhaAna.getByRole('button', { name: 'Ignorar', exact: true }).getAttribute('aria-pressed'), 'true')
   await dialogo.getByRole('button', { name: 'Erros', exact: true }).click()
