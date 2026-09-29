@@ -17,3 +17,12 @@ export async function gerarCartao(dados = {}) {
   if (!resultado.possui_cartao) throw new ErroApi('O servidor não confirmou a criação do cartão.', 0, {})
   return resultado
 }
+
+
+export async function buscarComprasCartao() {
+  const resultado = await requisitarApi('/cartao/compras')
+  if (!Array.isArray(resultado?.compras) || !Array.isArray(resultado?.parcelas) || !resultado?.resumo) {
+    throw new ErroApi('Não foi possível carregar as compras do cartão.', 0, {})
+  }
+  return resultado
+}
