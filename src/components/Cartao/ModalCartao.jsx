@@ -42,10 +42,10 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   }), [parcelas])
 
   useEffect(() => {
-    if (!cartao || comprasCarregadas || tentouCarregarCompras) return
+    if (!cartao || tentouCarregarCompras) return
     setTentouCarregarCompras(true)
-    void carregarComprasCartao()
-  }, [cartao, comprasCarregadas, tentouCarregarCompras, carregarComprasCartao])
+    void carregarComprasCartao({ forcar: true })
+  }, [cartao, tentouCarregarCompras, carregarComprasCartao])
 
   async function criar(evento) {
     evento.preventDefault()
