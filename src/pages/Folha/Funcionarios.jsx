@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Paginacao from './Paginacao.jsx'
 import Icone from '../../components/Dashboard/Icone.jsx'
 import { mascaraCpf, somenteNumeros } from '../../utils/formatadores.js'
 import { exportarFuncionarios } from './csvFuncionarios.js'
@@ -7,6 +8,8 @@ import { moeda, possuiConta } from './folhaUtils.js'
 export default function Funcionarios({ funcionarios, carregando, erro, atualizar, editar, alterarStatus, bloqueado, adicionar, importar, abrirFolha }) {
   const [busca, setBusca] = useState('')
   const [situacao, setSituacao] = useState('todos')
+  const [pagina, setPagina] = useState(1)
+  const [porPagina, setPorPagina] = useState(5)
   const ativos = funcionarios.filter((item) => Number(item.status) === 1).length
   const comConta = funcionarios.filter(possuiConta).length
   const salarios = funcionarios.filter((item) => Number(item.status) === 1).reduce((total, item) => total + Number(item.salario || 0), 0)
@@ -17,6 +20,25 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
     const cpfEncontrado = cpfBuscado.length > 0 && somenteNumeros(item.cpf).includes(cpfBuscado)
     return (nomeEncontrado || cpfEncontrado) && (situacao === 'todos' || Number(item.status) === Number(situacao))
   })
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / porPagina))
+  const paginaAtual = Math.min(pagina, totalPaginas)
+  const inicio = (paginaAtual - 1) * porPagina
+  const listaPaginada = lista.slice(inicio, inicio + porPagina)
+
+  function alterarBusca(valor) {
+    setBusca(valor)
+    setPagina(1)
+  }
+
+  function alterarSituacao(valor) {
+    setSituacao(valor)
+    setPagina(1)
+  }
+
+  function alterarPorPagina(valor) {
+    setPorPagina(valor)
+    setPagina(1)
+  }
   if (carregando) return <p className="folha-estado" role="status">Carregando funcionários...</p>
   if (erro) return <div className="mensagem-identidade erro" role="alert">{erro} <button className="botao botao-secundario" type="button" onClick={atualizar} disabled={bloqueado}>Tentar novamente</button></div>
   return <>
@@ -38,12 +60,12 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
           <small>Você só precisa do nome, CPF e salário mensal.</small>
         </div> : <>
           <div className="funcionarios-filtros">
-            <div className="funcionarios-busca"><label htmlFor="buscar-funcionario">Buscar funcionário</label><input id="buscar-funcionario" type="search" placeholder="Nome ou CPF" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
-            <div><label htmlFor="situacao-funcionario">Situação</label><select id="situacao-funcionario" value={situacao} onChange={(e) => setSituacao(e.target.value)}><option value="todos">Todos os funcionários</option><option value="1">Ativos</option><option value="0">Inativos</option></select></div>
+            <div className="funcionarios-busca"><label htmlFor="buscar-funcionario">Buscar funcionário</label><input id="buscar-funcionario" type="search" placeholder="Nome ou CPF" value={busca} onChange={(e) => alterarBusca(e.target.value)} /></div>
+            <div><label htmlFor="situacao-funcionario">Situação</label><select id="situacao-funcionario" value={situacao} onChange={(e) => alterarSituacao(e.target.value)}><option value="todos">Todos os funcionários</option><option value="1">Ativos</option><option value="0">Inativos</option></select></div>
           </div>
           <p className="funcionarios-contagem" role="status">{lista.length} {lista.length === 1 ? 'funcionário encontrado' : 'funcionários encontrados'}</p>
-          {lista.length === 0 ? <div className="folha-estado"><h3>Nenhum funcionário encontrado.</h3><p>Tente outro nome, CPF ou situação.</p><button type="button" className="botao botao-secundario" onClick={() => { setBusca(''); setSituacao('todos') }}>Limpar filtros</button></div> : <ul className="folha-lista funcionarios-lista">
-            {lista.map((funcionario) => {
+          {lista.length === 0 ? <div className="folha-estado"><h3>Nenhum funcionário encontrado.</h3><p>Tente outro nome, CPF ou situação.</p><button type="button" className="botao botao-secundario" onClick={() => { setBusca(''); setSituacao('todos'); setPagina(1) }}>Limpar filtros</button></div> : <ul className="folha-lista funcionarios-lista">
+            {listaPaginada.map((funcionario) => {
               const ativo = Number(funcionario.status) === 1
               const iniciais = String(funcionario.nome || '').trim().split(/\s+/).slice(0, 2).map((nome) => nome[0]).join('')
               return <li className="folha-funcionario" key={funcionario.id_funcionario}>
@@ -54,6 +76,14 @@ export default function Funcionarios({ funcionarios, carregando, erro, atualizar
               </li>
             })}
           </ul>}
+          {lista.length > 0 && <Paginacao
+            total={lista.length}
+            pagina={paginaAtual}
+            porPagina={porPagina}
+            onPagina={setPagina}
+            onPorPagina={alterarPorPagina}
+            rotulo="funcionários"
+          />}
         </>}
       </section>
       <aside className="funcionarios-orientacao" aria-label="Preparar pagamentos">
