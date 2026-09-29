@@ -87,7 +87,7 @@ async function ambiente(opcoes = {}) {
     }
     if (path === '/editar_funcionario') {
       assert.equal(req.method(), 'PUT')
-      assert.equal('cpf' in body, false)
+      assert.match(body.cpf, /^\d{11}$/)
       Object.assign(state.funcionarios.find((f) => f.id_funcionario === body.id_funcionario), body)
       return reply({ mensagem: 'Funcionário atualizado.' })
     }
@@ -160,7 +160,7 @@ try {
   await visible(page.getByRole('heading', { name: 'Ana Silva', exact: true }))
   assert.equal(state.funcionarios[0].salario, 2500)
   await page.getByRole('button', { name: 'Editar Ana Silva', exact: true }).click()
-  assert.equal(await page.getByRole('dialog').getByLabel('CPF', { exact: true }).count(), 0)
+  assert.equal(await page.getByRole('dialog').getByLabel('CPF', { exact: true }).inputValue(), '529.982.247-25')
   await page.getByLabel('Salário mensal (R$)', { exact: true }).fill('2.800,50')
   await page.getByRole('button', { name: 'Salvar funcionário', exact: true }).click()
   await visible(page.locator('.funcionario-salario').getByText('R$ 2.800,50', { exact: true }))
