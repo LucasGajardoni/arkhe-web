@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { adicionarChavePix, buscarChavesPix, excluirChavePix } from '../services/pixService.js'
+import { adicionarChavePix, buscarChavesPix, confirmarTelefonePix, excluirChavePix, iniciarConfirmacaoEmailPix, iniciarConfirmacaoTelefonePix } from '../services/pixService.js'
 import { somenteNumeros } from '../utils/formatadores.js'
 
 function extrairChaves(resposta) {
@@ -16,6 +16,9 @@ export function usePix(usuario) {
   const [modalCadastro, setModalCadastro] = useState(false)
   const [chaveExclusao, setChaveExclusao] = useState(null)
   const [tipo, setTipo] = useState('email')
+  const [canalTelefone, setCanalTelefone] = useState('SMS')
+  const [idVerificacaoTelefone, setIdVerificacaoTelefone] = useState(null)
+  const [codigoTelefone, setCodigoTelefone] = useState('')
   const valoresAutomaticos = {
     email: String(usuario?.email || '').trim().toLowerCase(),
     telefone: somenteNumeros(usuario?.telefone),
@@ -63,6 +66,8 @@ export function usePix(usuario) {
 
   function alterarTipo(novoTipo) {
     setTipo(novoTipo)
+    setIdVerificacaoTelefone(null)
+    setCodigoTelefone('')
     setErro('')
   }
   const valorValido = tipo === 'aleatoria' || Boolean(valor)
@@ -72,15 +77,50 @@ export function usePix(usuario) {
     if (!valorValido || processando) return
     setProcessando(true)
     setErro('')
+
     try {
-      let valorEnviar = valor.trim()
-      if (['telefone', 'cpf', 'cnpj'].includes(tipo)) {
-        valorEnviar = somenteNumeros(valor)
+      if (tipo === 'email') {
+        const resposta = await iniciarConfirmacaoEmailPix()
+        setMensagem(resposta.mensagem || 'Enviamos um link de confirmação para seu e-mail.')
+        setModalCadastro(false)
+        return
       }
+
+      if (tipo === 'telefone') {
+        const resposta = await iniciarConfirmacaoTelefonePix(canalTelefone)
+        setIdVerificacaoTelefone(resposta.id_verificacao)
+        setCodigoTelefone('')
+        setMensagem('')
+        return
+      }
+
+      let valorEnviar = valor.trim()
+      if (['cpf', 'cnpj'].includes(tipo)) valorEnviar = somenteNumeros(valor)
 
       const resposta = await adicionarChavePix(tipo, valorEnviar)
       setMensagem(resposta.mensagem || 'Chave Pix cadastrada com sucesso.')
       setModalCadastro(false)
+      await carregar()
+    } catch (falha) {
+      setErro(falha.message)
+    } finally {
+      setProcessando(false)
+    }
+  }
+
+  async function confirmarTelefone(evento) {
+    evento.preventDefault()
+    if (!idVerificacaoTelefone || !/^\d{6}$/.test(codigoTelefone) || processando) return
+
+    setProcessando(true)
+    setErro('')
+
+    try {
+      const resposta = await confirmarTelefonePix(idVerificacaoTelefone, codigoTelefone)
+      setMensagem(resposta.mensagem || 'Telefone confirmado e cadastrado como chave Pix.')
+      setModalCadastro(false)
+      setIdVerificacaoTelefone(null)
+      setCodigoTelefone('')
       await carregar()
     } catch (falha) {
       setErro(falha.message)
@@ -122,7 +162,16 @@ export function usePix(usuario) {
     tiposDisponiveis,
     valor,
     valorValido,
+    canalTelefone,
+    setCanalTelefone,
+    idVerificacaoTelefone,
+    codigoTelefone,
+    setCodigoTelefone: (valorCodigo) => {
+      setCodigoTelefone(somenteNumeros(valorCodigo).slice(0, 6))
+      setErro('')
+    },
     cadastrar,
+    confirmarTelefone,
     excluir,
     carregar,
   }
