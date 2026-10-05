@@ -14,6 +14,7 @@ const mensagens = {
   LIMITE_INSUFICIENTE: 'Limite insuficiente para esta compra.',
   CONTA_INVALIDA: 'Não foi possível realizar esta venda.',
   PIN_INVALIDO: 'PIN incorreto. Tente novamente.',
+  CARTAO_BLOQUEADO_PIN: 'Cartão bloqueado após 3 tentativas de PIN incorreto.',
   SALDO_INSUFICIENTE: 'Saldo insuficiente.',
   COMPRA_DUPLICADA: 'Uma compra com este mesmo valor já foi realizada neste estabelecimento nos últimos 5 minutos.',
   ERRO_INTERNO: 'Não foi possível processar o pagamento agora.',
@@ -50,9 +51,22 @@ export function useMaquininha(aoPagamentoAprovado) {
     async function negar(atual, dados) {
       if (!vigente(atual)) return
       const codigo = Object.hasOwn(mensagens, dados?.codigo) ? dados.codigo : 'ERRO_INTERNO'
+      let mensagem = mensagens[codigo]
+
+      if (codigo === 'PIN_INVALIDO' && Number.isInteger(Number(dados?.tentativas_restantes))) {
+        const restantes = Number(dados.tentativas_restantes)
+        mensagem = restantes === 1
+          ? 'PIN incorreto. Resta 1 tentativa antes do bloqueio do cartão.'
+          : `PIN incorreto. Restam ${restantes} tentativas antes do bloqueio do cartão.`
+      }
+
+      if (codigo === 'CARTAO_BLOQUEADO_PIN') {
+        mensagem = 'Cartão bloqueado por segurança após 3 tentativas de PIN incorreto. O titular deve desbloqueá-lo pelo Banco Arkhé.'
+      }
+
       atual.etapa = 'NEGADO'
       atual.uid = ''
-      atualizar({ etapa: 'NEGADO', mensagem: mensagens[codigo] })
+      atualizar({ etapa: 'NEGADO', mensagem })
       await notificar(`NEGADO|${codigo}`)
     }
 
