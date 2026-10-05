@@ -1,6 +1,6 @@
 import ReconhecimentoFacial from '../ReconhecimentoFacial/ReconhecimentoFacial.jsx'
 
-export default function ReconhecimentoLogin({ modo, mensagem, sessao, concluir, informarErro, mensagemErro, processando }) {
+export default function ReconhecimentoLogin({ modo, mensagem, sessao, concluir, reiniciar, informarErro, mensagemErro, processando }) {
   return (
     <>
       <div className="cabecalho-login">
@@ -14,6 +14,7 @@ export default function ReconhecimentoLogin({ modo, mensagem, sessao, concluir, 
           sessao={sessao}
           aoConcluir={concluir}
           aoErro={informarErro}
+          aoReiniciar={reiniciar}
         />
       )}
       {mensagemErro && <p className="mensagem-login" role="alert">{mensagemErro}</p>}
