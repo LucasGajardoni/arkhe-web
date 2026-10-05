@@ -11,7 +11,6 @@ const tipos = [
 
 const canaisTelefone = [
   ['SMS', 'SMS', 'Receba o código por mensagem de texto.'],
-  ['WHATSAPP', 'WhatsApp', 'Receba o código diretamente no WhatsApp.'],
   ['LIGACAO', 'Ligação', 'Receba uma ligação automática com o código.'],
 ]
 
@@ -86,7 +85,7 @@ export default function ModalChavePix({ pix, fechar }) {
                 onClick={() => setCanalTelefone(valorCanal)}
               >
                 <span className="icone-canal-pix" aria-hidden="true">
-                  {valorCanal === 'SMS' ? 'SMS' : valorCanal === 'WHATSAPP' ? 'WA' : 'TEL'}
+                  {valorCanal === 'SMS' ? 'SMS' : 'TEL'}
                 </span>
                 <span className="texto-canal-pix">
                   <strong>{titulo}</strong>
