@@ -109,10 +109,21 @@ export function useLogin() {
     return autenticar(dados, false)
   }
 
+
+  function reiniciarReconhecimentoFacial() {
+    if (!credenciaisPendentes || ocupado.current) return
+
+    setMensagemErro('')
+    setSessaoFacial(null)
+    setDesafioFacial('')
+
+    return autenticar(credenciaisPendentes, false)
+  }
+
   return {
     etapa, credenciais, credenciaisValidas, mostrarPin, processando, mensagemErro, mensagemSucesso,
     sessaoFacial, modoFacial, mensagemFacial, recuperandoPin, setMostrarPin, setMensagemErro,
-    alterarCredencial, voltarEtapa, continuarCredenciais,
+    alterarCredencial, voltarEtapa, continuarCredenciais, reiniciarReconhecimentoFacial,
     irParaCadastro: () => navigate('/cadastro'),
     abrirRecuperacaoPin: () => { if (!ocupado.current) setRecuperandoPin(true) },
     fecharRecuperacaoPin: () => setRecuperandoPin(false),
