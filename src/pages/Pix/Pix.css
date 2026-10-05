@@ -63,7 +63,7 @@
 
 .canais-confirmacao-pix{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px;
 }
 
@@ -203,4 +203,66 @@
   .canal-confirmacao-pix{
     min-height:68px;
   }
+}
+
+
+.mensagem-pix.sucesso,
+.mensagem-pix.erro{
+  align-items:flex-start;
+  border:1px solid transparent;
+}
+
+.mensagem-pix.sucesso{
+  border-color:#cfe4dc;
+  background:#edf7f3;
+}
+
+.mensagem-pix.erro{
+  border-color:#edd0ca;
+  background:#fff5f3;
+}
+
+.mensagem-pix-icone{
+  display:grid;
+  width:27px;
+  height:27px;
+  flex:0 0 auto;
+  place-items:center;
+  border-radius:50%;
+  color:#fff;
+  background:#137a74;
+  font-size:11px;
+  font-weight:900;
+}
+
+.mensagem-pix.erro .mensagem-pix-icone{
+  background:#a84c43;
+}
+
+.mensagem-pix-conteudo{
+  display:flex;
+  min-width:0;
+  flex:1;
+  flex-direction:column;
+  gap:2px;
+}
+
+.mensagem-pix-conteudo strong{
+  color:#183735;
+  font-size:10px;
+}
+
+.mensagem-pix.erro .mensagem-pix-conteudo strong{
+  color:#7e302a;
+}
+
+.mensagem-pix-conteudo span{
+  color:#657d79;
+  font-size:9px;
+  font-weight:500;
+  line-height:1.45;
+}
+
+.mensagem-pix.erro .mensagem-pix-conteudo span{
+  color:#8c514a;
 }
