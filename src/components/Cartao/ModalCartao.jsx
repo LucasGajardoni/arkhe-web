@@ -146,7 +146,11 @@ export default function ModalCartao({ usuario, dados, fechar }) {
           <button type="button" className="botao botao-secundario" onClick={copiar} disabled={!numero}>Copiar número</button>
           <button type="button" className="botao botao-secundario" aria-pressed={bloqueado} onClick={alterarBloqueio} disabled={alterandoBloqueio}>{alterandoBloqueio ? 'Alterando...' : bloqueado ? 'Desbloquear cartão' : 'Bloquear cartão'}</button>
         </div>
-        {bloqueado && <p className="cartao-mensagem erro" role="status">Cartão bloqueado. Novas compras serão recusadas até você desbloquear.</p>}
+        {bloqueado && <p className="cartao-mensagem erro" role="status">
+          {cartao.motivo_bloqueio === 'PIN'
+            ? 'Cartão bloqueado após 3 tentativas de PIN incorretas. Desbloqueie para voltar a comprar.'
+            : 'Cartão bloqueado. Novas compras serão recusadas até você desbloquear.'}
+        </p>}
         {erroCopia && <p className="cartao-mensagem erro" role="alert">{erroCopia}</p>}
         {erroBloqueio && <p className="cartao-mensagem erro" role="alert">{erroBloqueio}</p>}
 
