@@ -37,6 +37,33 @@ export function buscarChavesPix() {
   return requisitarPix('/chaves_pix')
 }
 
+export function iniciarVerificacaoChavePix(tipo, canal = '') {
+  return requisitarPix('/pix/verificacao/iniciar', {
+    method: 'POST',
+    body: JSON.stringify({
+      tipo: String(tipo || '').toUpperCase(),
+      canal: String(canal || '').toUpperCase(),
+    }),
+  })
+}
+
+export function confirmarTelefonePix(idVerificacao, codigo) {
+  return requisitarPix('/pix/verificacao/confirmar-telefone', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_verificacao: idVerificacao,
+      codigo: String(codigo || '').replace(/\D/g, '').slice(0, 6),
+    }),
+  })
+}
+
+export function confirmarEmailPix(token) {
+  return requisitarPix('/pix/verificacao/confirmar-email', {
+    method: 'POST',
+    body: JSON.stringify({ token: String(token || '').trim() }),
+  })
+}
+
 export function adicionarChavePix(tipo, valor) {
   const campos = {
     email: 'chave_pix_email',
