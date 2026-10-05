@@ -101,9 +101,17 @@ export function useCartao(idConta) {
     setErroBloqueio('')
 
     try {
-      const resultado = await alterarBloqueioCartao()
+      const desejaBloquear = Number(cartao.status) !== 1
+      const resultado = await alterarBloqueioCartao(desejaBloquear)
+
       if (ativo.current) {
-        setCartao((atual) => atual ? { ...atual, status: Number(resultado.status) } : atual)
+        setCartao((atual) => atual ? {
+          ...atual,
+          status: Number(resultado.status),
+          motivo_bloqueio: Number(resultado.status) === 1 ? 'MANUAL' : null,
+          tentativas_pin: Number(resultado.status) === 1 ? atual.tentativas_pin : 0,
+          data_bloqueio: Number(resultado.status) === 1 ? atual.data_bloqueio : null,
+        } : atual)
       }
       return resultado.mensagem || (Number(resultado.status) === 1 ? 'Cartão bloqueado.' : 'Cartão desbloqueado.')
     } catch (falha) {
