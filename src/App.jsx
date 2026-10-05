@@ -15,6 +15,7 @@ import PrimeiroAcesso from './pages/PrimeiroAcesso/PrimeiroAcesso.jsx'
 import SelecionarConta from './pages/SelecionarConta/SelecionarConta.jsx'
 import Acessos from './pages/Acessos/Acessos.jsx'
 import Folha from './pages/Folha/Folha.jsx'
+import RedefinirPin from './pages/RedefinirPin/RedefinirPin.jsx'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/redefinir-pin" element={<RedefinirPin />} />
           <Route path="/cadastro" element={<EscolherConta />} />
           <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
           <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
