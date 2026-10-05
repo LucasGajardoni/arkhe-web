@@ -1,31 +1,27 @@
-import { FACE_API_URL, FACE_CLIENT_ID, FACE_CLIENT_SECRET } from '../config/api.js'
+import { API_URL, FACE_API_URL } from '../config/api.js'
 import { somenteNumeros } from '../utils/formatadores.js'
 import { verificarUsuario } from './authService.js'
 
 const SDK_ID = 'arkhe-face-identity-sdk'
 
 async function requisicaoFacial(caminho, dados, mensagemPadrao) {
-  const resposta = await fetch(`${FACE_API_URL}${caminho}`, {
+  const resposta = await fetch(`${API_URL}${caminho}`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Client-Id': FACE_CLIENT_ID,
-      'X-Client-Secret': FACE_CLIENT_SECRET,
-    },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dados),
   })
+
   let resultado = {}
   try {
     resultado = await resposta.json()
   } catch {
-    // A mensagem padrão será usada quando a API não devolver JSON.
+    // Usa a mensagem padrão quando o backend não devolver JSON.
   }
 
   if (!resposta.ok) {
-    const detalhe = resultado.detail?.message || resultado.detail
-    let mensagem = `${mensagemPadrao} (erro ${resposta.status}).`
-    if (typeof detalhe === 'string') mensagem = detalhe
-    const erro = new Error(mensagem)
+    const detalhe = resultado.mensagem || resultado.detail?.message || resultado.detail
+    const erro = new Error(typeof detalhe === 'string' ? detalhe : mensagemPadrao)
     erro.status = resposta.status
     erro.dados = resultado
     throw erro
@@ -34,26 +30,19 @@ async function requisicaoFacial(caminho, dados, mensagemPadrao) {
   return resultado
 }
 
-export function criarSessaoVerificacao(cpf, finalidade = 'login') {
-  return requisicaoFacial('/v1/verifications', {
+export function criarSessaoVerificacao(cpf, finalidade = 'cadastro_conta') {
+  return requisicaoFacial('/facial/verificacao', {
     cpf: somenteNumeros(cpf),
-    purpose: finalidade,
-    ttl_minutes: 10,
+    finalidade,
   }, 'Não foi possível iniciar o reconhecimento facial')
 }
 
 export function criarSessaoCadastro({ cpf, nome, email, telefone }) {
-  return requisicaoFacial('/v1/enrollments', {
+  return requisicaoFacial('/facial/cadastro', {
     cpf: somenteNumeros(cpf),
-    display_name: nome,
+    nome,
     email,
-    phone: somenteNumeros(telefone),
-    consent: {
-      accepted: true,
-      version: 'arkhe-termos-v1',
-      purpose: 'Cadastro e autenticação facial no Banco Arkhé',
-    },
-    ttl_minutes: 15,
+    telefone: somenteNumeros(telefone),
   }, 'Não foi possível iniciar o cadastro facial')
 }
 
