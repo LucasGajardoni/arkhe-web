@@ -15,10 +15,14 @@ function ConteudoCartao({ usuario }) {
   const dados = useCartao(usuario.idConta)
   const [aberto, setAberto] = useState(false)
   const { cartao, carregando, erro } = dados
+  const bloqueado = Number(cartao?.status) === 1
+  const bloqueioPorPin = String(cartao?.motivo_bloqueio || '').toUpperCase() === 'PIN'
   function abrir() { dados.limparErroGeracao(); setAberto(true) }
   const detalhes = <div className="cartao-resumo-detalhes">
-    {cartao ? <dl className="cartao-resumo-limites"><div><dt>Limite disponível</dt><dd>{formatarLimite(cartao.limite_disponivel)}</dd></div><div><dt>Limite utilizado</dt><dd>{formatarLimite(cartao.limite_utilizado)}</dd></div></dl>
-      : <><h3>Seu próximo passo começa aqui.</h3><p>Você ainda não possui um cartão Arkhé. Tenha seu cartão vinculado à conta para usar nas compras do projeto.</p></>}
+    {cartao ? <>
+      {bloqueado && <div className="cartao-resumo-status bloqueado"><strong>Cartão bloqueado</strong><span>{bloqueioPorPin ? '3 tentativas incorretas de PIN' : 'Compras temporariamente desativadas'}</span></div>}
+      <dl className="cartao-resumo-limites"><div><dt>Limite disponível</dt><dd>{formatarLimite(cartao.limite_disponivel)}</dd></div><div><dt>Limite utilizado</dt><dd>{formatarLimite(cartao.limite_utilizado)}</dd></div></dl>
+    </> : <><h3>Seu próximo passo começa aqui.</h3><p>Você ainda não possui um cartão Arkhé. Tenha seu cartão vinculado à conta para usar nas compras do projeto.</p></>}
     <button type="button" className="botao botao-principal" onClick={abrir}>{cartao ? 'Gerenciar cartão' : 'Gerar meu cartão'} <span aria-hidden="true">→</span></button>
     <small>Vinculado à conta que você está operando.</small>
   </div>
