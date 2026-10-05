@@ -67,8 +67,7 @@ export default function Pix() {
   }
 
   function fecharCadastro() {
-    pix.setModalCadastro(false)
-    pix.setErro('')
+    pix.fecharCadastro()
   }
 
   function prepararExclusao(chave) {
