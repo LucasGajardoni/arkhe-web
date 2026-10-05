@@ -16,6 +16,7 @@ import SelecionarConta from './pages/SelecionarConta/SelecionarConta.jsx'
 import Acessos from './pages/Acessos/Acessos.jsx'
 import Folha from './pages/Folha/Folha.jsx'
 import RedefinirPin from './pages/RedefinirPin/RedefinirPin.jsx'
+import ConfirmarChavePix from './pages/ConfirmarChavePix/ConfirmarChavePix.jsx'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/redefinir-pin" element={<RedefinirPin />} />
+          <Route path="/confirmar-chave-pix" element={<ConfirmarChavePix />} />
           <Route path="/cadastro" element={<EscolherConta />} />
           <Route path="/cadastro/pf" element={<Cadastro tipoConta="PF" />} />
           <Route path="/cadastro/pj" element={<Cadastro tipoConta="PJ" />} />
