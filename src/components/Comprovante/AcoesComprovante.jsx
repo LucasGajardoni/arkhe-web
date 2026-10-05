@@ -6,7 +6,7 @@ export default function AcoesComprovante({ idMovimentacao }) {
   const [acao, setAcao] = useState('')
   const [erro, setErro] = useState('')
   const [urlVisualizacao, setUrlVisualizacao] = useState('')
-  const [podeCompartilhar] = useState(() => typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+  const [podeCompartilhar] = useState(() => typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && typeof File !== 'undefined')
   const urlVisualizacaoRef = useRef('')
   const visualizadorRef = useRef(null)
   const acaoRef = useRef('')
