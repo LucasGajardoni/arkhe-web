@@ -8,7 +8,7 @@ import '../Login/Login.css'
 
 export default function RedefinirPin() {
   const navigate = useNavigate()
-  const token = window.location.hash.replace('#token=', '').trim()
+  const [token] = useState(() => window.location.hash.replace('#token=', '').trim())
   const [validando, setValidando] = useState(true)
   const [tokenValido, setTokenValido] = useState(false)
   const [novoPin, setNovoPin] = useState('')
