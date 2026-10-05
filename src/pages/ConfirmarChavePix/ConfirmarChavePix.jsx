@@ -8,18 +8,14 @@ import '../RedefinirPin/RedefinirPin.css'
 export default function ConfirmarChavePix() {
   const navigate = useNavigate()
   const token = useMemo(() => new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token') || '', [])
-  const [carregando, setCarregando] = useState(true)
+  const [carregando, setCarregando] = useState(Boolean(token))
   const [sucesso, setSucesso] = useState('')
-  const [erro, setErro] = useState('')
+  const [erro, setErro] = useState(token ? '' : 'Este link de confirmação é inválido.')
 
   useEffect(() => {
     let ativo = true
 
-    if (!token) {
-      setErro('Este link de confirmação é inválido.')
-      setCarregando(false)
-      return () => { ativo = false }
-    }
+    if (!token) return () => { ativo = false }
 
     confirmarEmailPix(token)
       .then((resultado) => {
