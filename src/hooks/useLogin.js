@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { realizarLoginUsuario } from '../services/authService.js'
-import { prepararSessaoFacialLogin } from '../services/facialService.js'
 import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
 import { cpfValido, pinValido } from '../utils/validadores.js'
 import { useSessao } from './useSessao.js'
@@ -20,6 +19,7 @@ export function useLogin() {
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [modoFacial, setModoFacial] = useState('login')
   const [mensagemFacial, setMensagemFacial] = useState('')
+  const [faceToken, setFaceToken] = useState('')
   const [recuperandoPin, setRecuperandoPin] = useState(false)
   const ocupado = useRef(false)
   const credenciaisValidas = cpfValido(credenciais.cpf) && pinValido(credenciais.pin)
@@ -30,38 +30,60 @@ export function useLogin() {
     setMensagemSucesso('')
   }
 
+  function limparFacial() {
+    setSessaoFacial(null)
+    setFaceToken('')
+    setMensagemFacial('')
+  }
+
   function voltarEtapa() {
     if (ocupado.current) return
     setMensagemErro('')
+
     if (recuperandoPin) return setRecuperandoPin(false)
     if (etapa === 'credenciais') return navigate('/')
-    setSessaoFacial(null)
+
+    limparFacial()
     setCredenciaisPendentes(null)
     setEtapa('credenciais')
   }
 
-  async function autenticar(dados, cadastroFacial) {
+  async function autenticar(dados, confirmarFace = false) {
     if (ocupado.current) return
     ocupado.current = true
     setProcessando(true)
     setMensagemErro('')
+
     try {
-      const resultado = await realizarLoginUsuario({ ...dados, cadastroFacial })
-      if (!cadastroFacial) {
-        const preparacao = await prepararSessaoFacialLogin({ cpf: dados.cpf })
-        setModoFacial(preparacao.modo)
-        setMensagemFacial(preparacao.mensagem)
-        setSessaoFacial(preparacao.sessao)
+      const resultado = await realizarLoginUsuario({
+        ...dados,
+        faceToken: confirmarFace ? faceToken : '',
+        faceSessionToken: confirmarFace ? sessaoFacial?.session_token : '',
+      })
+
+      if (resultado.reconhecimento_facial_pendente) {
+        const modo = resultado.modo_facial || 'login'
+        setModoFacial(modo)
+        setSessaoFacial(resultado.sessao_facial)
+        setFaceToken(resultado.face_token || '')
+        setMensagemFacial(modo === 'cadastro'
+          ? 'Este é seu primeiro acesso facial. Vamos cadastrar seu rosto para proteger sua conta.'
+          : 'Confirme sua identidade com o reconhecimento facial.')
         setEtapa('facial')
         return
       }
-      if (!resultado.usuario) throw new Error('O servidor não confirmou sua identidade. Tente novamente.')
+
+      if (!resultado.usuario) {
+        throw new Error('O servidor não confirmou sua identidade. Tente novamente.')
+      }
+
       iniciarSessaoIdentidade(resultado)
       setCredenciaisPendentes(null)
+      limparFacial()
       setCredenciais((atuais) => ({ ...atuais, pin: '' }))
       navigate(resultado.troca_pin_obrigatoria ? '/primeiro-acesso' : '/selecionar-conta', { replace: true })
     } catch (erro) {
-      setSessaoFacial(null)
+      limparFacial()
       setCredenciaisPendentes(null)
       setEtapa('credenciais')
       setMensagemErro(erro.dados?.pin_temporario_expirado
@@ -76,9 +98,10 @@ export function useLogin() {
   function continuarCredenciais(evento) {
     evento?.preventDefault()
     if (!credenciaisValidas || ocupado.current) return
+
     const dados = { cpf: somenteNumeros(credenciais.cpf), pin: credenciais.pin }
     setCredenciaisPendentes(dados)
-    return autenticar(dados, false)
+    return autenticar(dados)
   }
 
   return {
@@ -92,7 +115,7 @@ export function useLogin() {
       setCredenciais((dados) => ({ ...dados, pin: '' }))
       setMostrarPin(false)
       setMensagemErro('')
-      setMensagemSucesso(mensagem || 'PIN pessoal alterado com sucesso.')
+      setMensagemSucesso(mensagem || 'Confira seu e-mail para redefinir o PIN.')
       setRecuperandoPin(false)
     },
     concluirReconhecimentoFacial: () => credenciaisPendentes && autenticar(credenciaisPendentes, true),
