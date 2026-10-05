@@ -163,7 +163,10 @@ export function usePix(usuario) {
     valor,
     valorValido,
     canalTelefone,
-    setCanalTelefone,
+    setCanalTelefone: (novoCanal) => {
+      setCanalTelefone(novoCanal)
+      setErro('')
+    },
     idVerificacaoTelefone,
     codigoTelefone,
     setCodigoTelefone: (valorCodigo) => {
