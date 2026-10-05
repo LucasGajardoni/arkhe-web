@@ -1,0 +1,15 @@
+.redefinir-pin-area {
+  display: flex;
+  justify-content: center;
+  padding-top: 60px;
+  padding-bottom: 80px;
+}
+
+.redefinir-pin-cartao {
+  width: min(100%, 560px);
+  min-height: 0;
+}
+
+@media (max-width: 620px) {
+  .redefinir-pin-area { padding-top: 35px; }
+}
