@@ -45,6 +45,12 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
         </header>
 
         <div className="conteudo-detalhes-movimentacao">
+          <div className="status-detalhes-movimentacao">
+            <span aria-hidden="true" />
+            <strong>Transação concluída</strong>
+            <small>{meta.entrada ? 'Entrada na conta' : 'Saída da conta'}</small>
+          </div>
+
           <div className={`valor-detalhes-movimentacao${meta.entrada ? ' entrada' : ''}`}>
             <span><Icone nome={meta.icone} /></span>
             <small>{meta.descricao}</small>
@@ -52,10 +58,15 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
           </div>
 
           <dl>
-            <div><dt>{meta.entrada ? 'Pagador' : 'Recebedor'}</dt><dd>{contraparte}</dd></div>
+            <div><dt>Pagador</dt><dd>{item.nome_pagador || (meta.entrada ? contraparte : perfil.nome) || 'Conta Arkhé'}</dd></div>
+            <div><dt>Recebedor</dt><dd>{item.nome_recebedor || (!meta.entrada ? contraparte : perfil.nome) || 'Conta Arkhé'}</dd></div>
             <div><dt>Data e hora</dt><dd>{detalheData}</dd></div>
-            {meta.detalhe && <div><dt>Forma de pagamento</dt><dd>{meta.detalhe}</dd></div>}
-            {item.id_movimentacao && <div><dt>Identificação</dt><dd>#{item.id_movimentacao}</dd></div>}
+            <div><dt>Natureza</dt><dd>{meta.entrada ? 'Crédito recebido' : 'Débito realizado'}</dd></div>
+            <div><dt>Tipo da operação</dt><dd>{meta.descricao}</dd></div>
+            {meta.detalhe && <div><dt>Canal / detalhe</dt><dd>{meta.detalhe}</dd></div>}
+            {item.id_movimentacao && <div><dt>Identificação Arkhé</dt><dd>ARKHE-{String(item.id_movimentacao).padStart(12, '0')}</dd></div>}
+            {item.id_cobranca && <div><dt>Cobrança vinculada</dt><dd>#{item.id_cobranca}</dd></div>}
+            {item.id_folha && <div><dt>Folha vinculada</dt><dd>#{item.id_folha}</dd></div>}
           </dl>
 
           {!meta.entrada && item.id_movimentacao && (
