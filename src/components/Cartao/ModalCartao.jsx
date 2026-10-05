@@ -30,6 +30,30 @@ function statusFatura(situacao) {
   return ['Fechada', 'fechada']
 }
 
+function mensagemCartaoBloqueado(cartao) {
+  const motivo = String(cartao?.motivo_bloqueio || '').toUpperCase()
+  const data = formatarData(cartao?.data_bloqueio)
+
+  if (motivo === 'PIN') {
+    return {
+      titulo: 'Bloqueado por tentativas de PIN',
+      texto: `O cartão foi bloqueado por segurança após 3 tentativas incorretas de PIN${data !== '—' ? ` em ${data}` : ''}. Desbloqueie para voltar a usar nas compras.`,
+    }
+  }
+
+  if (motivo === 'MANUAL') {
+    return {
+      titulo: 'Cartão bloqueado por você',
+      texto: `Novas compras estão recusadas${data !== '—' ? ` desde ${data}` : ''}. Você pode desbloquear o cartão quando quiser.`,
+    }
+  }
+
+  return {
+    titulo: 'Cartão bloqueado',
+    texto: 'Novas compras estão recusadas até que o cartão seja desbloqueado.',
+  }
+}
+
 function ItemFatura({ item }) {
   return <div className="cartao-fatura-item">
     <div><strong>Compra #{item.id_compra}</strong><small>{formatarData(item.data_compra)} · Parcela {item.numero_parcela}/{item.total_parcelas}</small></div>
@@ -71,6 +95,7 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const bloqueado = Number(cartao?.status) === 1
+  const avisoBloqueio = bloqueado ? mensagemCartaoBloqueado(cartao) : null
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
   const vencimento = Number(fechamento) + 3
   const compras = comprasCartao?.compras || []
@@ -146,7 +171,16 @@ export default function ModalCartao({ usuario, dados, fechar }) {
           <button type="button" className="botao botao-secundario" onClick={copiar} disabled={!numero}>Copiar número</button>
           <button type="button" className="botao botao-secundario" aria-pressed={bloqueado} onClick={alterarBloqueio} disabled={alterandoBloqueio}>{alterandoBloqueio ? 'Alterando...' : bloqueado ? 'Desbloquear cartão' : 'Bloquear cartão'}</button>
         </div>
-        {bloqueado && <p className="cartao-mensagem erro" role="status">Cartão bloqueado. Novas compras serão recusadas até você desbloquear.</p>}
+        {bloqueado && <div className="cartao-alerta-bloqueio" role="status">
+          <span aria-hidden="true">!</span>
+          <div>
+            <strong>{avisoBloqueio.titulo}</strong>
+            <p>{avisoBloqueio.texto}</p>
+            {String(cartao.motivo_bloqueio || '').toUpperCase() === 'PIN' && (
+              <small>Tentativas registradas: {Number(cartao.tentativas_pin || 0)} de 3.</small>
+            )}
+          </div>
+        </div>}
         {erroCopia && <p className="cartao-mensagem erro" role="alert">{erroCopia}</p>}
         {erroBloqueio && <p className="cartao-mensagem erro" role="alert">{erroBloqueio}</p>}
 
