@@ -16,6 +16,7 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro,
   const reiniciar = useRef(aoReiniciar)
   const [iniciando, setIniciando] = useState(true)
   const [tentativa, setTentativa] = useState(0)
+  const [reinicioLocal, setReinicioLocal] = useState(0)
   const [erroScanner, setErroScanner] = useState('')
   const [mensagem, setMensagem] = useState('Preparando a câmera...')
 
@@ -181,11 +182,18 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro,
         elementoScanner.innerHTML = ''
       }
     }
-  }, [modo, sessao])
+  }, [modo, sessao, reinicioLocal])
 
   function tentarNovamente() {
     if (conclusaoEmAndamento.current) return
-    reiniciar.current?.()
+
+    if (reiniciar.current) {
+      reiniciar.current()
+      return
+    }
+
+    setErroScanner('')
+    setReinicioLocal((valor) => valor + 1)
   }
 
   let textoStatus = mensagem
