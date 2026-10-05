@@ -33,3 +33,39 @@
     font-size: 16px;
   }
 }
+
+
+.aviso-confirmacao-chave {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--borda);
+  border-radius: 11px;
+  background: var(--fundo-claro);
+}
+
+.aviso-confirmacao-chave strong { color: var(--verde-escuro); font-size: 13px; }
+.aviso-confirmacao-chave span { color: var(--texto-secundario); font-size: 12px; line-height: 1.5; }
+
+.canais-confirmacao-pix { margin-top: 16px; }
+.canais-confirmacao-pix > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.canais-confirmacao-pix button {
+  min-height: 42px;
+  border: 1px solid var(--borda);
+  border-radius: 9px;
+  background: var(--branco);
+  color: var(--texto);
+  cursor: pointer;
+  font-weight: 700;
+}
+.canais-confirmacao-pix button.ativo {
+  border-color: var(--verde-medio);
+  background: #edf7f3;
+  color: var(--verde-escuro);
+}
+
+@media (max-width: 520px) {
+  .canais-confirmacao-pix > div { grid-template-columns: 1fr; }
+}
