@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { realizarLoginUsuario } from '../services/authService.js'
-import { prepararSessaoFacialLogin } from '../services/facialService.js'
 import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
 import { cpfValido, pinValido } from '../utils/validadores.js'
 import { useSessao } from './useSessao.js'
@@ -20,6 +19,7 @@ export function useLogin() {
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [modoFacial, setModoFacial] = useState('login')
   const [mensagemFacial, setMensagemFacial] = useState('')
+  const [desafioFacial, setDesafioFacial] = useState('')
   const [recuperandoPin, setRecuperandoPin] = useState(false)
   const ocupado = useRef(false)
   const credenciaisValidas = cpfValido(credenciais.cpf) && pinValido(credenciais.pin)
@@ -40,28 +40,43 @@ export function useLogin() {
     setEtapa('credenciais')
   }
 
-  async function autenticar(dados, cadastroFacial) {
+  async function autenticar(dados, confirmarFacial = false) {
     if (ocupado.current) return
     ocupado.current = true
     setProcessando(true)
     setMensagemErro('')
+
     try {
-      const resultado = await realizarLoginUsuario({ ...dados, cadastroFacial })
-      if (!cadastroFacial) {
-        const preparacao = await prepararSessaoFacialLogin({ cpf: dados.cpf })
-        setModoFacial(preparacao.modo)
-        setMensagemFacial(preparacao.mensagem)
-        setSessaoFacial(preparacao.sessao)
+      const resultado = await realizarLoginUsuario({
+        ...dados,
+        desafioFacial: confirmarFacial ? desafioFacial : '',
+        sessaoFacialId: confirmarFacial ? sessaoFacial?.session_id : '',
+      })
+
+      if (resultado.reconhecimento_facial_pendente) {
+        setModoFacial(resultado.modo_facial || 'login')
+        setMensagemFacial(
+          resultado.modo_facial === 'cadastro'
+            ? 'Este é seu primeiro acesso. Vamos cadastrar seu rosto para proteger sua conta.'
+            : 'Confirme sua identidade com o reconhecimento facial.',
+        )
+        setSessaoFacial(resultado.sessao_facial)
+        setDesafioFacial(resultado.desafio_facial || '')
         setEtapa('facial')
         return
       }
+
       if (!resultado.usuario) throw new Error('O servidor não confirmou sua identidade. Tente novamente.')
+
       iniciarSessaoIdentidade(resultado)
       setCredenciaisPendentes(null)
+      setSessaoFacial(null)
+      setDesafioFacial('')
       setCredenciais((atuais) => ({ ...atuais, pin: '' }))
       navigate(resultado.troca_pin_obrigatoria ? '/primeiro-acesso' : '/selecionar-conta', { replace: true })
     } catch (erro) {
       setSessaoFacial(null)
+      setDesafioFacial('')
       setCredenciaisPendentes(null)
       setEtapa('credenciais')
       setMensagemErro(erro.dados?.pin_temporario_expirado
