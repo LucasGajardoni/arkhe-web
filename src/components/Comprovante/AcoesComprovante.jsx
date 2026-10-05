@@ -6,6 +6,7 @@ export default function AcoesComprovante({ idMovimentacao }) {
   const [acao, setAcao] = useState('')
   const [erro, setErro] = useState('')
   const [urlVisualizacao, setUrlVisualizacao] = useState('')
+  const [podeCompartilhar] = useState(() => typeof navigator !== 'undefined' && typeof navigator.share === 'function')
   const urlVisualizacaoRef = useRef('')
   const visualizadorRef = useRef(null)
   const acaoRef = useRef('')
@@ -77,6 +78,34 @@ export default function AcoesComprovante({ idMovimentacao }) {
     }
   }
 
+  async function compartilhar() {
+    if (!iniciarAcao('compartilhar')) return
+
+    try {
+      const arquivo = await buscarComprovantePdf(idMovimentacao)
+      if (!ativoRef.current) return
+
+      const nome = `comprovante-arkhe-${idMovimentacao}.pdf`
+      const documento = new File([arquivo], nome, { type: 'application/pdf' })
+
+      if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [documento] })) {
+        throw new Error('Este dispositivo não permite compartilhar arquivos PDF.')
+      }
+
+      await navigator.share({
+        title: 'Comprovante Banco Arkhé',
+        text: `Comprovante da transação #${idMovimentacao}`,
+        files: [documento],
+      })
+    } catch (falha) {
+      if (falha?.name !== 'AbortError' && ativoRef.current) {
+        setErro(falha.message || 'Não foi possível compartilhar o comprovante.')
+      }
+    } finally {
+      finalizarAcao()
+    }
+  }
+
   function fecharVisualizacao() {
     if (urlVisualizacaoRef.current) URL.revokeObjectURL(urlVisualizacaoRef.current)
     urlVisualizacaoRef.current = ''
@@ -98,6 +127,11 @@ export default function AcoesComprovante({ idMovimentacao }) {
         <button className="botao botao-secundario" type="button" disabled={Boolean(acao)} onClick={baixar}>
           {acao === 'baixar' ? 'Gerando comprovante...' : 'Baixar comprovante'}
         </button>
+        {podeCompartilhar && (
+          <button className="botao botao-secundario" type="button" disabled={Boolean(acao)} onClick={compartilhar}>
+            {acao === 'compartilhar' ? 'Preparando...' : 'Compartilhar'}
+          </button>
+        )}
       </div>
 
       {erro && <p className="mensagem-comprovante erro" role="alert">{erro}</p>}
@@ -128,6 +162,11 @@ export default function AcoesComprovante({ idMovimentacao }) {
             <iframe src={urlVisualizacao} title={`Comprovante Arkhé ${idMovimentacao}`} />
             <footer>
               <button className="botao botao-secundario" type="button" onClick={fecharVisualizacao}>Fechar</button>
+              {podeCompartilhar && (
+                <button className="botao botao-secundario" type="button" disabled={Boolean(acao)} onClick={compartilhar}>
+                  {acao === 'compartilhar' ? 'Preparando...' : 'Compartilhar'}
+                </button>
+              )}
               <button className="botao botao-principal" type="button" disabled={Boolean(acao)} onClick={baixar}>
                 {acao === 'baixar' ? 'Gerando comprovante...' : 'Baixar PDF'}
               </button>
