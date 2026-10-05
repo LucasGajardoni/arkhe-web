@@ -10,23 +10,19 @@ import './RedefinirPin.css'
 export default function RedefinirPin() {
   const navigate = useNavigate()
   const token = useMemo(() => new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token') || '', [])
-  const [validando, setValidando] = useState(true)
+  const [validando, setValidando] = useState(Boolean(token))
   const [tokenValido, setTokenValido] = useState(false)
   const [novoPin, setNovoPin] = useState('')
   const [confirmarPin, setConfirmarPin] = useState('')
   const [mostrar, setMostrar] = useState(false)
   const [processando, setProcessando] = useState(false)
-  const [erro, setErro] = useState('')
+  const [erro, setErro] = useState(token ? '' : 'Este link de recuperação é inválido.')
   const [sucesso, setSucesso] = useState('')
 
   useEffect(() => {
     let ativo = true
 
-    if (!token) {
-      setValidando(false)
-      setErro('Este link de recuperação é inválido.')
-      return () => { ativo = false }
-    }
+    if (!token) return () => { ativo = false }
 
     verificarTokenRecuperacaoPin(token)
       .then(() => {
