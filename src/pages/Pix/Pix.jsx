@@ -221,14 +221,22 @@ export default function Pix() {
 
           {pix.mensagem && (
             <div className="mensagem-pix sucesso" role="status">
-              {pix.mensagem}
+              <span className="mensagem-pix-icone" aria-hidden="true">✓</span>
+              <div className="mensagem-pix-conteudo">
+                <strong>Operação concluída</strong>
+                <span>{pix.mensagem}</span>
+              </div>
               <button type="button" onClick={() => pix.setMensagem('')} aria-label="Fechar mensagem">×</button>
             </div>
           )}
 
           {pix.erro && !pix.modalCadastro && !pix.chaveExclusao && (
             <div className="mensagem-pix erro" role="alert">
-              {pix.erro}
+              <span className="mensagem-pix-icone" aria-hidden="true">!</span>
+              <div className="mensagem-pix-conteudo">
+                <strong>Não foi possível concluir</strong>
+                <span>{pix.erro}</span>
+              </div>
               <button type="button" onClick={() => pix.setErro('')} aria-label="Fechar mensagem de erro">×</button>
             </div>
           )}
