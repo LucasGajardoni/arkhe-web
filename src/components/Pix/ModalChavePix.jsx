@@ -9,6 +9,12 @@ const tipos = [
   ['aleatoria', 'Chave aleatória'],
 ]
 
+const canaisTelefone = [
+  ['SMS', 'SMS', 'Receba o código por mensagem de texto.'],
+  ['WHATSAPP', 'WhatsApp', 'Receba o código diretamente no WhatsApp.'],
+  ['LIGACAO', 'Ligação', 'Receba uma ligação automática com o código.'],
+]
+
 export default function ModalChavePix({ pix, fechar }) {
   const {
     tipo, alterarTipo, tiposDisponiveis, valor, valorValido, cadastrar, processando, erro,
@@ -62,14 +68,35 @@ export default function ModalChavePix({ pix, fechar }) {
           <input value={formatarChavePix(tipo, valor)} readOnly />
           <small>Escolha como deseja receber o código de 6 números.</small>
         </label>
-        <label className="campo-chave-pix">
-          <span>Receber código por</span>
-          <select value={canalTelefone} onChange={(e) => setCanalTelefone(e.target.value)} disabled={processando}>
-            <option value="SMS">SMS</option>
-            <option value="WHATSAPP">WhatsApp</option>
-            <option value="LIGACAO">Ligação</option>
-          </select>
-        </label>
+        <div className="bloco-canal-pix">
+          <div className="cabecalho-canal-pix">
+            <strong>Como deseja receber o código?</strong>
+            <span>Escolha um canal de confirmação.</span>
+          </div>
+
+          <div className="canais-confirmacao-pix" role="radiogroup" aria-label="Canal de confirmação">
+            {canaisTelefone.map(([valorCanal, titulo, descricao]) => (
+              <button
+                className={canalTelefone === valorCanal ? 'canal-confirmacao-pix ativo' : 'canal-confirmacao-pix'}
+                type="button"
+                role="radio"
+                aria-checked={canalTelefone === valorCanal}
+                key={valorCanal}
+                disabled={processando}
+                onClick={() => setCanalTelefone(valorCanal)}
+              >
+                <span className="icone-canal-pix" aria-hidden="true">
+                  {valorCanal === 'SMS' ? 'SMS' : valorCanal === 'WHATSAPP' ? 'WA' : 'TEL'}
+                </span>
+                <span className="texto-canal-pix">
+                  <strong>{titulo}</strong>
+                  <small>{descricao}</small>
+                </span>
+                <span className="seletor-canal-pix" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
       </>
     )
   }
@@ -79,7 +106,7 @@ export default function ModalChavePix({ pix, fechar }) {
       <>
         <div className="aviso-chave-aleatoria">
           <strong>Código enviado</strong>
-          <span>Digite o código recebido. Ele expira em 5 minutos.</span>
+          <span>Digite o código recebido. A verificação expira em aproximadamente 10 minutos.</span>
         </div>
         <label className="campo-chave-pix">
           <span>Código de confirmação</span>
@@ -136,7 +163,15 @@ export default function ModalChavePix({ pix, fechar }) {
 
           {campoChave}
 
-          {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
+          {erro && (
+            <div className="erro-confirmacao-pix" role="alert">
+              <span aria-hidden="true">!</span>
+              <div>
+                <strong>Não foi possível concluir esta etapa</strong>
+                <p>{erro}</p>
+              </div>
+            </div>
+          )}
 
           <footer>
             <button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button>
