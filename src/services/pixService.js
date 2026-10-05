@@ -54,6 +54,38 @@ export function adicionarChavePix(tipo, valor) {
   })
 }
 
+
+export function iniciarConfirmacaoEmailPix() {
+  return requisitarPix('/pix/verificacao/email/iniciar', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }, 'Não foi possível enviar a confirmação por e-mail.')
+}
+
+export function confirmarEmailPix(token) {
+  return requisitarPix('/pix/verificacao/email/confirmar', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  }, 'Não foi possível confirmar a chave Pix.')
+}
+
+export function iniciarConfirmacaoTelefonePix(canal) {
+  return requisitarPix('/pix/verificacao/telefone/iniciar', {
+    method: 'POST',
+    body: JSON.stringify({ canal }),
+  }, 'Não foi possível enviar o código de confirmação.')
+}
+
+export function confirmarTelefonePix(idVerificacao, codigo) {
+  return requisitarPix('/pix/verificacao/telefone/confirmar', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_verificacao: idVerificacao,
+      codigo,
+    }),
+  }, 'Não foi possível confirmar o telefone.')
+}
+
 export function excluirChavePix(tipo, valor) {
   const campos = {
     email: 'chave_pix_email',
