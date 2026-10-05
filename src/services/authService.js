@@ -96,13 +96,14 @@ export async function verificarUsuario(cpf) {
   return resultado
 }
 
-export function realizarLoginUsuario({ cpf, pin, cadastroFacial = false }) {
+export function realizarLoginUsuario({ cpf, pin, desafioFacial = '', sessaoFacialId = '' }) {
   return enviarJson(
     '/login_usuario',
     {
       cpf: somenteNumeros(cpf),
       pin: prepararPin(pin),
-      cadastro_facial: cadastroFacial,
+      desafio_facial: desafioFacial || undefined,
+      sessao_facial_id: sessaoFacialId || undefined,
     },
     'Não foi possível entrar na conta.',
   )
@@ -116,23 +117,19 @@ export function solicitarRecuperacaoPin(email) {
   )
 }
 
-export function verificarCodigoRecuperacaoPin({ email, codigo }) {
+export function verificarTokenRecuperacaoPin(token) {
   return enviarJson(
-    '/verificar_codigo',
-    {
-      email: String(email || '').trim().toLowerCase(),
-      codigo: somenteNumeros(codigo).slice(0, 6),
-    },
-    'Não foi possível validar o código de recuperação.',
+    '/verificar_token_pin',
+    { token: String(token || '').trim() },
+    'Não foi possível validar o link de recuperação.',
   )
 }
 
-export function trocarPin({ email, codigo, novoPin }) {
+export function trocarPin({ token, novoPin }) {
   return enviarJson(
     '/trocar_pin',
     {
-      email: String(email || '').trim().toLowerCase(),
-      codigo: somenteNumeros(codigo).slice(0, 6),
+      token: String(token || '').trim(),
       novo_pin: prepararPin(novoPin),
     },
     'Não foi possível alterar o PIN.',
