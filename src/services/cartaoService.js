@@ -37,8 +37,11 @@ export async function buscarFaturasCartao() {
 }
 
 
-export async function alterarBloqueioCartao() {
-  const resultado = await requisitarApi('/bloquear_cartao', { method: 'PUT' })
+export async function alterarBloqueioCartao(bloqueado) {
+  const resultado = await requisitarApi('/bloquear_cartao', {
+    method: 'PUT',
+    dados: { bloqueado: Boolean(bloqueado) },
+  })
   if (![0, 1].includes(Number(resultado?.status))) {
     throw new ErroApi('Não foi possível confirmar o novo status do cartão.', 0, {})
   }
