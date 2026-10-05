@@ -6,7 +6,7 @@ import '../Login/Login.css'
 
 export default function ConfirmarChavePix() {
   const navigate = useNavigate()
-  const token = window.location.hash.replace('#token=', '').trim()
+  const [token] = useState(() => window.location.hash.replace('#token=', '').trim())
   const [carregando, setCarregando] = useState(true)
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
