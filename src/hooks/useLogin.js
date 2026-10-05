@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { realizarLoginUsuario } from '../services/authService.js'
+import { obterSessaoUsuario, realizarLoginUsuario } from '../services/authService.js'
 import { mascaraCpf, somenteNumeros } from '../utils/formatadores.js'
 import { cpfValido, pinValido } from '../utils/validadores.js'
 import { useSessao } from './useSessao.js'
@@ -66,9 +66,22 @@ export function useLogin() {
         return
       }
 
-      if (!resultado.usuario) throw new Error('O servidor não confirmou sua identidade. Tente novamente.')
+      let resultadoFinal = resultado
 
-      iniciarSessaoIdentidade(resultado)
+      if (!resultado.usuario) {
+        const sessaoAtual = await obterSessaoUsuario()
+
+        if (!sessaoAtual?.usuario) {
+          throw new Error('O reconhecimento terminou, mas a sessão não foi criada. Tente novamente.')
+        }
+
+        resultadoFinal = {
+          ...resultado,
+          usuario: sessaoAtual.usuario,
+        }
+      }
+
+      iniciarSessaoIdentidade(resultadoFinal)
       setCredenciaisPendentes(null)
       setSessaoFacial(null)
       setDesafioFacial('')
