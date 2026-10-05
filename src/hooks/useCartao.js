@@ -102,9 +102,22 @@ export function useCartao(idConta) {
 
     try {
       const resultado = await alterarBloqueioCartao(Number(cartao.status) !== 1)
+
       if (ativo.current) {
-        setCartao((atual) => atual ? { ...atual, status: Number(resultado.status) } : atual)
+        try {
+          const atualizado = await buscarCartao()
+          setCartao(cartaoDaConta(atualizado, idConta))
+        } catch {
+          setCartao((atual) => atual ? {
+            ...atual,
+            status: Number(resultado.status),
+            tentativas_pin: Number(resultado.status) === 0 ? 0 : atual.tentativas_pin,
+            motivo_bloqueio: Number(resultado.status) === 0 ? null : atual.motivo_bloqueio,
+            data_bloqueio: Number(resultado.status) === 0 ? null : atual.data_bloqueio,
+          } : atual)
+        }
       }
+
       return resultado.mensagem || (Number(resultado.status) === 1 ? 'Cartão bloqueado.' : 'Cartão desbloqueado.')
     } catch (falha) {
       if (ativo.current) setErroBloqueio(falha.message || 'Não foi possível alterar o status do cartão.')
