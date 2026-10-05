@@ -3,6 +3,7 @@ import { somenteNumeros } from '../utils/formatadores.js'
 import { verificarUsuario } from './authService.js'
 
 const SDK_ID = 'arkhe-face-identity-sdk'
+const SDK_VERSION = '20261005-2'
 
 async function requisicaoFacial(caminho, dados, mensagemPadrao) {
   const resposta = await fetch(`${API_URL}${caminho}`, {
@@ -110,7 +111,7 @@ export function carregarSdkFacial() {
 
     const script = document.createElement('script')
     script.id = SDK_ID
-    script.src = `${FACE_API_URL}/static/sdk/face-identity.js`
+    script.src = `${FACE_API_URL}/static/sdk/face-identity.js?v=${SDK_VERSION}`
     script.onload = resolve
     script.onerror = () => reject(new Error('Não foi possível carregar o scanner facial.'))
     document.head.appendChild(script)
