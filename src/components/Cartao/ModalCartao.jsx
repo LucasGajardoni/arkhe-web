@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import CartaoVisual from './CartaoVisual.jsx'
 import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao } from './cartaoUtils.js'
@@ -67,14 +67,14 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const [aba, setAba] = useState('resumo')
-  const [tentouCarregarCredito, setTentouCarregarCredito] = useState(false)
+  const tentouCarregarCredito = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const bloqueado = Number(cartao?.status) === 1
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
   const vencimento = Number(fechamento) + 3
   const compras = comprasCartao?.compras || []
-  const parcelas = comprasCartao?.parcelas || []
+  const parcelas = useMemo(() => comprasCartao?.parcelas || [], [comprasCartao?.parcelas])
   const resumoCredito = comprasCartao?.resumo || {}
   const faturas = faturasCartao?.faturas || []
   const proximasFaturas = faturasCartao?.proximas_faturas || []
@@ -88,13 +88,13 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   }), [parcelas])
 
   useEffect(() => {
-    if (!cartao || tentouCarregarCredito) return
-    setTentouCarregarCredito(true)
+    if (!cartao || tentouCarregarCredito.current) return
+    tentouCarregarCredito.current = true
     void (async () => {
       await carregarFaturasCartao({ forcar: true })
       await carregarComprasCartao({ forcar: true })
     })()
-  }, [cartao, tentouCarregarCredito, carregarFaturasCartao, carregarComprasCartao])
+  }, [cartao, carregarFaturasCartao, carregarComprasCartao])
 
   async function atualizarCredito() {
     await carregarFaturasCartao({ forcar: true })
