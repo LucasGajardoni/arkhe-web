@@ -101,7 +101,7 @@ export function useCartao(idConta) {
     setErroBloqueio('')
 
     try {
-      const resultado = await alterarBloqueioCartao()
+      const resultado = await alterarBloqueioCartao(Number(cartao.status) !== 1)
       if (ativo.current) {
         setCartao((atual) => atual ? { ...atual, status: Number(resultado.status) } : atual)
       }
