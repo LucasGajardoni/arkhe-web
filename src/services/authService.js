@@ -96,13 +96,14 @@ export async function verificarUsuario(cpf) {
   return resultado
 }
 
-export function realizarLoginUsuario({ cpf, pin, cadastroFacial = false }) {
+export function realizarLoginUsuario({ cpf, pin, faceToken = '', faceSessionToken = '' }) {
   return enviarJson(
     '/login_usuario',
     {
       cpf: somenteNumeros(cpf),
       pin: prepararPin(pin),
-      cadastro_facial: cadastroFacial,
+      face_token: faceToken || undefined,
+      face_session_token: faceSessionToken || undefined,
     },
     'Não foi possível entrar na conta.',
   )
@@ -116,26 +117,35 @@ export function solicitarRecuperacaoPin(email) {
   )
 }
 
-export function verificarCodigoRecuperacaoPin({ email, codigo }) {
+export function verificarTokenRecuperacaoPin(token) {
   return enviarJson(
-    '/verificar_codigo',
-    {
-      email: String(email || '').trim().toLowerCase(),
-      codigo: somenteNumeros(codigo).slice(0, 6),
-    },
-    'Não foi possível validar o código de recuperação.',
+    '/verificar_token_pin',
+    { token: String(token || '').trim() },
+    'Não foi possível validar o link de recuperação.',
   )
 }
 
-export function trocarPin({ email, codigo, novoPin }) {
+export function trocarPin({ token, novoPin }) {
   return enviarJson(
     '/trocar_pin',
     {
-      email: String(email || '').trim().toLowerCase(),
-      codigo: somenteNumeros(codigo).slice(0, 6),
+      token: String(token || '').trim(),
       novo_pin: prepararPin(novoPin),
     },
     'Não foi possível alterar o PIN.',
+  )
+}
+
+export function prepararCadastroFacial({ cpf, nome, email, telefone }) {
+  return enviarJson(
+    '/facial/preparar_cadastro',
+    {
+      cpf: somenteNumeros(cpf),
+      nome: String(nome || '').trim(),
+      email: String(email || '').trim().toLowerCase(),
+      telefone: somenteNumeros(telefone),
+    },
+    'Não foi possível iniciar o reconhecimento facial.',
   )
 }
 
@@ -224,8 +234,17 @@ function montarDadosCadastro(tipoConta, dadosPF, dadosPJ) {
   return formData
 }
 
-export function cadastrarUsuario({ tipoConta, dadosPF, dadosPJ }) {
+export function cadastrarUsuario({
+  tipoConta,
+  dadosPF,
+  dadosPJ,
+  faceToken,
+  faceSessionToken,
+}) {
   const formData = montarDadosCadastro(tipoConta, dadosPF, dadosPJ)
+  formData.append('face_token', String(faceToken || ''))
+  formData.append('face_session_token', String(faceSessionToken || ''))
+
   return enviarFormulario(
     '/adicionar_usuario',
     'POST',
