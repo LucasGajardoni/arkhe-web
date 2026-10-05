@@ -2,25 +2,28 @@ import { useEffect, useRef, useState } from 'react'
 import { carregarSdkFacial, criarScannerFacial } from '../../services/facialService.js'
 import './ReconhecimentoFacial.css'
 
-export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro }) {
+export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro, aoReiniciar }) {
   const areaScanner = useRef(null)
   const scanner = useRef(null)
   const temporizadorCaptura = useRef(null)
   const temporizadorInicializacao = useRef(null)
   const cameraPronta = useRef(false)
   const conclusaoEmAndamento = useRef(false)
+  const tentativasComparacao = useRef(0)
+  const falhasLeitura = useRef(0)
   const concluir = useRef(aoConcluir)
   const informarErro = useRef(aoErro)
+  const reiniciar = useRef(aoReiniciar)
   const [iniciando, setIniciando] = useState(true)
   const [tentativa, setTentativa] = useState(0)
-  const [reinicio, setReinicio] = useState(0)
   const [erroScanner, setErroScanner] = useState('')
   const [mensagem, setMensagem] = useState('Preparando a câmera...')
 
   useEffect(() => {
     concluir.current = aoConcluir
     informarErro.current = aoErro
-  }, [aoConcluir, aoErro])
+    reiniciar.current = aoReiniciar
+  }, [aoConcluir, aoErro, aoReiniciar])
 
   useEffect(() => {
     let ativo = true
@@ -28,7 +31,10 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
 
     async function iniciarScanner() {
       setIniciando(true)
+      setTentativa(0)
       setErroScanner('')
+      tentativasComparacao.current = 0
+      falhasLeitura.current = 0
       cameraPronta.current = false
       conclusaoEmAndamento.current = false
       informarErro.current?.('')
@@ -38,15 +44,20 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
         await carregarSdkFacial()
         if (!ativo || !areaScanner.current) return
 
-        // O token abaixo é temporário e autoriza somente esta sessão facial.
-        // A chave permanente da aplicação não é usada pelo scanner/câmera.
-        // Agenda a próxima leitura sem permitir uma sequência de cliques manuais.
-        // Cada nova captura só é disparada depois que a API respondeu à anterior.
         function agendarCaptura(tempo = 900) {
           clearTimeout(temporizadorCaptura.current)
           temporizadorCaptura.current = setTimeout(() => {
-            if (ativo) scanner.current?.ui?.captureButton?.click()
+            if (ativo && !conclusaoEmAndamento.current) {
+              scanner.current?.ui?.captureButton?.click()
+            }
           }, tempo)
+        }
+
+        function encerrarComErro(texto) {
+          clearTimeout(temporizadorCaptura.current)
+          scanner.current?.stop?.()
+          setMensagem(texto)
+          setErroScanner(texto)
         }
 
         const opcoes = {
@@ -55,93 +66,92 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
           mount: areaScanner.current,
           destroyOnClose: true,
           autoComplete: modo === 'cadastro',
+
           onProgress(resultado) {
             if (resultado.next_hint) setMensagem(resultado.next_hint)
 
-            // No enrollment, a API acumula cobertura frontal, esquerda,
-            // direita, acima e abaixo. Continuamos lendo até ready=true.
-            if (modo === 'cadastro' && !resultado.ready) agendarCaptura()
+            if (modo === 'cadastro' && !resultado.ready) {
+              agendarCaptura()
+            }
           },
+
           onSuccess(resultado) {
             if (!ativo || conclusaoEmAndamento.current) return
 
-            // No login, o SDK considera a tentativa concluída mesmo quando o
-            // rosto não combina. Permitimos no máximo três leituras para não
-            // atingir o rate limit e mostramos uma resposta clara ao usuário.
             if (modo === 'login' && !resultado.matched) {
-              if (tentativa >= 2) {
-                const texto = 'Rosto não reconhecido. A pessoa não corresponde ao cadastro.'
-                setMensagem(texto)
-                setErroScanner(texto)
-                informarErro.current?.(texto)
+              tentativasComparacao.current += 1
+              const atual = tentativasComparacao.current
+              setTentativa(atual)
+
+              if (atual >= 3 || resultado.status === 'not_matched') {
+                encerrarComErro('Rosto não reconhecido após 3 tentativas. Inicie uma nova verificação para tentar novamente.')
                 return
               }
 
-              setMensagem(`Rosto não reconhecido. Tentativa ${tentativa + 1} de 3.`)
-              clearTimeout(temporizadorCaptura.current)
-              temporizadorCaptura.current = setTimeout(() => {
-                if (ativo) setTentativa((valor) => valor + 1)
-              }, 1400)
+              setMensagem(`Rosto não reconhecido. Tentativa ${atual} de 3. Vamos tentar novamente.`)
+              agendarCaptura(1400)
               return
             }
 
             conclusaoEmAndamento.current = true
             clearTimeout(temporizadorCaptura.current)
+
             Promise.resolve(concluir.current?.(resultado)).catch((erro) => {
               if (!ativo) return
               conclusaoEmAndamento.current = false
-              const texto = erro?.message || 'Não foi possível concluir o reconhecimento facial.'
-              setMensagem(texto)
-              setErroScanner(texto)
-              informarErro.current?.(texto)
+              encerrarComErro(erro?.message || 'Não foi possível concluir o reconhecimento facial.')
             })
           },
+
           onError(erro) {
             if (!ativo) return
+
             const texto = erro?.message || 'Não foi possível realizar o reconhecimento facial.'
 
-            // O SDK pode emitir falhas transitórias enquanto o elemento de vídeo
-            // ainda está sendo montado. Nesse intervalo mantemos o carregamento.
             if (!cameraPronta.current) return
 
-            const maisDeUmRosto = erro?.code === 'ARKHE_MULTIPLE_FACES'
-              || texto.toLowerCase().includes('mais de uma face')
-              || texto.toLowerCase().includes('mais de um rosto')
-            const limiteExcedido = texto.toLowerCase().includes('limite')
+            const codigo = String(erro?.code || '')
+            const textoLower = texto.toLowerCase()
+            const maisDeUmRosto = codigo === 'ARKHE_MULTIPLE_FACES'
+              || textoLower.includes('mais de uma face')
+              || textoLower.includes('mais de um rosto')
+            const capturaRuim = codigo === 'ARKHE_NO_FACE'
+              || codigo === 'ARKHE_LOW_IMAGE_QUALITY'
+              || codigo === 'HTTP_422'
+              || textoLower.includes('nenhuma face')
+              || textoLower.includes('qualidade insuficiente')
+              || textoLower.includes('liveness insuficiente')
 
-            // Mais de uma pessoa no quadro invalida a leitura. Interrompemos
-            // câmera e temporizador imediatamente para não continuar mandando
-            // frames depois de a própria API recusar a situação.
             if (maisDeUmRosto) {
-              clearTimeout(temporizadorCaptura.current)
-              scanner.current?.stop?.()
-              const aviso = 'Mais de um rosto detectado. Deixe apenas uma pessoa em frente à câmera e tente novamente.'
-              setMensagem(aviso)
-              setErroScanner(aviso)
-              informarErro.current?.(aviso)
+              encerrarComErro('Mais de um rosto detectado. Deixe apenas uma pessoa em frente à câmera e tente novamente.')
               return
             }
 
-            setMensagem(texto)
-            setErroScanner(texto)
-            informarErro.current?.(texto)
+            if (modo === 'login' && capturaRuim) {
+              falhasLeitura.current += 1
 
-            // Durante o cadastro, erros de enquadramento podem ser corrigidos
-            // no próximo frame. No login, não repetimos erros HTTP para evitar
-            // várias chamadas seguidas e mensagens de rate limit.
-            if (modo === 'cadastro' && !limiteExcedido) {
-              agendarCaptura(1500)
-            } else {
-              clearTimeout(temporizadorCaptura.current)
-              scanner.current?.stop?.()
+              if (falhasLeitura.current >= 5) {
+                encerrarComErro('Não conseguimos obter uma leitura facial válida. Ajuste a iluminação e tente novamente.')
+                return
+              }
+
+              setMensagem('Não conseguimos ler seu rosto. Ajuste a posição e olhe para a câmera.')
+              agendarCaptura(1300)
+              return
             }
+
+            if (modo === 'cadastro' && !textoLower.includes('limite')) {
+              setMensagem(texto)
+              agendarCaptura(1500)
+              return
+            }
+
+            encerrarComErro(texto)
           },
         }
 
         scanner.current = await criarScannerFacial(modo, opcoes)
 
-        // Inicia o escaneamento automaticamente assim que a câmera estiver pronta.
-        // O usuário apenas olha para a câmera e segue as orientações na tela.
         temporizadorInicializacao.current = setTimeout(() => {
           if (!ativo) return
           cameraPronta.current = true
@@ -154,7 +164,6 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
         const texto = erro?.message || 'Não foi possível iniciar o reconhecimento facial.'
         setMensagem(texto)
         setErroScanner(texto)
-        informarErro.current?.(texto)
         setIniciando(false)
       }
     }
@@ -167,29 +176,37 @@ export default function ReconhecimentoFacial({ modo, sessao, aoConcluir, aoErro 
       clearTimeout(temporizadorInicializacao.current)
       scanner.current?.stop?.()
       scanner.current = null
-      if (elementoScanner) elementoScanner.innerHTML = ''
+
+      if (elementoScanner) {
+        elementoScanner.innerHTML = ''
+      }
     }
-  }, [modo, sessao, tentativa, reinicio])
+  }, [modo, sessao])
 
   function tentarNovamente() {
-    conclusaoEmAndamento.current = false
-    setTentativa(0)
-    setErroScanner('')
-    informarErro.current?.('')
-    setReinicio((valor) => valor + 1)
+    if (conclusaoEmAndamento.current) return
+    reiniciar.current?.()
   }
 
   let textoStatus = mensagem
-  if (iniciando) textoStatus = 'Preparando a câmera...'
+
+  if (iniciando) {
+    textoStatus = 'Preparando a câmera...'
+  } else if (modo === 'login' && tentativa > 0 && !erroScanner) {
+    textoStatus = mensagem
+  }
 
   return (
     <div className="reconhecimento-facial">
       <div ref={areaScanner} className="area-scanner-facial" />
       <p className="status-scanner-facial">{textoStatus}</p>
+
       {erroScanner && (
         <div className="erro-scanner-facial" role="alert">
           <p>{erroScanner}</p>
-          <button className="botao botao-principal" type="button" onClick={tentarNovamente}>Tentar novamente</button>
+          <button className="botao botao-principal" type="button" onClick={tentarNovamente}>
+            Tentar novamente
+          </button>
         </div>
       )}
     </div>
