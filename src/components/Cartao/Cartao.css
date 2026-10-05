@@ -251,3 +251,74 @@
   .cartao-fatura-total { grid-column: 1; grid-row: 2; justify-items: start; padding-right: 0; }
   .cartao-fatura-card > summary::after { grid-column: 1; grid-row: 2; justify-self: end; align-self: center; margin: 0; }
 }
+
+
+.cartao-resumo-status{
+  display:flex;
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  flex-direction:column;
+  gap:2px;
+}
+
+.cartao-resumo-status.bloqueado{
+  border:1px solid #ecd1ca;
+  color:#7a4038;
+  background:#fff7f5;
+}
+
+.cartao-resumo-status strong{
+  font-size:10px;
+}
+
+.cartao-resumo-status span{
+  font-size:9px;
+  line-height:1.4;
+}
+
+.cartao-alerta-bloqueio{
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  margin-top:14px;
+  padding:14px 15px;
+  border:1px solid #ecd1ca;
+  border-radius:12px;
+  color:#7a4038;
+  background:#fff7f5;
+}
+
+.cartao-alerta-bloqueio>span{
+  display:grid;
+  width:25px;
+  height:25px;
+  flex:0 0 auto;
+  place-items:center;
+  border-radius:50%;
+  color:#fff;
+  background:#a84c43;
+  font-size:11px;
+  font-weight:900;
+}
+
+.cartao-alerta-bloqueio>div{
+  display:grid;
+  gap:3px;
+}
+
+.cartao-alerta-bloqueio strong{
+  font-size:11px;
+}
+
+.cartao-alerta-bloqueio p{
+  margin:0;
+  color:#8c514a;
+  font-size:10px;
+  line-height:1.5;
+}
+
+.cartao-alerta-bloqueio small{
+  color:#9a675f;
+  font-size:9px;
+}
