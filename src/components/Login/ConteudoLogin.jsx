@@ -22,6 +22,7 @@ export default function ConteudoLogin({ login }) {
         mensagem={login.mensagemFacial}
         sessao={login.sessaoFacial}
         concluir={login.concluirReconhecimentoFacial}
+        reiniciar={login.reiniciarReconhecimentoFacial}
         informarErro={login.setMensagemErro}
         mensagemErro={login.mensagemErro}
         processando={login.processando}
