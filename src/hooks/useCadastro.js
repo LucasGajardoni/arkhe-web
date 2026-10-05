@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adicionarConta, cadastrarUsuario } from '../services/authService.js'
+import { adicionarConta, cadastrarUsuario, prepararCadastroFacial } from '../services/authService.js'
 import { consultarEnderecoPorCep } from '../services/cepService.js'
-import { prepararSessaoFacialCadastro } from '../services/facialService.js'
 import { useSessao } from './useSessao.js'
 import {
   mascaraCep,
@@ -131,6 +130,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
   const [sessaoFacial, setSessaoFacial] = useState(null)
   const [modoFacial, setModoFacial] = useState('cadastro')
   const [mensagemFacial, setMensagemFacial] = useState('')
+  const [faceToken, setFaceToken] = useState('')
   const [facialConcluido, setFacialConcluido] = useState(false)
 
   const etapa = configuracaoEtapas[etapaAtual]
@@ -373,7 +373,13 @@ export function useCadastro(tipoConta, fluxo = {}) {
     setMensagemErro('')
 
     try {
-      await cadastrarUsuario({ tipoConta, dadosPF, dadosPJ })
+      await cadastrarUsuario({
+        tipoConta,
+        dadosPF,
+        dadosPJ,
+        faceToken,
+        faceSessionToken: sessaoFacial?.session_token,
+      })
       transicionarFormulario(() => navigate('/login', { replace: true }))
     } catch (erro) {
       const mensagem = erro.message
@@ -385,6 +391,7 @@ export function useCadastro(tipoConta, fluxo = {}) {
         const indiceContato = configuracaoEtapas.findIndex((item) => item.id === 'contato')
         setErroEmailCadastro('Este e-mail já está cadastrado.')
         setSessaoFacial(null)
+        setFaceToken('')
         setMensagemFacial('')
         setFacialConcluido(false)
         transicionarFormulario(() => setEtapaAtual(indiceContato))
@@ -457,9 +464,12 @@ export function useCadastro(tipoConta, fluxo = {}) {
         }
       }
 
-      const preparacaoFacial = await prepararSessaoFacialCadastro(dadosFaciais)
+      const preparacaoFacial = await prepararCadastroFacial(dadosFaciais)
       setModoFacial(preparacaoFacial.modo)
-      setMensagemFacial(preparacaoFacial.mensagem)
+      setFaceToken(preparacaoFacial.face_token || '')
+      setMensagemFacial(preparacaoFacial.modo === 'cadastro'
+        ? 'Vamos cadastrar seu rosto para proteger seu acesso Arkhé.'
+        : 'Seu CPF já possui biometria. Vamos confirmar que você é você mesmo.')
       setSessaoFacial(preparacaoFacial.sessao)
       transicionarFormulario(() => setEtapaAtual(etapaFacial))
     } catch (erro) {
