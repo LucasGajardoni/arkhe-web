@@ -1282,7 +1282,8 @@
 
   .navegacao-mobile-dashboard button {
     display: flex;
-    min-width: 58px;
+    flex: 1 1 0;
+    min-width: 0;
     min-height: 50px;
     align-items: center;
     justify-content: center;
