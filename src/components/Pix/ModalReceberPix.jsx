@@ -15,6 +15,7 @@ function nomeDaConta(usuario) {
 
 export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
   const [centavos, setCentavos] = useState(0)
+  const [valorLivre, setValorLivre] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
   const [cobranca, setCobranca] = useState(null)
@@ -30,14 +31,14 @@ export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
 
   async function gerar(evento) {
     evento.preventDefault()
-    if (processandoRef.current || valor <= 0) return
+    if (processandoRef.current || (!valorLivre && valor <= 0)) return
 
     processandoRef.current = true
     setProcessando(true)
     setErro('')
 
     try {
-      const resposta = await criarCobrancaPix(valor)
+      const resposta = await criarCobrancaPix(valor, valorLivre)
       const codigoPagamento = String(resposta.codigo_pagamento ?? '')
       const valorResposta = Number(resposta.valor)
 
@@ -48,7 +49,8 @@ export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
       setCobranca({
         ...resposta,
         codigo_pagamento: codigoPagamento,
-        valor: Number.isFinite(valorResposta) && valorResposta > 0 ? valorResposta : valor,
+        valor: valorLivre ? null : (Number.isFinite(valorResposta) && valorResposta > 0 ? valorResposta : valor),
+        valor_livre: valorLivre,
       })
       Promise.resolve(aoCriar?.()).catch(() => {})
     } catch (falha) {
@@ -78,7 +80,7 @@ export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
         <header>
           <div>
             <p>RECEBER PIX</p>
-            <h2 id="titulo-receber-pix">{cobranca ? 'Pix para receber' : 'Quanto você quer receber?'}</h2>
+            <h2 id="titulo-receber-pix">{cobranca ? 'Pix para receber' : 'Gerar QR Code Pix'}</h2>
             <span>{cobranca ? 'Compartilhe o QR Code ou o código Pix.' : 'Crie uma cobrança Pix para sua conta atual.'}</span>
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
@@ -88,33 +90,47 @@ export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
           <QRCodePix
             codigo={cobranca.codigo_pagamento}
             valor={cobranca.valor}
+            valorLivre={cobranca.valor_livre}
             nomeRecebedor={nomeDaConta(usuario)}
             aoCriarOutro={criarOutro}
             aoConcluir={fechar}
           />
         ) : (
           <form className="form-receber-pix" onSubmit={gerar} aria-busy={processando}>
-            <label>
-              <span>Valor do Pix</span>
-              <input
-                autoFocus
-                inputMode="decimal"
-                autoComplete="off"
-                value={moeda.format(valor)}
-                onChange={alterarValor}
-                disabled={processando}
-                required
-                aria-label="Valor do Pix para receber"
-                aria-describedby="ajuda-valor-receber-pix"
-              />
-              <small id="ajuda-valor-receber-pix">Informe um valor maior que zero.</small>
-            </label>
+            <fieldset className="opcoes-valor-pix" disabled={processando}>
+              <legend>Como definir o valor?</legend>
+              <label>
+                <input type="radio" name="tipo-valor-pix" checked={!valorLivre} onChange={() => { setValorLivre(false); setErro('') }} />
+                <span><strong>Eu defino o valor</strong><small>O QR Code já leva o valor da cobrança.</small></span>
+              </label>
+              <label>
+                <input type="radio" name="tipo-valor-pix" checked={valorLivre} onChange={() => { setValorLivre(true); setErro('') }} />
+                <span><strong>Quem paga escolhe o valor</strong><small>A pessoa informa quanto quer pagar no Arkhé.</small></span>
+              </label>
+            </fieldset>
+            {!valorLivre && (
+              <label>
+                <span>Valor do Pix</span>
+                <input
+                  autoFocus
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={moeda.format(valor)}
+                  onChange={alterarValor}
+                  disabled={processando}
+                  required
+                  aria-label="Valor do Pix para receber"
+                  aria-describedby="ajuda-valor-receber-pix"
+                />
+                <small id="ajuda-valor-receber-pix">Informe um valor maior que zero.</small>
+              </label>
+            )}
 
             <div className="aviso-receber-pix">
               <span aria-hidden="true">↓</span>
               <p>
                 <strong>O dinheiro entra na conta atual</strong>
-                <small>O código Pix e o QR Code aparecem após a confirmação.</small>
+                <small>{valorLivre ? 'Este QR Code vale para um pagamento, com o valor escolhido por quem paga.' : 'O código Pix e o QR Code aparecem após a confirmação.'}</small>
               </p>
             </div>
 
@@ -122,8 +138,8 @@ export default function ModalReceberPix({ usuario, fechar, aoCriar }) {
 
             <footer>
               <button className="botao botao-secundario" type="button" disabled={processando} onClick={fechar}>Cancelar</button>
-              <button className="botao botao-principal" type="submit" disabled={processando || valor <= 0}>
-                {processando ? 'Gerando Pix...' : 'Gerar Pix'}
+              <button className="botao botao-principal" type="submit" disabled={processando || (!valorLivre && valor <= 0)}>
+                {processando ? 'Gerando QR Code...' : 'Gerar QR Code'}
               </button>
             </footer>
           </form>

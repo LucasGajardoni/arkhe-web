@@ -111,6 +111,77 @@ if (data.status === 1) {
   console.log('Pagamento confirmado')
 }`
 
+const exemploQrLivre = `${exemploHeaders}
+
+const response = await fetch('${baseUrl}/api/v1/cobrancas/pix/qrcode', {
+  method: 'POST',
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ valor_livre: true })
+})
+const pix = await response.json()
+if (!response.ok) throw new Error(pix.mensagem)
+// Guarde o ID e entregue a imagem SVG ao seu frontend.
+console.log(pix.id_cobranca, pix.codigo_pagamento, pix.qr_code_svg)`
+
+const dadosBoleto = {
+  documento_pagador: '52998224725',
+  valor: 125.50,
+  data_vencimento: '2026-11-10',
+}
+
+const dadosVenda = {
+  numero_cartao: '2481000000000001',
+  validade: '09/2031',
+  cvv: '082',
+  valor: 100,
+  tipo: 'CREDITO',
+  parcelas: 3,
+}
+
+const exemploBoleto = `${exemploHeaders}
+
+const response = await fetch('${baseUrl}/api/v1/cobrancas/boletos', {
+  method: 'POST',
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify(${JSON.stringify(dadosBoleto, null, 2)})
+})
+const boleto = await response.json()
+if (!response.ok) throw new Error(boleto.mensagem)
+console.log(boleto.id_cobranca, boleto.codigo_pagamento, boleto.url_pdf)`
+
+const exemploVenda = `${exemploHeaders}
+
+const response = await fetch('${baseUrl}/api/v1/vendas/cartao', {
+  method: 'POST',
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify(${JSON.stringify(dadosVenda, null, 2)})
+})
+const venda = await response.json()
+if (!response.ok) throw new Error(venda.mensagem)
+console.log(venda.aprovado, venda.id_compra, venda.valor_recebido)`
+
+const exemploPdfBoleto = `// No servidor Node.js, usando as mesmas credenciais.
+import { writeFile } from 'node:fs/promises'
+
+${exemploHeaders}
+const idCobranca = 123
+const response = await fetch('${baseUrl}/api/v1/cobrancas/boletos/' + idCobranca + '/pdf', { headers })
+if (!response.ok) throw new Error((await response.json()).mensagem)
+await writeFile('boleto.pdf', Buffer.from(await response.arrayBuffer()))`
+
+const respostaBoleto = JSON.stringify({
+  mensagem: 'Boleto criado com sucesso', id_cobranca: 123,
+  id_pagador: 12, id_recebedor: 9, valor: 125.50, data_vencimento: '2026-11-10',
+  codigo_pagamento: '2480000000123', status: 0, tipo_cobranca: 0,
+  url_pdf: '/api/v1/cobrancas/boletos/123/pdf',
+}, null, 2)
+
+const respostaVenda = JSON.stringify({
+  aprovado: true, mensagem: 'Venda aprovada',
+  id_compra: 456, id_movimentacao: 789, valor: 100, valor_recebido: 95, taxa: 5,
+  tipo: 'CREDITO', parcelas: 3, final_cartao: '0001', data_compra: '2026-10-19T10:30:00',
+}, null, 2)
+
 const exemploErros = `const response = await fetch('${baseUrl}/api/v1/saldo', { headers })
 const data = await response.json()
 
@@ -187,6 +258,11 @@ const endpoints = [
   ['endpoint-resumo', 'Resumo financeiro'],
   ['endpoint-criar-cobranca', 'Criar cobrança Pix'],
   ['endpoint-consultar-cobranca', 'Consultar cobrança Pix'],
+  ['endpoint-gerar-qrcode', 'Gerar QR Code Pix'],
+  ['endpoint-criar-boleto', 'Emitir boleto'],
+  ['endpoint-consultar-boleto', 'Consultar boleto e PDF'],
+  ['endpoint-venda-cartao', 'Venda com cartão virtual'],
+  ['repeticao-pedidos', 'Pedidos repetidos'],
 ]
 
 function BlocoCodigo({ titulo, codigo }) {
@@ -253,8 +329,10 @@ export default function DocumentacaoApi() {
           <section id="introducao" className="secao-documentacao-api" aria-labelledby="titulo-introducao-api">
             <p className="rotulo-documentacao-api">VISÃO GERAL</p>
             <h2 id="titulo-introducao-api">Integração para contas empresariais</h2>
-            <p>A API Arkhé permite que sistemas autorizados por uma conta PJ consultem informações financeiras e criem cobranças Pix internas.</p>
+            <p>A API Arkhé permite que sistemas autorizados por uma conta PJ consultem informações financeiras, emitam cobranças Pix e boletos e recebam vendas com cartões virtuais Arkhé.</p>
             <div className="nota-documentacao-api"><strong>Antes de começar</strong><span>Crie uma integração na conta PJ e salve o Client ID e o Client Secret exibidos.</span></div>
+            <p>Boletos e cartões funcionam entre contas do próprio Arkhé. A conta recebedora vem das credenciais da integração.</p>
+            <p><a href="/arkhe-api.postman_collection.json" download>Baixar coleção do Postman</a> · <a href="/exemplo-integracao-arkhe.py" download>Baixar exemplo Python</a></p>
           </section>
 
           <section id="autenticacao" className="secao-documentacao-api" aria-labelledby="titulo-autenticacao-api">
@@ -362,6 +440,74 @@ export default function DocumentacaoApi() {
                 <div className="status-cobranca-docs"><span><b>0</b> Pendente</span><span><b>1</b> Pago</span></div>
               </div>
             </article>
+
+            <article className="endpoint-api" id="endpoint-gerar-qrcode">
+              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/cobrancas/pix/qrcode">Gera a imagem de um QR Code Pix Arkhé com valor fixo ou escolhido por quem paga.</CabecalhoEndpoint>
+              <div className="detalhes-endpoint-api">
+                <dl>
+                  <div><dt>valor_livre</dt><dd>Envie <code>true</code> para a pessoa informar o valor ao pagar no Arkhé. O campo <code>valor</code> não é necessário.</dd></div>
+                  <div><dt>valor</dt><dd>Para definir a quantia antes de gerar, envie somente <code>{'{ "valor": 125.50 }'}</code>.</dd></div>
+                  <div><dt>qr_code_svg</dt><dd>A resposta contém a imagem SVG pronta para exibir ou salvar, além do código Pix Copia e Cola.</dd></div>
+                </dl>
+                <BlocoCodigo titulo="Gerar QR Code com valor livre" codigo={exemploQrLivre} />
+                <BlocoCodigo titulo="Resposta do QR Code" codigo={JSON.stringify({ id_cobranca: 124, codigo_pagamento: 'ARKHEPIX:EXEMPLO124', valor: null, valor_livre: true, qr_code_svg: '<svg ...>...</svg>', status: 0, tipo_cobranca: 1 }, null, 2)} />
+                <p>Quem escaneia escolhe o valor, confere o recebedor e confirma o pagamento no Arkhé. O QR Code vale para um pagamento. Depois de pago, gere outro para um novo recebimento.</p>
+                <p>Consulte <code>/api/v1/cobrancas/pix/{'{id_cobranca}'}</code> para acompanhar. Após o pagamento, a consulta informa <code>status: 1</code> e o valor efetivamente pago. A geração também funciona na rota Pix anterior e não movimenta dinheiro.</p>
+              </div>
+            </article>
+
+            <article className="endpoint-api" id="endpoint-criar-boleto">
+              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/cobrancas/boletos">Emite um boleto para uma conta Arkhé, identificada pelo CPF ou CNPJ do pagador.</CabecalhoEndpoint>
+              <div className="detalhes-endpoint-api">
+                <dl>
+                  <div><dt>documento_pagador</dt><dd>CPF da conta PF ou CNPJ da conta PJ. Aceita documento com ou sem pontuação.</dd></div>
+                  <div><dt>valor</dt><dd>Valor positivo em reais, com ponto para os centavos.</dd></div>
+                  <div><dt>data_vencimento</dt><dd>Data YYYY-MM-DD, igual ou posterior a hoje.</dd></div>
+                </dl>
+                <BlocoCodigo titulo="Emitir boleto no servidor JavaScript" codigo={exemploBoleto} />
+                <BlocoCodigo titulo="Resposta da emissão" codigo={respostaBoleto} />
+                <p>A emissão retorna <code>201</code>. O boleto aparece na conta pagadora e pode ser pago pelo fluxo normal do Arkhé. Emitir não significa que o pagamento já aconteceu.</p>
+                <p>Guarde o <code>id_cobranca</code> no pedido do seu sistema. Um boleto pendente com o mesmo pagador, recebedor, valor e vencimento impede outra emissão igual: a API retorna <code>409</code> com o ID do boleto existente.</p>
+              </div>
+            </article>
+
+            <article className="endpoint-api" id="endpoint-consultar-boleto">
+              <CabecalhoEndpoint metodo="GET" caminho="/api/v1/cobrancas/boletos/{id_cobranca}">Consulta o estado atual do boleto da conta vinculada à integração.</CabecalhoEndpoint>
+              <div className="detalhes-endpoint-api">
+                <p>Use os mesmos headers. O campo <code>status</code> informa <code>0</code> para pendente e <code>1</code> para pago.</p>
+                <CabecalhoEndpoint metodo="GET" caminho="/api/v1/cobrancas/boletos/{id_cobranca}/pdf">Baixa o PDF do boleto com autenticação da integração.</CabecalhoEndpoint>
+                <p>O PDF exige as credenciais nos headers. Abra-o pelo seu servidor ou entregue o arquivo ao cliente; o endereço isolado não concede acesso.</p>
+                <BlocoCodigo titulo="Baixar PDF no servidor Node.js" codigo={exemploPdfBoleto} />
+              </div>
+            </article>
+
+            <article className="endpoint-api" id="endpoint-venda-cartao">
+              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/vendas/cartao">Recebe uma venda com o cartão virtual Arkhé do comprador.</CabecalhoEndpoint>
+              <div className="detalhes-endpoint-api">
+                <dl>
+                  <div><dt>numero_cartao</dt><dd>Número do cartão virtual Arkhé, com 16 dígitos.</dd></div>
+                  <div><dt>validade / cvv</dt><dd>Validade MM/YYYY e CVV como texto com 3 dígitos, preservando zeros à esquerda. Não envie o PIN pessoal.</dd></div>
+                  <div><dt>valor</dt><dd>Valor total positivo em reais. Cada parcela deve ter pelo menos um centavo.</dd></div>
+                  <div><dt>tipo</dt><dd><code>DEBITO</code> ou <code>CREDITO</code>. O padrão é débito.</dd></div>
+                  <div><dt>parcelas</dt><dd>Uma parcela no débito; de 1 a 15 no crédito. O padrão é 1.</dd></div>
+                </dl>
+                <p>No débito, o comprador precisa de saldo e o vendedor recebe o valor integral. No crédito, o limite é conferido sobre o valor integral, o comprador recebe as parcelas na fatura e o vendedor recebe 95%, com desconto de 5%.</p>
+                <BlocoCodigo titulo="Receber venda no servidor JavaScript" codigo={exemploVenda} />
+                <BlocoCodigo titulo="Resposta da venda" codigo={respostaVenda} />
+                <p>Cartões bloqueados, vencidos, com dados inválidos ou sem saldo/limite são recusados. A resposta devolve somente os quatro últimos dígitos do cartão.</p>
+                <p>Guarde <code>id_compra</code>, <code>id_movimentacao</code> e o resultado junto ao pedido do seu sistema. Os recebimentos aparecem na consulta de movimentações da conta.</p>
+              </div>
+            </article>
+
+            <article className="endpoint-api" id="repeticao-pedidos">
+              <div className="detalhes-endpoint-api">
+                <h3>Pedidos repetidos e falhas de conexão</h3>
+                <p>Se a conexão cair depois do envio, a operação pode ter sido aprovada. Confira o boleto ou o recebimento nas movimentações antes de enviar uma nova cobrança. Desative a repetição automática de POST no seu sistema.</p>
+                <p>No cartão, uma venda com o mesmo cartão, vendedor, valor, modalidade e número de parcelas nos últimos cinco minutos retorna <code>409</code>, com código <code>VENDA_SEMELHANTE_RECENTE</code>. Isso também bloqueia duas vendas legítimas iguais nesse intervalo. Depois dos cinco minutos, o mesmo envio pode gerar uma nova cobrança.</p>
+                <p>No boleto, a resposta <code>409</code> com código <code>BOLETO_PENDENTE_EXISTENTE</code> inclui <code>id_cobranca</code> para consulta. Duas cobranças pendentes iguais também ficam bloqueadas enquanto houver uma pendente.</p>
+                <p>Não há referência externa persistida nem garantia de envio único por pedido. O sistema integrado deve controlar seus pedidos e guardar os IDs retornados. Uma operação concorrente também pode retornar <code>409</code>; confira o resultado antes de tentar novamente.</p>
+              </div>
+            </article>
           </section>
 
           <section id="erros-api" className="secao-documentacao-api" aria-labelledby="titulo-erros-api">
@@ -373,7 +519,9 @@ export default function DocumentacaoApi() {
               <div><dt>401</dt><dd>Credenciais ausentes ou inválidas.</dd></div>
               <div><dt>403</dt><dd>Integração sem permissão ou desativada.</dd></div>
               <div><dt>404</dt><dd>Recurso não encontrado.</dd></div>
+              <div><dt>409</dt><dd>Boleto pendente igual, venda semelhante recente ou operação concorrente. Confira o resultado antes de enviar novamente.</dd></div>
               <div><dt>500</dt><dd>Erro interno.</dd></div>
+              <div><dt>503</dt><dd>Configuração de liquidação ou regra de parcelas indisponível.</dd></div>
             </dl>
             <h3>Tratamento básico</h3>
             <BlocoCodigo titulo="JavaScript" codigo={exemploErros} />
@@ -388,6 +536,8 @@ export default function DocumentacaoApi() {
               <li>Use HTTPS em todas as comunicações.</li>
               <li>Não coloque credenciais em repositórios públicos.</li>
               <li>Cada integração pertence a uma única conta PJ.</li>
+              <li>Guarde os IDs retornados junto ao pedido e confira o recebimento antes de repetir uma cobrança após falha de conexão.</li>
+              <li>Não registre CVV, PIN ou dados completos do cartão em logs ou no cadastro de pedidos do seu sistema.</li>
             </ul>
           </section>
         </div>

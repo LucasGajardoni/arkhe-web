@@ -7,18 +7,14 @@ import '../Login/Login.css'
 export default function ConfirmarChavePix() {
   const navigate = useNavigate()
   const [token] = useState(() => window.location.hash.replace('#token=', '').trim())
-  const [carregando, setCarregando] = useState(true)
+  const [carregando, setCarregando] = useState(Boolean(token))
   const [mensagem, setMensagem] = useState('')
-  const [erro, setErro] = useState('')
+  const [erro, setErro] = useState(token ? '' : 'Este link de confirmação é inválido.')
 
   useEffect(() => {
     let ativo = true
 
-    if (!token) {
-      setErro('Este link de confirmação é inválido.')
-      setCarregando(false)
-      return () => { ativo = false }
-    }
+    if (!token) return
 
     confirmarEmailPix(token)
       .then((resultado) => {

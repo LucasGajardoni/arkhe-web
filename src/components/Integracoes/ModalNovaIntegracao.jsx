@@ -8,7 +8,10 @@ const permissoes = [
   'Consultar saldo',
   'Consultar movimentações',
   'Criar cobranças Pix',
+  'Gerar QR Code Pix com valor fixo ou escolhido por quem paga',
   'Consultar status de cobranças Pix',
+  'Emitir e consultar boletos Arkhé e baixar seus PDFs',
+  'Receber vendas com cartão virtual Arkhé no débito ou crédito',
 ]
 
 export default function ModalNovaIntegracao({ fechar, aoCriar }) {

@@ -37,7 +37,7 @@ async function copiarTexto(texto) {
   if (!copiado) throw new Error('Não foi possível copiar o código Pix.')
 }
 
-export default function QRCodePix({ codigo, valor, nomeRecebedor, aoCriarOutro, aoConcluir }) {
+export default function QRCodePix({ codigo, valor, valorLivre = false, nomeRecebedor, aoCriarOutro, aoConcluir }) {
   const [mensagemCopia, setMensagemCopia] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const temporizadorRef = useRef(null)
@@ -63,8 +63,8 @@ export default function QRCodePix({ codigo, valor, nomeRecebedor, aoCriarOutro, 
   return (
     <div className="conteudo-qr-pix">
       <div className="resumo-qr-pix">
-        <small>VALOR A RECEBER</small>
-        <strong>{moeda.format(Number(valor) || 0)}</strong>
+        <small>{valorLivre ? 'VALOR LIVRE' : 'VALOR A RECEBER'}</small>
+        <strong>{valorLivre ? 'Quem paga escolhe' : moeda.format(Number(valor) || 0)}</strong>
       </div>
 
       <div className="quadro-qr-pix">
@@ -81,7 +81,7 @@ export default function QRCodePix({ codigo, valor, nomeRecebedor, aoCriarOutro, 
         />
       </div>
 
-      <p className="instrucao-qr-pix">Escaneie para pagar</p>
+      <p className="instrucao-qr-pix">{valorLivre ? 'Escaneie e informe o valor no Arkhé' : 'Escaneie para pagar'}</p>
       <p className="recebedor-qr-pix">
         <strong>{nomeRecebedor || 'Cliente Arkhé'}</strong>
         <span>Banco Arkhé</span>

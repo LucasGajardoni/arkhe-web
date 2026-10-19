@@ -114,10 +114,10 @@ export function realizarPix(tipoChave, chavePix, valor) {
   })
 }
 
-export function criarCobrancaPix(valor) {
+export function criarCobrancaPix(valor, valorLivre = false) {
   return requisitarPix('/criar_cobranca_pix', {
     method: 'POST',
-    body: JSON.stringify({ valor }),
+    body: JSON.stringify(valorLivre ? { valor_livre: true } : { valor }),
   }, 'Não foi possível gerar o Pix para receber.')
 }
 
@@ -128,10 +128,10 @@ export function buscarCobrancaPixPorCodigo(codigoPagamento) {
   }, 'Não foi possível localizar esta cobrança Pix.')
 }
 
-export function pagarCobrancaPix(idCobranca) {
+export function pagarCobrancaPix(idCobranca, valor) {
   return requisitarPix('/baixar_cobranca', {
     method: 'POST',
-    body: JSON.stringify({ id_cobranca: idCobranca }),
+    body: JSON.stringify({ id_cobranca: idCobranca, valor }),
   }, 'Não foi possível pagar esta cobrança Pix.')
 }
 

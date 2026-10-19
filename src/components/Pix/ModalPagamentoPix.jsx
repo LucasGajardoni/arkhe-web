@@ -196,7 +196,8 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
       }
 
       setCobranca(cobrancaEncontrada)
-      setEtapa('revisao_codigo')
+      setCentavos(0)
+      setEtapa(cobrancaEncontrada.valor_livre ? 'valor_codigo' : 'revisao_codigo')
     } catch (falha) {
       setCobranca(null)
       let mensagem = falha.message || 'Não foi possível localizar esta cobrança Pix.'
@@ -237,7 +238,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setProcessando(true)
     setErro('')
     try {
-      const resposta = await pagarCobrancaPix(cobranca.id_cobranca)
+      const resposta = await pagarCobrancaPix(cobranca.id_cobranca, cobranca.valor_livre ? centavos / 100 : undefined)
       setIdMovimentacao(resposta.id_movimentacao || null)
       Promise.resolve(aoConcluir?.()).catch(() => {})
       setEtapa('sucesso')
@@ -249,7 +250,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     }
   }
 
-  const valorCobranca = Number(cobranca?.valor) || 0
+  const valorCobranca = cobranca?.valor_livre ? centavos / 100 : Number(cobranca?.valor) || 0
   const valorSucesso = metodo === 'chave' ? centavos / 100 : valorCobranca
   const recebedorSucesso = metodo === 'chave'
     ? destinatario?.nome_fantasia || destinatario?.nome
@@ -260,13 +261,13 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   let titulo = 'Como você quer pagar?'
 
   if (['chave', 'scanner', 'copia', 'buscando'].includes(etapa)) etapaAtual = 2
-  if (etapa === 'valor') etapaAtual = 3
+  if (etapa === 'valor' || etapa === 'valor_codigo') etapaAtual = 3
   if (['confirmacao', 'revisao_codigo', 'confirmacao_codigo'].includes(etapa)) etapaAtual = 4
   if (etapa === 'chave') titulo = 'Pagar com chave Pix'
   if (etapa === 'scanner') titulo = 'Ler QR Code Pix'
   if (etapa === 'copia') titulo = 'Pix Copia e Cola'
   if (etapa === 'buscando') titulo = 'Consultando o Pix'
-  if (etapa === 'valor') titulo = 'Informe o valor'
+  if (etapa === 'valor' || etapa === 'valor_codigo') titulo = 'Informe o valor'
   if (etapa === 'confirmacao' || etapa === 'revisao_codigo') titulo = 'Revise antes de pagar'
   if (etapa === 'confirmacao_codigo') titulo = 'Confirme o pagamento'
   if (etapa === 'sucesso') titulo = 'Pix concluído'
@@ -350,16 +351,17 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <p>Estamos validando o código e os dados do recebedor.</p>
       </div>
     )
-  } else if (etapa === 'valor') {
+  } else if (etapa === 'valor' || etapa === 'valor_codigo') {
     conteudo = (
-      <form onSubmit={(evento) => { evento.preventDefault(); if (centavos > 0) setEtapa('confirmacao') }}>
+      <form onSubmit={(evento) => { evento.preventDefault(); if (centavos > 0) setEtapa(etapa === 'valor_codigo' ? 'revisao_codigo' : 'confirmacao') }}>
+        {etapa === 'valor_codigo' && <p>Quanto você quer pagar para <strong>{nomeRecebedor(cobranca)}</strong>?</p>}
         <label className="campo-chave-pix campo-valor-pix">
           <span>Valor do Pix</span>
           <input autoFocus inputMode="decimal" value={moeda.format(centavos / 100)} onChange={alterarValor} aria-label="Valor do Pix" />
           <small>Informe um valor maior que zero.</small>
         </label>
         <footer>
-          <button className="botao botao-secundario" type="button" onClick={() => setEtapa('chave')}>Voltar</button>
+          <button className="botao botao-secundario" type="button" onClick={() => setEtapa(etapa === 'valor_codigo' ? 'copia' : 'chave')}>Voltar</button>
           <button className="botao botao-principal" type="submit" disabled={centavos <= 0}>Revisar Pix</button>
         </footer>
       </form>
@@ -392,6 +394,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <strong className="valor-cobranca-pix">{moeda.format(valorCobranca)}</strong>
         <dl>
           <div><dt>Método</dt><dd>{rotuloMetodo(metodo)}</dd></div>
+          {cobranca?.valor_livre && <div><dt>Valor escolhido por você</dt><dd><button type="button" className="botao botao-secundario" onClick={() => setEtapa('valor_codigo')}>Alterar valor</button></dd></div>}
           <div><dt>Situação</dt><dd>{paga ? 'Pix já pago' : 'Pendente'}</dd></div>
           <div><dt>Conta de origem</dt><dd>{descricaoConta(usuario)}</dd></div>
         </dl>

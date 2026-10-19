@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import CartaoVisual from './CartaoVisual.jsx'
 import { formatarLimite, nomeNoCartao, numeroCartao, percentualUtilizado, validadeCartao } from './cartaoUtils.js'
@@ -91,7 +91,7 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const [mensagem, setMensagem] = useState('')
   const [erroCopia, setErroCopia] = useState('')
   const [aba, setAba] = useState('resumo')
-  const [tentouCarregarCredito, setTentouCarregarCredito] = useState(false)
+  const tentouCarregarCredito = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, gerando)
   const numero = numeroCartao(cartao)
   const bloqueado = Number(cartao?.status) === 1
@@ -99,27 +99,26 @@ export default function ModalCartao({ usuario, dados, fechar }) {
   const percentual = percentualUtilizado(cartao?.limite_total, cartao?.limite_utilizado)
   const vencimento = Number(fechamento) + 3
   const compras = comprasCartao?.compras || []
-  const parcelas = comprasCartao?.parcelas || []
   const resumoCredito = comprasCartao?.resumo || {}
   const faturas = faturasCartao?.faturas || []
   const proximasFaturas = faturasCartao?.proximas_faturas || []
   const faturaAtual = faturasCartao?.fatura_atual || null
   const proximaFatura = faturasCartao?.proxima_fatura || null
-  const parcelasOrdenadas = useMemo(() => [...parcelas].sort((a, b) => {
+  const parcelasOrdenadas = useMemo(() => [...(comprasCartao?.parcelas || [])].sort((a, b) => {
     const pendenteA = Number(a.status) === 0 ? 0 : 1
     const pendenteB = Number(b.status) === 0 ? 0 : 1
     if (pendenteA !== pendenteB) return pendenteA - pendenteB
     return String(a.data_parcela || '').localeCompare(String(b.data_parcela || ''))
-  }), [parcelas])
+  }), [comprasCartao?.parcelas])
 
   useEffect(() => {
-    if (!cartao || tentouCarregarCredito) return
-    setTentouCarregarCredito(true)
+    if (!cartao || tentouCarregarCredito.current) return
+    tentouCarregarCredito.current = true
     void (async () => {
       await carregarFaturasCartao({ forcar: true })
       await carregarComprasCartao({ forcar: true })
     })()
-  }, [cartao, tentouCarregarCredito, carregarFaturasCartao, carregarComprasCartao])
+  }, [cartao, carregarFaturasCartao, carregarComprasCartao])
 
   async function atualizarCredito() {
     await carregarFaturasCartao({ forcar: true })
