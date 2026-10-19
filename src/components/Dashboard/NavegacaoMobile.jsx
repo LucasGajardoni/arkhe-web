@@ -23,7 +23,7 @@ export default function NavegacaoMobile({ secao = 'inicio', tipoConta = '' }) {
         <span>{tipoConta === 'PJ' ? 'Cobranças' : 'Boletos'}</span>
       </button>
       <button className={secao === 'whatsapp' ? 'ativo' : ''} type="button" aria-current={secao === 'whatsapp' ? 'page' : undefined} onClick={() => navigate('/dashboard/whatsapp')}>
-        <Icone nome="api" />
+        <Icone nome="whatsapp" />
         <span>WhatsApp</span>
       </button>
       {tipoConta === 'PJ' && (
