@@ -5,6 +5,7 @@ import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import ModalNovaIntegracao from '../../components/Integracoes/ModalNovaIntegracao.jsx'
+import WhatsAppArkhe from '../../components/WhatsAppArkhe/WhatsAppArkhe.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
 import { listarIntegracoes } from '../../services/integracoesService.js'
@@ -273,6 +274,7 @@ export default function Integracoes() {
           </div>
         </div>
 
+        <WhatsAppArkhe />
         <DocumentacaoApi />
       </main>
 
