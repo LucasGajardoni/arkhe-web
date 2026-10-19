@@ -22,6 +22,10 @@ export default function NavegacaoMobile({ secao = 'inicio', tipoConta = '' }) {
         <Icone nome="boleto" />
         <span>{tipoConta === 'PJ' ? 'Cobranças' : 'Boletos'}</span>
       </button>
+      <button className={secao === 'whatsapp' ? 'ativo' : ''} type="button" aria-current={secao === 'whatsapp' ? 'page' : undefined} onClick={() => navigate('/dashboard/whatsapp')}>
+        <Icone nome="api" />
+        <span>WhatsApp</span>
+      </button>
       {tipoConta === 'PJ' && (
         <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>
           <Icone nome="api" />
