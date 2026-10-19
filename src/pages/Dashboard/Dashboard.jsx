@@ -9,6 +9,7 @@ import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import CartaoResumo from '../../components/Cartao/CartaoResumo.jsx'
 import ArkhePay from '../../components/Maquininha/ArkhePay.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
+import WhatsAppArkhe from '../../components/WhatsAppArkhe/WhatsAppArkhe.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
 import {
@@ -124,6 +125,7 @@ export default function Dashboard() {
       <main>
         {erroSessao && <p className="mensagem-sessao-dashboard" role="alert">{erroSessao}</p>}
 
+        <WhatsAppArkhe />
         <section className="hero-dashboard">
           <div className="orbita-dashboard orbita-um" />
           <div className="orbita-dashboard orbita-dois" />
