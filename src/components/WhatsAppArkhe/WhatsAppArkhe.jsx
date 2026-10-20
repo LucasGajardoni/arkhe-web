@@ -3,9 +3,9 @@ import { requisitarApi } from '../../services/authService.js'
 import './WhatsAppArkhe.css'
 
 const niveis = [
-  { valor: 1, titulo: 'Consultas', detalhe: 'Informações gerais; dados bancários exigem verificação adicional.' },
-  { valor: 2, titulo: 'Serviços', detalhe: 'Permissão futura para serviços sem movimentação.' },
-  { valor: 3, titulo: 'Movimentações', detalhe: 'Permissão futura para pagamentos, sujeita a segurança adicional.' },
+  { valor: 1, titulo: 'Consultas', detalhe: 'Consultas de saldo, extrato e outras informações da conta, após vinculação.' },
+  { valor: 2, titulo: 'Serviços', detalhe: 'Consultas e transações bancárias, quando habilitadas na integração.' },
+  { valor: 3, titulo: 'Movimentações', detalhe: 'Para PJ: consultas, transações e emissão de boletos e cobranças, quando habilitadas.' },
 ]
 
 export default function WhatsAppArkhe() {
