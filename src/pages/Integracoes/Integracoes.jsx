@@ -274,10 +274,10 @@ export default function Integracoes() {
           </div>
         </div>
 
-        <WhatsAppArkhe />
         <DocumentacaoApi />
       </main>
 
+      <WhatsAppArkhe />
       <NavegacaoMobile secao="integracoes" tipoConta={perfil.tipoConta} />
       {perfilAberto && <ModalPerfil usuario={perfil} fechar={() => setPerfilAberto(false)} aoAtualizar={atualizarPerfil} />}
       {modalAberto && <ModalNovaIntegracao fechar={() => setModalAberto(false)} aoCriar={carregarIntegracoes} />}
