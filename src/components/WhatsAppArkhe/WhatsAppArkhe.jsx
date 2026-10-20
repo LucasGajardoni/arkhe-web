@@ -55,7 +55,8 @@ export default function WhatsAppArkhe() {
         method: 'PUT', dados: { autorizado: true, nivel },
       })
       setConfig(dados)
-      setMensagem('Autorização salva. Agora abra o WhatsApp e envie a mensagem de ativação.')
+      const envio = await requisitarApi('/whatsapp/ativar', { method: 'POST' })
+      setMensagem(envio.mensagem || 'Mensagem enviada. Confira seu WhatsApp.')
     } catch (e) { setErro(e.message || 'Não foi possível autorizar o WhatsApp.') }
     finally { setSalvando(false) }
   }
@@ -64,16 +65,11 @@ export default function WhatsAppArkhe() {
     if (salvando) return
     setSalvando(true)
     setErro('')
-    // Abre a guia durante o clique, antes do await, para evitar bloqueio de pop-up.
-    const janela = window.open('', '_blank')
     try {
-      const resposta = await requisitarApi('/whatsapp/link', { method: 'POST' })
-      if (janela) janela.location.href = resposta.url
-      else window.location.href = resposta.url
-      setMensagem('Envie a mensagem pronta no WhatsApp para iniciar a verificação.')
+      const envio = await requisitarApi('/whatsapp/ativar', { method: 'POST' })
+      setMensagem(envio.mensagem || 'Mensagem enviada. Confira seu WhatsApp.')
     } catch (e) {
-      janela?.close()
-      setErro(e.message || 'Não foi possível abrir a conversa.')
+      setErro(e.message || 'Não foi possível enviar a mensagem.')
     } finally { setSalvando(false) }
   }
 
@@ -111,13 +107,13 @@ export default function WhatsAppArkhe() {
           ) : (
             <>
               <div className="arkhe-wa-confirmado">✓ Autorização salva para esta conta</div>
-              <button type="button" className="arkhe-wa-primario" onClick={iniciar} disabled={salvando}>{salvando ? 'Preparando...' : 'Conversar no WhatsApp'} <span>↗</span></button>
+              <button type="button" className="arkhe-wa-primario" onClick={iniciar} disabled={salvando}>{salvando ? 'Preparando...' : 'Reenviar mensagem de ativação'} <span>↗</span></button>
             </>
           )}
           <button type="button" className="arkhe-wa-depois" onClick={() => setAberta(false)}>Agora não</button>
           {mensagem && <p className="arkhe-wa-sucesso" role="status">{mensagem}</p>}
           {erro && <p className="arkhe-wa-erro" role="alert">{erro}</p>}
-          <p className="arkhe-wa-aviso">O acesso a dados financeiros e movimentações depende de validação de identidade e ainda não está disponível pelo WhatsApp.</p>
+          <p className="arkhe-wa-aviso">O WhatsApp será ativado somente após a confirmação ATIVAR. As operações bancárias dependem das permissões habilitadas.</p>
         </div>
       </section>
     </div>
