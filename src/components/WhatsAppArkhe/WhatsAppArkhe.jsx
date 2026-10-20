@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { requisitarApi } from '../../services/authService.js'
 import './WhatsAppArkhe.css'
+
+const niveis = [
+  { valor: 1, titulo: 'Consultas', detalhe: 'Informações gerais; dados bancários exigem verificação adicional.' },
+  { valor: 2, titulo: 'Serviços', detalhe: 'Permissão futura para serviços sem movimentação.' },
+  { valor: 3, titulo: 'Movimentações', detalhe: 'Permissão futura para pagamentos, sujeita a segurança adicional.' },
+]
 
 export default function WhatsAppArkhe() {
   const [config, setConfig] = useState(null)
   const [nivel, setNivel] = useState(1)
+  const [aberta, setAberta] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
+  const fecharRef = useRef(null)
 
   useEffect(() => {
     let ativo = true
@@ -15,65 +23,101 @@ export default function WhatsAppArkhe() {
       if (!ativo) return
       setConfig(dados)
       setNivel(Number(dados.nivel) || 1)
-    }).catch(e => { if (ativo) setErro(e.message) })
+      // Convite apenas para quem ainda nao autorizou. Reaparece ao voltar para a pagina.
+      if (!Boolean(dados.autorizado)) setAberta(true)
+    }).catch(() => {
+      // Nunca interromper o banco com uma modal se a API de WhatsApp falhar.
+    })
     return () => { ativo = false }
   }, [])
 
-  async function alterar(autorizado) {
+  useEffect(() => {
+    if (!aberta) return undefined
+    const anterior = document.activeElement
+    fecharRef.current?.focus()
+    function teclado(e) { if (e.key === 'Escape' && !salvando) setAberta(false) }
+    document.addEventListener('keydown', teclado)
+    return () => {
+      document.removeEventListener('keydown', teclado)
+      if (anterior?.isConnected) anterior.focus()
+    }
+  }, [aberta, salvando])
+
+  async function autorizar() {
+    if (salvando) return
     setSalvando(true)
     setErro('')
     setMensagem('')
     try {
       const dados = await requisitarApi('/whatsapp/configuracao', {
-        method: 'PUT', dados: { autorizado, nivel },
+        method: 'PUT', dados: { autorizado: true, nivel },
       })
       setConfig(dados)
-      setMensagem(autorizado ? 'Autorização salva. Agora inicie a conversa.' : 'WhatsApp desativado nesta conta.')
-    } catch (e) { setErro(e.message) }
+      setMensagem('Autorização salva. Agora abra o WhatsApp e envie a mensagem de ativação.')
+    } catch (e) { setErro(e.message || 'Não foi possível autorizar o WhatsApp.') }
     finally { setSalvando(false) }
   }
 
   async function iniciar() {
+    if (salvando) return
     setSalvando(true)
     setErro('')
+    // Abre a guia durante o clique, antes do await, para evitar bloqueio de pop-up.
     const janela = window.open('', '_blank')
     try {
       const resposta = await requisitarApi('/whatsapp/link', { method: 'POST' })
       if (janela) janela.location.href = resposta.url
       else window.location.href = resposta.url
-      setMensagem('Envie a mensagem preenchida no WhatsApp para iniciar a verificação.')
+      setMensagem('Envie a mensagem pronta no WhatsApp para iniciar a verificação.')
     } catch (e) {
-      if (janela) janela.close()
-      setErro(e.message)
+      janela?.close()
+      setErro(e.message || 'Não foi possível abrir a conversa.')
     } finally { setSalvando(false) }
   }
 
+  if (!aberta) return null
+
   return (
-    <section className="arkhe-whatsapp" aria-label="WhatsApp do Arkhé">
-      <div>
-        <small>ASSISTENTE ARKHÉ</small>
-        <h2>Seu banco também no WhatsApp</h2>
-        <p>Autorize esta conta, escolha o nível e abra uma conversa com o número oficial do Arkhé. O acesso bancário só será liberado após a verificação de identidade.</p>
-      </div>
-      {!config && !erro && <p>Carregando configuração...</p>}
-      {config && <>
-        <label htmlFor="nivel-whatsapp-arkhe">Nível permitido para esta conta</label>
-        <select id="nivel-whatsapp-arkhe" value={nivel} onChange={e => setNivel(Number(e.target.value))} disabled={salvando}>
-          <option value={1}>Nível 1 — consultas</option>
-          <option value={2}>Nível 2 — serviços</option>
-          <option value={3}>Nível 3 — movimentações</option>
-        </select>
-        <p className="arkhe-whatsapp-status">Status: {config.autorizado ? 'autorizado' : 'desativado'}</p>
-        <div className="arkhe-whatsapp-acoes">
-          <button type="button" disabled={salvando} onClick={() => alterar(true)}>
-            {config.autorizado ? 'Salvar nível' : 'Autorizar WhatsApp'}
-          </button>
-          {config.autorizado && <button type="button" disabled={salvando || nivel !== Number(config.nivel)} onClick={iniciar}>Abrir WhatsApp</button>}
-          {config.autorizado && <button type="button" className="arkhe-whatsapp-desativar" disabled={salvando} onClick={() => alterar(false)}>Desativar</button>}
+    <div className="arkhe-wa-overlay" onMouseDown={e => { if (e.target === e.currentTarget && !salvando) setAberta(false) }}>
+      <section className="arkhe-wa-modal" role="dialog" aria-modal="true" aria-labelledby="arkhe-wa-titulo">
+        <button ref={fecharRef} className="arkhe-wa-fechar" type="button" aria-label="Fechar convite" onClick={() => setAberta(false)}>×</button>
+        <div className="arkhe-wa-arte" aria-hidden="true">
+          <span className="arkhe-wa-marca">ARKHÉ <span>•</span> DIGITAL</span>
+          <div className="arkhe-wa-ilustracao">
+            <span className="arkhe-wa-bolha arkhe-wa-bolha-um">Olá, Arkhé!</span>
+            <span className="arkhe-wa-bolha arkhe-wa-bolha-dois">Olá! Como posso ajudar?</span>
+            <div className="arkhe-wa-celular"><span>✦</span><strong>Arkhé</strong><small>Seu assistente, sempre por perto</small></div>
+          </div>
+          <div className="arkhe-wa-arte-rodape">O próximo jeito de conversar com seu banco.</div>
         </div>
-      </>}
-      {mensagem && <p role="status">{mensagem}</p>}
-      {erro && <p role="alert" className="arkhe-whatsapp-erro">{erro}</p>}
-    </section>
+        <div className="arkhe-wa-conteudo">
+          <span className="arkhe-wa-etiqueta">NOVIDADE NO ARKHÉ</span>
+          <h2 id="arkhe-wa-titulo">O seu banco,<br /><em>na sua conversa.</em></h2>
+          <p className="arkhe-wa-intro">Conheça o assistente Arkhé no WhatsApp. Ative a integração em poucos passos, com controle de permissões direto pela sua conta.</p>
+          <div className="arkhe-wa-recursos"><span>✓ Atendimento por mensagem</span><span>✓ Autorização por conta</span><span>✓ Controle de acesso</span></div>
+          {!config?.autorizado ? (
+            <>
+              <label className="arkhe-wa-label" htmlFor="arkhe-wa-nivel">Escolha o nível de autorização</label>
+              <div className="arkhe-wa-select">
+                <select id="arkhe-wa-nivel" value={nivel} disabled={salvando} onChange={e => setNivel(Number(e.target.value))}>
+                  {niveis.map(n => <option key={n.valor} value={n.valor}>Nível {n.valor} — {n.titulo}</option>)}
+                </select>
+              </div>
+              <p className="arkhe-wa-descricao">{niveis.find(n => n.valor === nivel)?.detalhe}</p>
+              <button type="button" className="arkhe-wa-primario" onClick={autorizar} disabled={salvando}>{salvando ? 'Salvando...' : 'Autorizar e continuar'} <span>→</span></button>
+            </>
+          ) : (
+            <>
+              <div className="arkhe-wa-confirmado">✓ Autorização salva para esta conta</div>
+              <button type="button" className="arkhe-wa-primario" onClick={iniciar} disabled={salvando}>{salvando ? 'Preparando...' : 'Conversar no WhatsApp'} <span>↗</span></button>
+            </>
+          )}
+          <button type="button" className="arkhe-wa-depois" onClick={() => setAberta(false)}>Agora não</button>
+          {mensagem && <p className="arkhe-wa-sucesso" role="status">{mensagem}</p>}
+          {erro && <p className="arkhe-wa-erro" role="alert">{erro}</p>}
+          <p className="arkhe-wa-aviso">O acesso a dados financeiros e movimentações depende de validação de identidade e ainda não está disponível pelo WhatsApp.</p>
+        </div>
+      </section>
+    </div>
   )
 }
