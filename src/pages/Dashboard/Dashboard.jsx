@@ -125,7 +125,6 @@ export default function Dashboard() {
       <main>
         {erroSessao && <p className="mensagem-sessao-dashboard" role="alert">{erroSessao}</p>}
 
-        <WhatsAppArkhe />
         <section className="hero-dashboard">
           <div className="orbita-dashboard orbita-um" />
           <div className="orbita-dashboard orbita-dois" />
@@ -318,6 +317,7 @@ export default function Dashboard() {
         </div>
       </main>
 
+      <WhatsAppArkhe />
       <NavegacaoMobile tipoConta={usuario.tipoConta} />
       {perfilAberto && (
         <ModalPerfil usuario={usuario} fechar={() => setPerfilAberto(false)} aoAtualizar={atualizarPerfil} />
