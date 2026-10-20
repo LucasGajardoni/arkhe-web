@@ -11,6 +11,7 @@ const niveis = [
 export default function WhatsAppArkhe() {
   const [config, setConfig] = useState(null)
   const [nivel, setNivel] = useState(1)
+  const [tipoConta, setTipoConta] = useState(0)
   const [aberta, setAberta] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
@@ -22,7 +23,8 @@ export default function WhatsAppArkhe() {
     requisitarApi('/whatsapp/configuracao').then(dados => {
       if (!ativo) return
       setConfig(dados)
-      setNivel(Number(dados.nivel) || 1)
+      setTipoConta(Number(dados.tipo_conta) || 0)
+      setNivel(Number(dados.tipo_conta) === 0 ? Math.min(2, Number(dados.nivel) || 1) : Number(dados.nivel) || 1)
       // Convite apenas para quem ainda nao autorizou. Reaparece ao voltar para a pagina.
       if (!Boolean(dados.autorizado)) setAberta(true)
     }).catch(() => {
@@ -100,7 +102,7 @@ export default function WhatsAppArkhe() {
               <label className="arkhe-wa-label" htmlFor="arkhe-wa-nivel">Escolha o nível de autorização</label>
               <div className="arkhe-wa-select">
                 <select id="arkhe-wa-nivel" value={nivel} disabled={salvando} onChange={e => setNivel(Number(e.target.value))}>
-                  {niveis.map(n => <option key={n.valor} value={n.valor}>Nível {n.valor} — {n.titulo}</option>)}
+                  {niveis.filter(n => tipoConta === 1 || n.valor <= 2).map(n => <option key={n.valor} value={n.valor}>Nível {n.valor} — {n.titulo}</option>)}
                 </select>
               </div>
               <p className="arkhe-wa-descricao">{niveis.find(n => n.valor === nivel)?.detalhe}</p>
