@@ -314,10 +314,10 @@ export default function Dashboard() {
             </section>
             )}
           </div>
+          <WhatsAppArkhe />
         </div>
       </main>
 
-      <WhatsAppArkhe />
       <NavegacaoMobile tipoConta={usuario.tipoConta} />
       {perfilAberto && (
         <ModalPerfil usuario={usuario} fechar={() => setPerfilAberto(false)} aoAtualizar={atualizarPerfil} />
