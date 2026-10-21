@@ -33,6 +33,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           {usuario?.tipoConta === 'PJ' && (
             <button aria-label="Abrir funcionários" className={['folha', 'funcionarios'].includes(secao) ? 'ativo' : ''} type="button" aria-current={secao === 'funcionarios' ? 'page' : undefined} onClick={() => navigate('/dashboard/funcionarios')}>Funcionários</button>
           )}
+          <button className={secao === 'whatsapp' ? 'ativo' : ''} type="button" aria-current={secao === 'whatsapp' ? 'page' : undefined} onClick={() => navigate('/dashboard/whatsapp')}>WhatsApp</button>
           {usuario?.tipoConta === 'PJ' && (
             <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>Integrações</button>
           )}

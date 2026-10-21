@@ -8,6 +8,7 @@ import Pix from './pages/Pix/Pix.jsx'
 import Extrato from './pages/Extrato/Extrato.jsx'
 import Boletos from './pages/Boletos/Boletos.jsx'
 import Integracoes from './pages/Integracoes/Integracoes.jsx'
+import WhatsApp from './pages/WhatsApp/WhatsApp.jsx'
 import SessaoProvider from './contexts/SessaoProvider.jsx'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 import IdentityRoute from './components/ProtectedRoute/IdentityRoute.jsx'
@@ -41,6 +42,7 @@ export default function App() {
             <Route path="/dashboard/extrato" element={<Extrato />} />
             <Route path="/dashboard/boletos" element={<Boletos />} />
             <Route path="/dashboard/integracoes" element={<Integracoes />} />
+          <Route path="/dashboard/whatsapp" element={<WhatsApp />} />
             <Route path="/dashboard/acessos" element={<Acessos />} />
             <Route path="/dashboard/folha" element={<Folha />} />
             <Route path="/dashboard/funcionarios" element={<Folha />} />
