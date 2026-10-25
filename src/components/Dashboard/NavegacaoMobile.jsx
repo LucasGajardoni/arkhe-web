@@ -26,6 +26,10 @@ export default function NavegacaoMobile({ secao = 'inicio', tipoConta = '' }) {
         <Icone nome="transferir" />
         <span>Limites</span>
       </button>
+      <button className={secao === 'agendamentos' ? 'ativo' : ''} type="button" aria-current={secao === 'agendamentos' ? 'page' : undefined} onClick={() => navigate('/dashboard/agendamentos')}>
+        <Icone nome="extrato" />
+        <span>Agenda</span>
+      </button>
       {tipoConta === 'PJ' && (
         <button className={secao === 'integracoes' ? 'ativo' : ''} type="button" aria-current={secao === 'integracoes' ? 'page' : undefined} onClick={() => navigate('/dashboard/integracoes')}>
           <Icone nome="api" />

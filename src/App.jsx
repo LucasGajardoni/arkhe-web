@@ -18,6 +18,7 @@ import Folha from './pages/Folha/Folha.jsx'
 import RedefinirPin from './pages/RedefinirPin/RedefinirPin.jsx'
 import ConfirmarChavePix from './pages/ConfirmarChavePix/ConfirmarChavePix.jsx'
 import Limites from './pages/Limites/Limites.jsx'
+import Agendamentos from './pages/Agendamentos/Agendamentos.jsx'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/dashboard/folha" element={<Folha />} />
             <Route path="/dashboard/funcionarios" element={<Folha />} />
             <Route path="/dashboard/limites" element={<Limites />} />
+            <Route path="/dashboard/agendamentos" element={<Agendamentos />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

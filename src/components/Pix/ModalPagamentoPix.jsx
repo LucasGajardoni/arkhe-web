@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
+import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
+import { criarAgendamento } from '../../services/agendamentosService.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import {
   buscarCobrancaPixPorCodigo,
@@ -114,6 +116,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [removendoFavorito, setRemovendoFavorito] = useState(null)
   const [validandoFavorito, setValidandoFavorito] = useState(null)
   const [favoritoSelecionado, setFavoritoSelecionado] = useState(null)
+  const [idAgendamento, setIdAgendamento] = useState(null)
   const processandoRef = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
@@ -344,6 +347,38 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     }
   }
 
+  async function confirmarAgendamento(dataAgendada) {
+    if (processandoRef.current) return
+    processandoRef.current = true
+    setProcessando(true)
+    setErro('')
+    try {
+      const dados = metodo === 'chave'
+        ? {
+            tipo_operacao: 'TRANSFERENCIA',
+            tipo_chave: tipoChave,
+            chave_pix: limparChave(tipoChave, chave),
+            valor: centavos / 100,
+            data_agendada: dataAgendada,
+          }
+        : {
+            tipo_operacao: 'PIX_COBRANCA',
+            id_cobranca: cobranca?.id_cobranca,
+            valor: cobranca?.valor_livre ? centavos / 100 : Number(cobranca?.valor) || 0,
+            data_agendada: dataAgendada,
+          }
+      const resposta = await criarAgendamento(dados)
+      setIdAgendamento(resposta.id_agendamento)
+      setEtapa('agendado')
+      Promise.resolve(aoConcluir?.()).catch(() => {})
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível criar o agendamento.')
+    } finally {
+      processandoRef.current = false
+      setProcessando(false)
+    }
+  }
+
   const valorCobranca = cobranca?.valor_livre ? centavos / 100 : Number(cobranca?.valor) || 0
   const valorSucesso = metodo === 'chave' ? centavos / 100 : valorCobranca
   const recebedorSucesso = metodo === 'chave'
@@ -357,6 +392,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   if (['chave', 'scanner', 'copia', 'buscando'].includes(etapa)) etapaAtual = 2
   if (etapa === 'valor' || etapa === 'valor_codigo') etapaAtual = 3
   if (['confirmacao', 'revisao_codigo', 'confirmacao_codigo'].includes(etapa)) etapaAtual = 4
+  if (etapa === 'agendamento') etapaAtual = 5
   if (etapa === 'chave') titulo = 'Pagar com chave Pix'
   if (etapa === 'scanner') titulo = 'Ler QR Code Pix'
   if (etapa === 'copia') titulo = 'Pix Copia e Cola'
@@ -364,6 +400,8 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   if (etapa === 'valor' || etapa === 'valor_codigo') titulo = 'Informe o valor'
   if (etapa === 'confirmacao' || etapa === 'revisao_codigo') titulo = 'Revise antes de pagar'
   if (etapa === 'confirmacao_codigo') titulo = 'Confirme o pagamento'
+  if (etapa === 'agendamento') titulo = 'Agendar Pix'
+  if (etapa === 'agendado') titulo = 'Pix agendado'
   if (etapa === 'sucesso') titulo = 'Pix concluído'
 
   if (etapa === 'metodo') {
@@ -494,6 +532,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
         <footer>
           <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => setEtapa('valor')}>Voltar</button>
+          <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => setEtapa('agendamento')}>Agendar para depois</button>
           <button className="botao botao-principal" type="button" disabled={processando} onClick={enviarPorChave}>{processando ? 'Enviando...' : 'Confirmar e enviar'}</button>
         </footer>
       </div>
@@ -517,6 +556,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
         <footer>
           <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa(metodo === 'qr' ? 'scanner' : 'copia') }}>Voltar</button>
+          <button className="botao botao-secundario" type="button" disabled={paga} onClick={() => setEtapa('agendamento')}>Agendar pagamento</button>
           <button className="botao botao-principal" type="button" disabled={paga} onClick={() => setEtapa('confirmacao_codigo')}>Pagar {moeda.format(valorCobranca)}</button>
         </footer>
       </div>
@@ -533,6 +573,33 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
           <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => { setErro(''); setEtapa('revisao_codigo') }}>Voltar</button>
           <button className="botao botao-principal" type="button" disabled={processando} onClick={pagarCodigo}>{processando ? 'Enviando Pix...' : 'Confirmar Pix'}</button>
         </footer>
+      </div>
+    )
+  } else if (etapa === 'agendamento') {
+    const valorAgendamento = metodo === 'chave'
+      ? centavos / 100
+      : cobranca?.valor_livre ? centavos / 100 : Number(cobranca?.valor) || 0
+    conteudo = (
+      <FormAgendamento
+        tipo={metodo === 'chave' ? 'Pix / transferência' : 'Pagamento Pix'}
+        valor={valorAgendamento}
+        destinatario={metodo === 'chave' ? (destinatario?.nome_fantasia || destinatario?.nome) : nomeRecebedor(cobranca)}
+        erro={erro}
+        processando={processando}
+        aoVoltar={() => { setErro(''); setEtapa(metodo === 'chave' ? 'confirmacao' : 'revisao_codigo') }}
+        aoConfirmar={confirmarAgendamento}
+      />
+    )
+  } else if (etapa === 'agendado') {
+    conteudo = (
+      <div className="sucesso-pagamento-pix" role="status">
+        <span>✓</span>
+        <h3>Agendamento salvo</h3>
+        <strong>{moeda.format(metodo === 'chave' ? centavos / 100 : valorCobranca)}</strong>
+        <p>{metodo === 'chave' ? destinatario?.nome_fantasia || destinatario?.nome : nomeRecebedor(cobranca)}</p>
+        <small>O saldo não foi movimentado. A execução revalidará saldo, permissões e limites.</small>
+        {idAgendamento && <small>Agendamento #{idAgendamento}</small>}
+        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )
   } else {
@@ -555,9 +622,9 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
           <div><p>PAGAR COM PIX</p><h2 id="titulo-pagamento-pix">{titulo}</h2><span>O pagamento só acontece depois da sua confirmação.</span></div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
-        {etapa !== 'sucesso' && (
-          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de 4`}>
-            <span style={{ width: `${(etapaAtual / 4) * 100}%` }} />
+        {!['sucesso', 'agendado'].includes(etapa) && (
+          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de ${etapa === 'agendamento' ? 5 : 4}`}>
+            <span style={{ width: `${(etapaAtual / (etapa === 'agendamento' ? 5 : 4)) * 100}%` }} />
           </p>
         )}
         {conteudo}

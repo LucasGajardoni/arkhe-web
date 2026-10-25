@@ -1273,16 +1273,20 @@
     left: 0;
     height: calc(66px + env(safe-area-inset-bottom));
     align-items: flex-start;
-    justify-content: space-around;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow-x: auto;
     padding: 8px 4px env(safe-area-inset-bottom);
     border-top: 1px solid #e5e2da;
     background: rgba(255, 255, 255, .98);
     box-shadow: 0 -8px 22px rgba(28, 28, 23, .06);
+    -webkit-overflow-scrolling: touch;
   }
 
   .navegacao-mobile-dashboard button {
     display: flex;
-    min-width: 58px;
+    min-width: 54px;
+    flex: 1 0 54px;
     min-height: 50px;
     align-items: center;
     justify-content: center;

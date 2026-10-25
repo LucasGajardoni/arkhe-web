@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
+import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
+import { criarAgendamento } from '../../services/agendamentosService.js'
 import { pagarCobranca } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
@@ -33,6 +35,7 @@ export default function ModalDetalhesBoleto({
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
   const [resultadoPagamento, setResultadoPagamento] = useState(null)
+  const [idAgendamento, setIdAgendamento] = useState(null)
   const pago = Number(boleto.status) === 1
   const vencimento = somenteData(boleto.data_vencimento)
   const dataPagamento = somenteData(boleto.data_pagamento)
@@ -59,6 +62,27 @@ export default function ModalDetalhesBoleto({
     }
   }
 
+  async function confirmarAgendamento(dataAgendada) {
+    if (processando || contaPJ || pago) return
+    setProcessando(true)
+    setErro('')
+    try {
+      const resposta = await criarAgendamento({
+        tipo_operacao: 'BOLETO',
+        id_cobranca: boleto.id_cobranca,
+        valor: Number(boleto.valor),
+        data_agendada: dataAgendada,
+      })
+      setIdAgendamento(resposta.id_agendamento)
+      setEtapa('agendado')
+      await atualizar()
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível criar o agendamento.')
+    } finally {
+      setProcessando(false)
+    }
+  }
+
   let conteudo
 
   if (etapa === 'confirmacao') {
@@ -74,6 +98,30 @@ export default function ModalDetalhesBoleto({
             {processando ? 'Processando...' : 'Confirmar pagamento'}
           </button>
         </footer>
+      </div>
+    )
+  } else if (etapa === 'agendamento') {
+    conteudo = (
+      <FormAgendamento
+        tipo="Pagamento de boleto"
+        valor={Number(boleto.valor) || 0}
+        destinatario={nomeRelacionado}
+        erro={erro}
+        processando={processando}
+        aoVoltar={() => { setErro(''); setEtapa('detalhes') }}
+        aoConfirmar={confirmarAgendamento}
+      />
+    )
+  } else if (etapa === 'agendado') {
+    conteudo = (
+      <div className="sucesso-pagamento-codigo" role="status">
+        <span>✓</span>
+        <h3>Agendamento salvo</h3>
+        <strong>{moeda.format(Number(boleto.valor) || 0)}</strong>
+        <p>{nomeRelacionado}</p>
+        <small>O saldo não foi movimentado. A execução revalidará saldo, permissões e limites.</small>
+        {idAgendamento && <small>Agendamento #{idAgendamento}</small>}
+        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )
   } else if (etapa === 'sucesso') {
@@ -116,6 +164,9 @@ export default function ModalDetalhesBoleto({
 
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Fechar</button>
+          {!contaPJ && !pago && (
+            <button className="botao botao-secundario" type="button" onClick={() => setEtapa('agendamento')}>Agendar para depois</button>
+          )}
           {!contaPJ && !pago && (
             <button className="botao botao-principal" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
           )}

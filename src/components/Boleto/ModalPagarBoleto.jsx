@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
+import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
+import { criarAgendamento } from '../../services/agendamentosService.js'
 import {
   buscarCobrancaPorCodigo,
   pagarCobranca,
@@ -51,6 +53,7 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
   const [resultadoPagamento, setResultadoPagamento] = useState(null)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
+  const [idAgendamento, setIdAgendamento] = useState(null)
   const processandoRef = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
@@ -103,6 +106,29 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
     }
   }
 
+  async function confirmarAgendamento(dataAgendada) {
+    if (!boleto || processandoRef.current) return
+    processandoRef.current = true
+    setProcessando(true)
+    setErro('')
+    try {
+      const resposta = await criarAgendamento({
+        tipo_operacao: 'BOLETO',
+        id_cobranca: boleto.id_cobranca,
+        valor: Number(boleto.valor),
+        data_agendada: dataAgendada,
+      })
+      setIdAgendamento(resposta.id_agendamento)
+      setEtapa('agendado')
+      await atualizar()
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível criar o agendamento.')
+    } finally {
+      processandoRef.current = false
+      setProcessando(false)
+    }
+  }
+
   let conteudo
   let titulo = 'Pagar boleto'
   let etapaAtual = 1
@@ -114,6 +140,8 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
     titulo = 'Confirmar pagamento'
     etapaAtual = 3
   }
+  if (etapa === 'agendamento') titulo = 'Agendar boleto'
+  if (etapa === 'agendado') titulo = 'Boleto agendado'
   if (etapa === 'sucesso') titulo = 'Pagamento concluído'
 
   if (etapa === 'entrada') {
@@ -190,6 +218,7 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
 
         <footer>
           <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa('entrada') }}>Voltar</button>
+          {!pago && <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa('agendamento') }}>Agendar para depois</button>}
           <button className="botao botao-principal" type="button" disabled={pago} onClick={() => setEtapa('confirmacao')}>Continuar</button>
         </footer>
       </div>
@@ -210,6 +239,30 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
             {processando ? 'Processando...' : 'Confirmar pagamento'}
           </button>
         </footer>
+      </div>
+    )
+  } else if (etapa === 'agendamento') {
+    conteudo = (
+      <FormAgendamento
+        tipo="Pagamento de boleto"
+        valor={Number(boleto?.valor) || 0}
+        destinatario={beneficiarioBoleto(boleto)}
+        erro={erro}
+        processando={processando}
+        aoVoltar={() => { setErro(''); setEtapa('revisao') }}
+        aoConfirmar={confirmarAgendamento}
+      />
+    )
+  } else if (etapa === 'agendado') {
+    conteudo = (
+      <div className="sucesso-pagamento-codigo" role="status">
+        <span>✓</span>
+        <h3>Agendamento salvo</h3>
+        <strong>{moeda.format(Number(boleto?.valor) || 0)}</strong>
+        <p>{beneficiarioBoleto(boleto)}</p>
+        <small>O saldo não foi movimentado. A execução revalidará saldo, permissões e limites.</small>
+        {idAgendamento && <small>Agendamento #{idAgendamento}</small>}
+        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
       </div>
     )
   } else {
@@ -241,7 +294,7 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
-        {etapa !== 'sucesso' && (
+        {!['sucesso', 'agendado'].includes(etapa) && (
           <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de 3`}>
             <span style={{ width: `${(etapaAtual / 3) * 100}%` }} />
           </p>
