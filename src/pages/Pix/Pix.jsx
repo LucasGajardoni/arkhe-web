@@ -40,9 +40,12 @@ export default function Pix() {
   const podeCadastrarChave = pix.tiposDisponiveis.length > 0
 
   useEffect(() => {
-    if (!location.state?.iniciarAgendamento) return
-    setPagamentoAberto(true)
-    navigate(location.pathname, { replace: true, state: null })
+    if (!location.state?.iniciarAgendamento && !location.state?.iniciarRecorrencia) return
+    const abrir = window.setTimeout(() => {
+      setPagamentoAberto(true)
+      navigate(location.pathname, { replace: true, state: null })
+    }, 0)
+    return () => window.clearTimeout(abrir)
   }, [location.key, location.pathname, location.state, navigate])
 
   async function sair() {

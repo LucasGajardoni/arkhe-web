@@ -90,9 +90,12 @@ export default function Boletos() {
   const tipoCobranca = contaPJ ? 'receber' : 'pagar'
 
   useEffect(() => {
-    if (!location.state?.iniciarAgendamento) return
-    if (!contaPJ) setPagamentoAberto(true)
-    navigate(location.pathname, { replace: true, state: null })
+    if (!location.state?.iniciarAgendamento && !location.state?.iniciarRecorrencia) return
+    const abrir = window.setTimeout(() => {
+      if (!contaPJ) setPagamentoAberto(true)
+      navigate(location.pathname, { replace: true, state: null })
+    }, 0)
+    return () => window.clearTimeout(abrir)
   }, [contaPJ, location.key, location.pathname, location.state, navigate])
 
   const cobrancas = useMemo(() => dados.cobrancas

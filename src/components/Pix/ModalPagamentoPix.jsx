@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
+import FormRecorrencia from '../Agendamentos/FormRecorrencia.jsx'
 import { criarAgendamento } from '../../services/agendamentosService.js'
+import { criarRecorrencia } from '../../services/recorrenciasService.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import {
   buscarCobrancaPixPorCodigo,
@@ -17,6 +19,7 @@ import ScannerQrPix from './ScannerQrPix.jsx'
 import './ModalPagamentoPix.css'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const dataHoraSp = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Sao_Paulo' })
 const tiposChave = [['email', 'E-mail'], ['cpf', 'CPF'], ['cnpj', 'CNPJ'], ['telefone', 'Telefone'], ['aleatoria', 'Aleatória']]
 
 function detectarTipo(valor, atual) {
@@ -117,6 +120,8 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [validandoFavorito, setValidandoFavorito] = useState(null)
   const [favoritoSelecionado, setFavoritoSelecionado] = useState(null)
   const [idAgendamento, setIdAgendamento] = useState(null)
+  const [idRecorrencia, setIdRecorrencia] = useState(null)
+  const [proximaRecorrencia, setProximaRecorrencia] = useState(null)
   const processandoRef = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
@@ -379,6 +384,37 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     }
   }
 
+  async function confirmarRecorrencia(configuracao) {
+    if (processandoRef.current) return
+    processandoRef.current = true
+    setProcessando(true)
+    setErro('')
+    try {
+      const dados = metodo === 'chave'
+        ? {
+            tipo_operacao: 'TRANSFERENCIA',
+            tipo_chave: tipoChave,
+            chave_pix: limparChave(tipoChave, chave),
+            valor: centavos / 100,
+          }
+        : {
+            tipo_operacao: 'PIX_COBRANCA',
+            id_cobranca: cobranca?.id_cobranca,
+            valor: valorCobranca,
+          }
+      const resposta = await criarRecorrencia({ ...dados, ...configuracao })
+      setIdRecorrencia(resposta.id_recorrencia)
+      setProximaRecorrencia(resposta.proxima_execucao)
+      setEtapa('recorrencia_criada')
+      Promise.resolve(aoConcluir?.()).catch(() => {})
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível criar a recorrência.')
+    } finally {
+      processandoRef.current = false
+      setProcessando(false)
+    }
+  }
+
   const valorCobranca = cobranca?.valor_livre ? centavos / 100 : Number(cobranca?.valor) || 0
   const valorSucesso = metodo === 'chave' ? centavos / 100 : valorCobranca
   const recebedorSucesso = metodo === 'chave'
@@ -393,6 +429,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   if (etapa === 'valor' || etapa === 'valor_codigo') etapaAtual = 3
   if (['confirmacao', 'revisao_codigo', 'confirmacao_codigo'].includes(etapa)) etapaAtual = 4
   if (etapa === 'agendamento') etapaAtual = 5
+  if (etapa === 'recorrencia') etapaAtual = 5
   if (etapa === 'chave') titulo = 'Pagar com chave Pix'
   if (etapa === 'scanner') titulo = 'Ler QR Code Pix'
   if (etapa === 'copia') titulo = 'Pix Copia e Cola'
@@ -401,6 +438,8 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   if (etapa === 'confirmacao' || etapa === 'revisao_codigo') titulo = 'Revise antes de pagar'
   if (etapa === 'confirmacao_codigo') titulo = 'Confirme o pagamento'
   if (etapa === 'agendamento') titulo = 'Agendar Pix'
+  if (etapa === 'recorrencia') titulo = 'Configurar recorrência'
+  if (etapa === 'recorrencia_criada') titulo = 'Recorrência autorizada'
   if (etapa === 'agendado') titulo = 'Pix agendado'
   if (etapa === 'sucesso') titulo = 'Pix concluído'
 
@@ -533,6 +572,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <footer>
           <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => setEtapa('valor')}>Voltar</button>
           <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => setEtapa('agendamento')}>Agendar para depois</button>
+          <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => { setErro(''); setEtapa('recorrencia') }}>Tornar recorrente</button>
           <button className="botao botao-principal" type="button" disabled={processando} onClick={enviarPorChave}>{processando ? 'Enviando...' : 'Confirmar e enviar'}</button>
         </footer>
       </div>
@@ -557,6 +597,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         <footer>
           <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa(metodo === 'qr' ? 'scanner' : 'copia') }}>Voltar</button>
           <button className="botao botao-secundario" type="button" disabled={paga} onClick={() => setEtapa('agendamento')}>Agendar pagamento</button>
+          <button className="botao botao-secundario" type="button" disabled={paga} onClick={() => { setErro(''); setEtapa('recorrencia') }}>Tornar recorrente</button>
           <button className="botao botao-principal" type="button" disabled={paga} onClick={() => setEtapa('confirmacao_codigo')}>Pagar {moeda.format(valorCobranca)}</button>
         </footer>
       </div>
@@ -590,6 +631,36 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
         aoConfirmar={confirmarAgendamento}
       />
     )
+  } else if (etapa === 'recorrencia') {
+    const tipo = metodo === 'chave' ? 'Transferência Pix' : 'Pagamento Pix'
+    const destinatarioRecorrencia = metodo === 'chave'
+      ? (destinatario?.nome_fantasia || destinatario?.nome)
+      : nomeRecebedor(cobranca)
+    conteudo = (
+      <FormRecorrencia
+        tipo={tipo}
+        valor={metodo === 'chave' ? centavos / 100 : valorCobranca}
+        destinatario={destinatarioRecorrencia}
+        observacao={metodo === 'chave' ? '' : 'Cobranças Pix podem ser de uso único. Se a cobrança já estiver quitada, as próximas parcelas serão recusadas e registradas no histórico.'}
+        erro={erro}
+        processando={processando}
+        aoVoltar={() => { setErro(''); setEtapa(metodo === 'chave' ? 'confirmacao' : 'revisao_codigo') }}
+        aoConfirmar={confirmarRecorrencia}
+      />
+    )
+  } else if (etapa === 'recorrencia_criada') {
+    conteudo = (
+      <div className="sucesso-pagamento-pix" role="status">
+        <span>✓</span>
+        <h3>Recorrência autorizada</h3>
+        <strong>{moeda.format(metodo === 'chave' ? centavos / 100 : valorCobranca)}</strong>
+        <p>{metodo === 'chave' ? destinatario?.nome_fantasia || destinatario?.nome : nomeRecebedor(cobranca)}</p>
+        <small>Nenhum valor foi movimentado agora. O saldo, os limites e as permissões serão verificados em cada execução.</small>
+        {proximaRecorrencia && <small>Próxima execução: {dataHoraSp.format(new Date(`${proximaRecorrencia}-03:00`))}</small>}
+        {idRecorrencia && <small>Recorrência #{idRecorrencia}</small>}
+        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
+      </div>
+    )
   } else if (etapa === 'agendado') {
     conteudo = (
       <div className="sucesso-pagamento-pix" role="status">
@@ -622,9 +693,9 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
           <div><p>PAGAR COM PIX</p><h2 id="titulo-pagamento-pix">{titulo}</h2><span>O pagamento só acontece depois da sua confirmação.</span></div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
-        {!['sucesso', 'agendado'].includes(etapa) && (
-          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de ${etapa === 'agendamento' ? 5 : 4}`}>
-            <span style={{ width: `${(etapaAtual / (etapa === 'agendamento' ? 5 : 4)) * 100}%` }} />
+        {!['sucesso', 'agendado', 'recorrencia_criada'].includes(etapa) && (
+          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de ${['agendamento', 'recorrencia'].includes(etapa) ? 5 : 4}`}>
+            <span style={{ width: `${(etapaAtual / (['agendamento', 'recorrencia'].includes(etapa) ? 5 : 4)) * 100}%` }} />
           </p>
         )}
         {conteudo}

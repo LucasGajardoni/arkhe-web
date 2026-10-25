@@ -36,6 +36,7 @@ function atalhosPorTipo(contaPJ) {
       { icone: 'folha', titulo: 'Funcionários', detalhe: 'Cadastre sua equipe e gerencie salários', destino: 'funcionarios', empresa: true },
       { icone: 'extrato', titulo: 'Folha de pagamento', detalhe: 'Prepare, pague e acompanhe suas folhas', destino: 'folha', empresa: true },
       { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
+      { icone: 'extrato', titulo: 'Pagamentos recorrentes', detalhe: 'Gerenciar execuções futuras', destino: 'recorrencias' },
     ]
   }
 
@@ -45,6 +46,7 @@ function atalhosPorTipo(contaPJ) {
     { icone: 'extrato', titulo: 'Extrato', detalhe: 'Ver movimentações', destino: 'extrato' },
     { icone: 'transferir', titulo: 'DDA', detalhe: 'Boletos da sua conta', destino: 'boletos' },
     { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
+    { icone: 'extrato', titulo: 'Pagamentos recorrentes', detalhe: 'Gerenciar execuções futuras', destino: 'recorrencias' },
   ]
 }
 
@@ -104,6 +106,7 @@ export default function Dashboard() {
     if (destino === 'emitir') setEmissaoAberta(true)
     if (destino === 'pagar') setPagamentoBoletoAberto(true)
     if (destino === 'agendamentos') navigate('/dashboard/agendamentos')
+    if (destino === 'recorrencias') navigate('/dashboard/recorrencias')
     if (destino === 'agendamentos') navigate('/dashboard/agendamentos')
   }
 
