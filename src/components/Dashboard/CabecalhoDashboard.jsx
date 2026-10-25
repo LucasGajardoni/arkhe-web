@@ -31,6 +31,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           </button>
           <button className={secao === 'extrato' ? 'ativo' : ''} type="button" aria-current={secao === 'extrato' ? 'page' : undefined} onClick={() => navigate('/dashboard/extrato')}>Extrato</button>
           <button className={secao === 'boletos' ? 'ativo' : ''} type="button" aria-current={secao === 'boletos' ? 'page' : undefined} onClick={() => navigate('/dashboard/boletos')}>{rotuloBoletos}</button>
+          <button className={secao === 'limites' ? 'ativo' : ''} type="button" aria-current={secao === 'limites' ? 'page' : undefined} onClick={() => navigate('/dashboard/limites')}>Limites</button>
           {usuario?.tipoConta === 'PJ' && (
             <button aria-label="Abrir funcionários" className={['folha', 'funcionarios'].includes(secao) ? 'ativo' : ''} type="button" aria-current={secao === 'funcionarios' ? 'page' : undefined} onClick={() => navigate('/dashboard/funcionarios')}>Funcionários</button>
           )}
