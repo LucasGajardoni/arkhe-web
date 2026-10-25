@@ -4,8 +4,11 @@ import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import {
   buscarCobrancaPixPorCodigo,
   buscarContasUsuario,
+  listarFavoritosPix,
   pagarCobrancaPix,
+  removerFavoritoPix,
   realizarPix,
+  salvarFavoritoPix,
 } from '../../services/pixService.js'
 import { mascaraCnpj, mascaraCpf, mascaraTelefone, somenteNumeros } from '../../utils/formatadores.js'
 import ScannerQrPix from './ScannerQrPix.jsx'
@@ -102,8 +105,29 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   const [buscandoDestinatario, setBuscandoDestinatario] = useState(false)
   const [erroBusca, setErroBusca] = useState('')
   const [idMovimentacao, setIdMovimentacao] = useState(null)
+  const [favoritos, setFavoritos] = useState([])
+  const [carregandoFavoritos, setCarregandoFavoritos] = useState(true)
+  const [modoSalvarFavorito, setModoSalvarFavorito] = useState(false)
+  const [rotuloFavorito, setRotuloFavorito] = useState('')
+  const [erroFavorito, setErroFavorito] = useState('')
+  const [salvandoFavorito, setSalvandoFavorito] = useState(false)
+  const [removendoFavorito, setRemovendoFavorito] = useState(null)
+  const [validandoFavorito, setValidandoFavorito] = useState(null)
+  const [favoritoSelecionado, setFavoritoSelecionado] = useState(null)
   const processandoRef = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
+
+  useEffect(() => {
+    let ativo = true
+    listarFavoritosPix().then((resposta) => {
+      if (ativo) setFavoritos(Array.isArray(resposta.favoritos) ? resposta.favoritos : [])
+    }).catch((falha) => {
+      if (ativo && falha.status !== 401) setErroFavorito(falha.message)
+    }).finally(() => {
+      if (ativo) setCarregandoFavoritos(false)
+    })
+    return () => { ativo = false }
+  }, [])
 
   useEffect(() => {
     if (etapa !== 'chave' || !chaveCompleta(tipoChave, chave)) return undefined
@@ -133,6 +157,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
 
   function selecionarMetodo(novoMetodo) {
     setMetodo(novoMetodo)
+    setFavoritoSelecionado(null)
     setErro('')
     setCobranca(null)
     if (novoMetodo === 'chave') setEtapa('chave')
@@ -143,6 +168,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
   function voltarAosMetodos() {
     setEtapa('metodo')
     setMetodo('')
+    setFavoritoSelecionado(null)
     setErro('')
     setCobranca(null)
   }
@@ -160,6 +186,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setChave(formatarChave(tipo, valor))
     setErro('')
     setDestinatario(null)
+    setFavoritoSelecionado(null)
     setErroBusca('')
     setBuscandoDestinatario(false)
   }
@@ -168,8 +195,75 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setTipoChave(tipo)
     setChave(formatarChave(tipo, chave))
     setDestinatario(null)
+    setFavoritoSelecionado(null)
     setErroBusca('')
   }
+
+  async function selecionarFavorito(favorito) {
+    if (validandoFavorito != null) return
+    setValidandoFavorito(favorito.id)
+    setErroFavorito('')
+    try {
+      const resposta = await buscarContasUsuario(limparChave(favorito.tipo_chave, favorito.chave_pix))
+      const conta = contaDaChave(Array.isArray(resposta.contas) ? resposta.contas : [], favorito.tipo_chave, favorito.chave_pix)
+      if (!conta || Number(conta.id_conta) !== Number(favorito.id_conta_destino)) {
+        throw new Error('A chave deste favorito mudou. Remova e salve o destinatário novamente.')
+      }
+      setTipoChave(favorito.tipo_chave)
+      setChave(formatarChave(favorito.tipo_chave, favorito.chave_pix))
+      setDestinatario(conta)
+      setMetodo('chave')
+      setFavoritoSelecionado(favorito.id)
+      setCentavos(0)
+      setErro('')
+      setErroBusca('')
+      setEtapa('valor')
+    } catch (falha) {
+      setErroFavorito(falha.message || 'Não foi possível validar este destinatário.')
+    } finally {
+      setValidandoFavorito(null)
+    }
+  }
+
+  async function salvarDestinatarioFavorito() {
+    if (!destinatario || salvandoFavorito) return
+    const rotulo = rotuloFavorito.trim() || destinatario.nome_fantasia || destinatario.nome || ''
+    setSalvandoFavorito(true)
+    setErroFavorito('')
+    try {
+      await salvarFavoritoPix({
+        tipo_chave: tipoChave,
+        chave_pix: limparChave(tipoChave, chave),
+        rotulo,
+      })
+      const resposta = await listarFavoritosPix()
+      setFavoritos(Array.isArray(resposta.favoritos) ? resposta.favoritos : [])
+      setModoSalvarFavorito(false)
+      setRotuloFavorito('')
+    } catch (falha) {
+      setErroFavorito(falha.message || 'Não foi possível salvar o favorito.')
+    } finally {
+      setSalvandoFavorito(false)
+    }
+  }
+
+  async function excluirFavorito(favorito) {
+    if (removendoFavorito != null) return
+    setRemovendoFavorito(favorito.id)
+    setErroFavorito('')
+    try {
+      await removerFavoritoPix(favorito.id)
+      setFavoritos((atuais) => atuais.filter((item) => item.id !== favorito.id))
+    } catch (falha) {
+      setErroFavorito(falha.message || 'Não foi possível remover o favorito.')
+    } finally {
+      setRemovendoFavorito(null)
+    }
+  }
+
+  const chaveAtualNormalizada = limparChave(tipoChave, chave).toLowerCase()
+  const favoritoAtual = favoritos.find((item) => item.tipo_chave === tipoChave
+    && limparChave(item.tipo_chave, item.chave_pix).toLowerCase() === chaveAtualNormalizada)
 
   async function localizarCobranca(codigoInformado, origem = metodo) {
     const codigoLimpo = String(codigoInformado || '').trim()
@@ -220,7 +314,7 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     setProcessando(true)
     setErro('')
     try {
-      const resposta = await realizarPix(tipoChave, limparChave(tipoChave, chave), centavos / 100)
+      const resposta = await realizarPix(tipoChave, limparChave(tipoChave, chave), centavos / 100, favoritoSelecionado)
       setIdMovimentacao(resposta.id_movimentacao || null)
       Promise.resolve(aoConcluir?.()).catch(() => {})
       setEtapa('sucesso')
@@ -293,6 +387,20 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
             <b aria-hidden="true">›</b>
           </button>
         </div>
+        <section className="favoritos-pix" aria-label="Destinatários favoritos">
+          <header><strong>Seus favoritos</strong><small>Da conta que está ativa</small></header>
+          {carregandoFavoritos ? <p>Carregando favoritos…</p> : favoritos.length ? (
+            <ul>{favoritos.map((favorito) => <li key={favorito.id}>
+              <button className="selecionar-favorito-pix" type="button" disabled={validandoFavorito != null} onClick={() => selecionarFavorito(favorito)}>
+                <span aria-hidden="true">{(favorito.rotulo || favorito.nome_destinatario || 'D').slice(0, 1).toUpperCase()}</span>
+                <span><strong>{validandoFavorito === favorito.id ? 'Validando…' : favorito.rotulo}</strong><small>{favorito.nome_destinatario} · {formatarChave(favorito.tipo_chave, favorito.chave_pix)}</small></span>
+                <b aria-hidden="true">›</b>
+              </button>
+              <button className="remover-favorito-pix" type="button" disabled={removendoFavorito === favorito.id} onClick={() => excluirFavorito(favorito)} aria-label={`Remover ${favorito.rotulo} dos favoritos`}>×</button>
+            </li>)}</ul>
+          ) : <p>Nenhum destinatário salvo ainda. Depois de localizar uma chave Pix, você poderá adicioná-la aqui.</p>}
+          {erroFavorito && <p className="erro-favorito-pix" role="alert">{erroFavorito}</p>}
+        </section>
         <footer><button className="botao botao-secundario" type="button" onClick={fechar}>Cancelar</button></footer>
       </div>
     )
@@ -314,6 +422,13 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
             <div><small>DESTINATÁRIO ENCONTRADO</small><strong>{destinatario.nome_fantasia || destinatario.nome}</strong><p>{destinatario.banco || 'Banco não informado'} · Agência {destinatario.agencia}</p></div>
           </div>
         )}
+        {destinatario && <div className="acao-favorito-pix">
+          {favoritoAtual ? <p role="status">Salvo nos favoritos como <strong>{favoritoAtual.rotulo}</strong>.</p> : modoSalvarFavorito ? <>
+            <label>Nome do favorito<input autoFocus maxLength={100} value={rotuloFavorito} onChange={(evento) => setRotuloFavorito(evento.target.value)} placeholder={destinatario.nome_fantasia || destinatario.nome || 'Nome do destinatário'} /></label>
+            <div><button type="button" className="botao botao-secundario" onClick={() => { setModoSalvarFavorito(false); setErroFavorito('') }} disabled={salvandoFavorito}>Cancelar</button><button type="button" className="botao botao-principal" onClick={salvarDestinatarioFavorito} disabled={salvandoFavorito || (!rotuloFavorito.trim() && !destinatario.nome_fantasia && !destinatario.nome)}>{salvandoFavorito ? 'Salvando…' : 'Salvar favorito'}</button></div>
+          </> : <button type="button" className="botao-salvar-favorito-pix" onClick={() => { setRotuloFavorito(destinatario.nome_fantasia || destinatario.nome || ''); setModoSalvarFavorito(true); setErroFavorito('') }}>☆ Salvar nos favoritos</button>}
+          {erroFavorito && <p className="erro-favorito-pix" role="alert">{erroFavorito}</p>}
+        </div>}
         {!buscandoDestinatario && erroBusca && <p className="erro-busca-destinatario" role="alert">{erroBusca}</p>}
         <footer>
           <button className="botao botao-secundario" type="button" onClick={voltarAosMetodos}>Voltar</button>

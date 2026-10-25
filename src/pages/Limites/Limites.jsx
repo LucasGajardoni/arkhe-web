@@ -39,6 +39,8 @@ function montarFormulario(politicas, tipoConta, periodo) {
       return [operacao, {
         ativo: regra?.ativo || false,
         limite_por_operacao: regra?.limite_por_operacao == null ? '' : String(regra.limite_por_operacao),
+        favorito_ativo: regra?.favorito_ativo || false,
+        limite_por_operacao_favorito: regra?.limite_por_operacao_favorito == null ? '' : String(regra.limite_por_operacao_favorito),
       }]
     })),
     acumulado: politicas.periodos?.find((item) =>
@@ -107,11 +109,14 @@ export default function Limites() {
   }
 
   function alterarOperacao(operacao, campo, valor) {
+    const ajusteFavorito = operacao === 'TRANSFERENCIA' && campo === 'ativo' && valor === false
+      ? { favorito_ativo: false, limite_por_operacao_favorito: '' }
+      : {}
     setFormulario((atual) => ({
       ...atual,
       operacoes: {
         ...atual.operacoes,
-        [operacao]: { ...atual.operacoes[operacao], [campo]: valor },
+        [operacao]: { ...atual.operacoes[operacao], ...ajusteFavorito, [campo]: valor },
       },
     }))
   }
@@ -129,6 +134,10 @@ export default function Limites() {
         operacoes: Object.fromEntries(OPERACOES.map((operacao) => [operacao, {
           ativo: formulario.operacoes[operacao].ativo,
           limite_por_operacao: formulario.operacoes[operacao].limite_por_operacao || null,
+          favorito_ativo: operacao === 'TRANSFERENCIA' && formulario.operacoes[operacao].favorito_ativo,
+          limite_por_operacao_favorito: operacao === 'TRANSFERENCIA'
+            ? (formulario.operacoes[operacao].limite_por_operacao_favorito || null)
+            : null,
         }])),
         acumulado_ativo: formulario.acumulado?.ativo || false,
         limite_acumulado: formulario.acumulado?.limite_acumulado ?? null,
@@ -184,6 +193,12 @@ export default function Limites() {
             <dl>
               <div><dt>Máximo por operação</dt><dd>{moeda(item.limite_por_operacao)}</dd></div>
               <div><dt>Disponível agora</dt><dd>{moeda(item.disponivel_agora)}</dd></div>
+              {item.operacao === 'TRANSFERENCIA' && item.limite_por_operacao_favorito != null && (
+                <>
+                  <div><dt>Máximo para destinatários favoritos</dt><dd>{moeda(item.limite_por_operacao_favorito)}</dd></div>
+                  <div><dt>Disponível agora para favoritos</dt><dd>{moeda(item.disponivel_favorito_agora)}</dd></div>
+                </>
+              )}
             </dl>
             {!item.configurado && <p>Não há um teto adicional configurado para este período.</p>}
           </article>)}
@@ -204,6 +219,11 @@ export default function Limites() {
               <legend>{OPERACAO_LABEL[operacao]}</legend>
               <label className="ativar-limite"><input type="checkbox" checked={formulario.operacoes[operacao].ativo} onChange={(event) => alterarOperacao(operacao, 'ativo', event.target.checked)} /> Ativar limite por operação</label>
               <label>Valor máximo por operação (R$)<input type="number" min="0.01" step="0.01" inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao} onChange={(event) => alterarOperacao(operacao, 'limite_por_operacao', event.target.value)} disabled={!formulario.operacoes[operacao].ativo} required={formulario.operacoes[operacao].ativo} placeholder="Ex.: 2.000,00" /></label>
+              {operacao === 'TRANSFERENCIA' && <>
+                <label className="ativar-limite"><input type="checkbox" checked={formulario.operacoes[operacao].favorito_ativo} disabled={!formulario.operacoes[operacao].ativo} onChange={(event) => alterarOperacao(operacao, 'favorito_ativo', event.target.checked)} /> Ativar limite maior para Pix favoritos</label>
+                <label>Máximo por operação para favoritos (R$)<input type="number" min="0.01" step="0.01" inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao_favorito} onChange={(event) => alterarOperacao(operacao, 'limite_por_operacao_favorito', event.target.value)} disabled={!formulario.operacoes[operacao].favorito_ativo} required={formulario.operacoes[operacao].favorito_ativo} placeholder="Ex.: 5.000,00" /></label>
+                <small>Aplicado somente a chaves Pix salvas nos favoritos deste usuário e conta.</small>
+              </>}
             </fieldset>)}
             <fieldset className="politica-limite acumulado">
               <legend>Acumulado do período</legend>

@@ -103,13 +103,14 @@ export function excluirChavePix(tipo, valor) {
   })
 }
 
-export function realizarPix(tipoChave, chavePix, valor) {
+export function realizarPix(tipoChave, chavePix, valor, idFavorito = null) {
   return requisitarPix('/adicionar_pix', {
     method: 'POST',
     body: JSON.stringify({
       tipo_chave: tipoChave,
       chave_pix: String(chavePix || '').trim(),
       valor,
+      ...(idFavorito != null ? { id_favorito: idFavorito } : {}),
     }),
   })
 }
@@ -140,6 +141,23 @@ export function buscarContasUsuario(busca) {
     method: 'POST',
     body: JSON.stringify({ busca }),
   })
+}
+
+export function listarFavoritosPix() {
+  return requisitarPix('/favoritos_pix')
+}
+
+export function salvarFavoritoPix(dados) {
+  return requisitarPix('/favoritos_pix', {
+    method: 'POST',
+    body: JSON.stringify(dados),
+  }, 'Não foi possível salvar este destinatário nos favoritos.')
+}
+
+export function removerFavoritoPix(idFavorito) {
+  return requisitarPix(`/favoritos_pix/${encodeURIComponent(idFavorito)}`, {
+    method: 'DELETE',
+  }, 'Não foi possível remover este destinatário dos favoritos.')
 }
 
 export function adicionarCobranca(idPagador, valor, dataVencimento) {
