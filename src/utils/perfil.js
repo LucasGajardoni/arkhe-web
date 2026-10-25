@@ -8,6 +8,9 @@ export function montarPerfilVisual(resultado = {}, fallback = {}) {
     telefone: usuario.telefone ?? fallback.telefone ?? '',
     cpf: usuario.cpf ?? fallback.cpf ?? '',
     idUsuario: usuario.id_usuario ?? fallback.idUsuario ?? null,
+    administradorBanco: usuario.administrador_bancario !== undefined
+      ? usuario.administrador_bancario === true
+      : fallback.administradorBanco === true,
     idConta: conta.id_conta ?? fallback.idConta ?? null,
     idTitular: conta.id_titular ?? fallback.idTitular ?? null,
     vinculo: conta.vinculo ?? fallback.vinculo ?? '',

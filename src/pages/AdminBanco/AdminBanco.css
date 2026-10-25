@@ -1,0 +1,141 @@
+.pagina-admin-banco { background:#f6f3ea; min-height:100vh; }
+.conteudo-admin-banco { padding:34px 0 88px; }
+.topo-admin-banco { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px; }
+.topo-admin-banco p,.cartao-admin-banco header small,.cartao-admin-banco>small { margin:0 0 7px; color:#b38a39; font-size:10px; font-weight:800; letter-spacing:.11em; }
+.topo-admin-banco h1 { margin:0; color:#0d4d4d; font-size:clamp(28px,4vw,40px); letter-spacing:-.035em; }
+.topo-admin-banco>div>span { display:block; margin-top:8px; color:#746e62; font-size:13px; }
+.acoes-topo-admin { display:flex; align-items:center; gap:12px; color:#746e62; font-size:12px; }
+.botao-atualizar-admin,.busca-usuario-admin button,.filtros-operacoes-admin button { border:0; border-radius:9px; padding:11px 16px; background:#0d4d4d; color:white; font-weight:700; cursor:pointer; }
+.botao-atualizar-admin:disabled,.busca-usuario-admin button:disabled,.filtros-operacoes-admin button:disabled { opacity:.55; cursor:wait; }
+.abas-admin-banco { display:flex; gap:7px; padding:6px; margin:0 0 18px; border:1px solid #e6e0d4; border-radius:12px; background:#fff; width:max-content; max-width:100%; }
+.abas-admin-banco button { border:0; border-radius:8px; padding:10px 15px; color:#66726c; background:transparent; font-weight:700; cursor:pointer; }
+.abas-admin-banco button.ativo { color:#fff; background:#0d4d4d; }
+.alerta-admin-banco,.estado-admin-banco { padding:18px; border:1px solid #e5e2da; border-radius:12px; background:#fff; color:#6c6b60; }
+.alerta-admin-banco.erro { color:#8b2424; border-color:#efc9c7; background:#fff5f4; }
+.grade-metricas-admin { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; }
+.metrica-admin-banco { min-height:125px; display:flex; flex-direction:column; justify-content:center; gap:9px; padding:19px; border:1px solid #e6e1d6; border-radius:15px; background:#fff; box-shadow:0 6px 22px rgba(30,50,40,.035); }
+.metrica-admin-banco span { color:#817a6e; font-size:12px; font-weight:700; }
+.metrica-admin-banco strong { color:#153d39; font-size:clamp(24px,3vw,32px); letter-spacing:-.035em; }
+.metrica-admin-banco small { color:#8a877e; font-size:11px; }
+.metrica-admin-banco.destaque { background:#0d4d4d; border-color:#0d4d4d; }
+.metrica-admin-banco.destaque span,.metrica-admin-banco.destaque small { color:#d0e3da; }
+.metrica-admin-banco.destaque strong { color:#fff; }
+.faixa-status-admin { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; }
+.faixa-status-admin>div { padding:17px 19px; border:1px solid #e6e1d6; border-radius:13px; background:#fbfaf6; }
+.faixa-status-admin strong { color:#244b43; font-size:12px; }
+.faixa-status-admin p { margin:7px 0 0; color:#777568; font-size:12px; line-height:1.6; }
+.grade-painel-admin { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr); gap:14px; }
+.cartao-admin-banco { padding:22px; border:1px solid #e6e1d6; border-radius:16px; background:#fff; box-shadow:0 8px 28px rgba(26,44,39,.04); }
+.cartao-admin-banco header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
+.cartao-admin-banco header h2,.cartao-admin-banco>h2 { margin:0; color:#0d4d4d; font-size:19px; }
+.cartao-admin-banco header p { margin:7px 0 0; color:#79766b; font-size:12px; line-height:1.5; }
+.cartao-admin-banco header button,.detalhe-usuario-admin header button,.links-operacoes-admin button { border:1px solid #d9e3dc; border-radius:8px; padding:9px 12px; color:#0d4d4d; background:#f5faf7; font-weight:700; cursor:pointer; }
+.tabela-admin-rolagem { width:100%; overflow-x:auto; }
+.tabela-admin-banco { width:100%; border-collapse:collapse; font-size:12px; text-align:left; }
+.tabela-admin-banco th { color:#8a8374; font-size:10px; text-transform:uppercase; letter-spacing:.06em; white-space:nowrap; }
+.tabela-admin-banco th,.tabela-admin-banco td { padding:12px 10px; border-bottom:1px solid #efede7; }
+.tabela-admin-banco td { color:#485b53; white-space:nowrap; }
+.tabela-admin-banco tr:last-child td { border-bottom:0; }
+.badge-status-admin { display:inline-flex; padding:5px 8px; border-radius:20px; background:#eef1ed; color:#48655a; font-size:10px; font-weight:800; }
+.status-cancelado,.status-cancelada,.status-falhou,.status-recusado { background:#fff0ee; color:#9a3d35; }
+.status-concluido,.status-concluida,.status-ativo { background:#e7f4ec; color:#28664d; }
+.bloco-alertas-admin>p { padding:12px; border-radius:10px; background:#f6f8f4; color:#66726c; font-size:12px; line-height:1.5; }
+.bloco-alertas-admin>p strong { color:#0d4d4d; font-size:23px; }
+.bloco-alertas-admin>p span { display:block; color:#8c887e; }
+.bloco-alertas-admin ul { display:grid; gap:12px; padding:0; margin:15px 0 0; list-style:none; }
+.bloco-alertas-admin li { display:grid; gap:4px; padding-left:11px; border-left:2px solid #d3a64e; }
+.bloco-alertas-admin li b { color:#465c51; font-size:11px; }
+.bloco-alertas-admin li span,.bloco-alertas-admin li small { color:#807d72; font-size:10px; line-height:1.4; }
+.atalhos-config-admin { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:18px 0 12px; }
+.atalhos-config-admin h2 { grid-column:1/-1; margin:0 0 2px; color:#254c43; font-size:17px; }
+.atalhos-config-admin button { display:flex; flex-direction:column; gap:7px; min-height:84px; text-align:left; padding:15px; border:1px solid #e6e1d6; border-radius:12px; color:#0d4d4d; background:#fff; font-weight:800; cursor:pointer; }
+.atalhos-config-admin button span { color:#817c70; font-size:10px; font-weight:500; line-height:1.4; }
+.nota-auditoria-admin { margin:12px 0; padding:12px 15px; border-left:3px solid #c69d4f; color:#756f61; background:#fbf8ef; font-size:11px; line-height:1.55; }
+.secao-usuarios-admin,.secao-operacoes-admin { margin-top:2px; }
+.busca-usuario-admin { display:grid; gap:7px; margin:0 0 16px; }
+.busca-usuario-admin label,.filtros-operacoes-admin label { color:#65685e; font-size:11px; font-weight:700; }
+.busca-usuario-admin>div { display:flex; gap:8px; }
+.busca-usuario-admin input,.filtros-operacoes-admin input,.filtros-operacoes-admin select { width:100%; min-height:42px; padding:10px 12px; border:1px solid #ddd9cf; border-radius:8px; color:#344b44; background:#fff; font:inherit; }
+.lista-usuarios-admin { display:grid; border:1px solid #eeeae2; border-radius:10px; overflow:hidden; }
+.lista-usuarios-admin>button { display:flex; justify-content:space-between; align-items:center; gap:15px; padding:14px 16px; border:0; border-bottom:1px solid #eeeae2; background:#fff; text-align:left; cursor:pointer; }
+.lista-usuarios-admin>button:last-child { border-bottom:0; }
+.lista-usuarios-admin>button:hover { background:#f7faf7; }
+.lista-usuarios-admin>button span:first-child { display:grid; gap:5px; }
+.lista-usuarios-admin strong { color:#244b43; font-size:13px; }
+.lista-usuarios-admin small,.lista-usuarios-admin>button>span:last-child { color:#817d72; font-size:10px; }
+.detalhe-usuario-admin { margin-top:18px; padding:18px; border:1px solid #e8e3d8; border-radius:12px; background:#fbfaf6; }
+.detalhe-usuario-admin header { align-items:center; }
+.detalhe-usuario-admin header h3 { margin:5px 0; color:#0d4d4d; }
+.detalhe-usuario-admin header p,.detalhe-usuario-admin>p { color:#777568; font-size:11px; }
+.detalhe-usuario-admin h4 { margin:20px 0 10px; color:#33584d; font-size:13px; }
+.cards-contas-admin { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:9px; }
+.cards-contas-admin>div { display:grid; gap:6px; padding:13px; border:1px solid #e6e1d6; border-radius:10px; background:#fff; }
+.cards-contas-admin b { color:#285046; font-size:12px; }
+.cards-contas-admin span,.cards-contas-admin small { color:#777568; font-size:10px; line-height:1.5; }
+.filtros-operacoes-admin { display:grid; grid-template-columns:repeat(5,minmax(100px,1fr)) auto; align-items:end; gap:9px; margin-bottom:16px; }
+.filtros-operacoes-admin label { display:grid; gap:6px; }
+.filtros-operacoes-admin input,.filtros-operacoes-admin select { font-size:11px; }
+.filtros-operacoes-admin button { min-height:42px; padding:10px 13px; white-space:nowrap; }
+.links-operacoes-admin { margin-top:16px; }
+.abas-admin-banco .aba-auditoria-principal { color:#885f18; }
+.abas-admin-banco .aba-auditoria-principal.ativo { color:#fff; background:#0d4d4d; }
+.atalho-central-auditoria { width:100%; display:grid; grid-template-columns:1fr auto; gap:6px 15px; align-items:center; margin-top:14px; padding:18px 20px; border:1px solid #cbded2; border-radius:14px; background:linear-gradient(120deg,#edf5ee,#fff); color:#174b41; text-align:left; cursor:pointer; }
+.atalho-central-auditoria span { font-size:16px; font-weight:850; }
+.atalho-central-auditoria small { grid-column:1; color:#777568; font-size:11px; }
+.atalho-central-auditoria b { grid-column:2; grid-row:1/3; color:#0d4d4d; font-size:12px; }
+.central-auditoria-admin { display:grid; gap:14px; }
+.cabecalho-central-auditoria { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:22px; border:1px solid #dfe8de; border-radius:16px; background:linear-gradient(110deg,#fff,#eff7f1); }
+.cabecalho-central-auditoria small { color:#b38a39; font-size:10px; font-weight:850; letter-spacing:.1em; }
+.cabecalho-central-auditoria h2 { margin:5px 0; color:#0d4d4d; font-size:24px; }
+.cabecalho-central-auditoria p { margin:0; color:#777568; font-size:12px; }
+.estado-live-auditoria { display:flex; align-items:center; gap:8px; color:#637267; font-size:11px; font-weight:800; white-space:nowrap; }
+.estado-live-auditoria button,.filtros-auditoria button { min-height:38px; padding:9px 13px; border:0; border-radius:8px; background:#0d4d4d; color:#fff; font:inherit; font-weight:800; cursor:pointer; }
+.estado-live-auditoria button { margin-left:8px; }
+.ponto-live { width:9px; height:9px; border-radius:50%; background:#d79b40; box-shadow:0 0 0 4px #d79b4022; }
+.ponto-live.conectado { background:#2b9b65; box-shadow:0 0 0 4px #2b9b6522; }
+.indicadores-auditoria { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.indicadores-auditoria article { display:grid; gap:7px; padding:15px 16px; border:1px solid #e6e1d6; border-radius:12px; background:#fff; }
+.indicadores-auditoria small { color:#8a8374; font-size:9px; font-weight:800; letter-spacing:.07em; }
+.indicadores-auditoria strong { color:#294a41; font-size:18px; }
+.indicadores-auditoria strong.indicador-ok { color:#27754e; }
+.indicadores-auditoria strong.indicador-erro { color:#a44d43; }
+.indicadores-auditoria span { color:#817c70; font-size:10px; }
+.filtros-auditoria { display:grid; grid-template-columns:repeat(5,minmax(110px,1fr)) auto; align-items:end; gap:9px; padding:16px; border:1px solid #e6e1d6; border-radius:13px; background:#fff; }
+.filtros-auditoria label { display:grid; gap:5px; color:#65685e; font-size:10px; font-weight:750; }
+.filtros-auditoria input,.filtros-auditoria select { min-width:0; width:100%; min-height:38px; padding:8px 10px; border:1px solid #ddd9cf; border-radius:7px; color:#344b44; background:#fff; font:inherit; font-size:11px; }
+.feed-auditoria { overflow:hidden; border:1px solid #e6e1d6; border-radius:15px; background:#fff; }
+.feed-auditoria-titulo { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 20px; border-bottom:1px solid #efede7; }
+.feed-auditoria-titulo h3 { margin:0; color:#194d43; font-size:17px; }
+.feed-auditoria-titulo span { display:block; margin-top:5px; color:#817c70; font-size:10px; }
+.feed-auditoria-titulo>span { margin:0; white-space:nowrap; }
+.lista-feed-auditoria { display:grid; }
+.linha-feed-auditoria { display:grid; grid-template-columns:10px minmax(0,1fr) minmax(90px,auto) minmax(125px,auto) 12px; align-items:center; gap:12px; width:100%; padding:14px 18px; border:0; border-bottom:1px solid #f0eee8; background:#fff; text-align:left; cursor:pointer; }
+.linha-feed-auditoria:hover { background:#f8faf7; }
+.linha-feed-auditoria:last-child { border-bottom:0; }
+.marcador-evento { width:8px; height:8px; border-radius:50%; background:#7f9a8b; }
+.marcador-evento.recusado,.marcador-evento.excluido { background:#c45d4f; }
+.marcador-evento.concluido,.marcador-evento.sucesso { background:#38a16e; }
+.linha-feed-conteudo { display:grid; gap:5px; min-width:0; }
+.linha-feed-conteudo b { color:#254b42; font-size:11px; text-transform:capitalize; }
+.linha-feed-conteudo small { overflow:hidden; color:#817c70; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.linha-feed-valor { color:#35584c; font-size:11px; font-weight:800; }
+.linha-feed-auditoria time { color:#817c70; font-size:10px; white-space:nowrap; }
+.seta-feed { color:#ae9b72; font-size:19px; }
+.modal-auditoria-fundo { position:fixed; z-index:130; inset:0; display:grid; place-items:center; padding:20px; background:#1025229c; }
+.modal-auditoria { width:min(920px,100%); max-height:90vh; overflow:auto; padding:22px; border:1px solid #e8e3d8; border-radius:17px; background:#fff; box-shadow:0 22px 70px #10252244; }
+.modal-auditoria>header { display:flex; justify-content:space-between; align-items:flex-start; gap:15px; margin-bottom:17px; }
+.modal-auditoria>header small { color:#b38a39; font-size:10px; font-weight:850; letter-spacing:.08em; }
+.modal-auditoria>header h2 { margin:5px 0; color:#0d4d4d; font-size:22px; text-transform:capitalize; }
+.modal-auditoria>header button { width:34px; height:34px; border:1px solid #e4e0d7; border-radius:9px; color:#0d4d4d; background:#f8f7f2; font-size:24px; cursor:pointer; }
+.detalhe-auditoria-grade { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.detalhe-auditoria-grade p { display:grid; gap:5px; margin:0; padding:11px; border-radius:9px; background:#f7f7f2; }
+.detalhe-auditoria-grade b { color:#8a8374; font-size:9px; text-transform:uppercase; letter-spacing:.05em; }
+.detalhe-auditoria-grade span { overflow-wrap:anywhere; color:#37564c; font-size:11px; }
+.detalhe-auditoria-grade .detalhe-auditoria-motivo { grid-column:1/-1; }
+.snapshots-auditoria { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+.snapshots-auditoria article { min-width:0; padding:13px; border:1px solid #e9e5dc; border-radius:10px; background:#fbfaf6; }
+.snapshots-auditoria h3 { margin:0 0 9px; color:#35584c; font-size:11px; }
+.snapshots-auditoria pre { max-height:240px; overflow:auto; margin:0; color:#55675e; font:10px/1.5 Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media(max-width:1000px) { .grade-painel-admin { grid-template-columns:1fr; } .filtros-operacoes-admin { grid-template-columns:repeat(3,minmax(120px,1fr)); } .atalhos-config-admin { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:1000px) { .filtros-auditoria { grid-template-columns:repeat(3,minmax(110px,1fr)); } .indicadores-auditoria { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:650px) { .conteudo-admin-banco { padding-top:24px; } .topo-admin-banco { align-items:stretch; flex-direction:column; } .acoes-topo-admin { justify-content:space-between; } .grade-metricas-admin { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .metrica-admin-banco { min-height:110px; padding:14px; } .faixa-status-admin { grid-template-columns:1fr; } .abas-admin-banco { width:100%; overflow:auto; } .abas-admin-banco button { flex:1; white-space:nowrap; padding:10px 9px; font-size:11px; } .cartao-admin-banco { padding:16px; } .filtros-operacoes-admin { grid-template-columns:1fr 1fr; } .lista-usuarios-admin>button { align-items:flex-start; flex-direction:column; } .busca-usuario-admin>div { flex-direction:column; } .cabecalho-central-auditoria { align-items:flex-start; flex-direction:column; padding:17px; } .estado-live-auditoria { width:100%; } .indicadores-auditoria { grid-template-columns:1fr 1fr; } .filtros-auditoria { grid-template-columns:1fr 1fr; } .linha-feed-auditoria { grid-template-columns:9px minmax(0,1fr) auto 12px; gap:8px; padding:13px 11px; } .linha-feed-valor { display:none; } .linha-feed-auditoria time { font-size:9px; } .detalhe-auditoria-grade,.snapshots-auditoria { grid-template-columns:1fr; } .modal-auditoria-fundo { padding:9px; } .modal-auditoria { max-height:95vh; padding:16px; } }

@@ -42,6 +42,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
         </nav>
         <div className="perfil-topo-dashboard">
           {proprietarioPJ(usuario) && <button className={`atalho-equipe ${secao === 'acessos' ? 'ativo' : ''}`} type="button" title="Gerenciar quem pode operar esta conta" aria-current={secao === 'acessos' ? 'page' : undefined} onClick={() => navigate('/dashboard/acessos')}>Acessos</button>}
+          {usuario?.administradorBanco === true && <button className={`atalho-admin-banco ${secao === 'admin' ? 'ativo' : ''}`} type="button" aria-current={secao === 'admin' ? 'page' : undefined} onClick={() => navigate('/dashboard/admin')}>Administração</button>}
           <button className="trocar-conta-dashboard" type="button" onClick={() => navigate('/selecionar-conta')}>Trocar conta</button>
           <NotificacoesDashboard />
           <button className="usuario-dashboard" type="button" aria-label={`Abrir perfil de ${usuario?.nome || 'cliente'}`} onClick={abrirPerfil}>
