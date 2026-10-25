@@ -174,8 +174,8 @@ export default function Recorrencias() {
             <button type="button" onClick={() => navigate('/dashboard/pix', { state: { iniciarRecorrencia: true } })}>
               <strong>Pix ou transferência</strong><small>Escolha a chave e configure as próximas execuções.</small><span aria-hidden="true">›</span>
             </button>
-            <button type="button" onClick={() => navigate('/dashboard/boletos', { state: { iniciarRecorrencia: true } })}>
-              <strong>Pagamento de boleto</strong><small>Informe o código no fluxo de pagamento existente.</small><span aria-hidden="true">›</span>
+            <button type="button" className="opcao-recorrencia-indisponivel" disabled aria-describedby="aviso-boleto-recorrencia-indisponivel">
+              <strong>Pagamento de boleto · indisponível</strong><small id="aviso-boleto-recorrencia-indisponivel">Cada parcela exige uma nova cobrança válida. O boleto atual é de uso único.</small><span aria-hidden="true">×</span>
             </button>
           </section>
         )}
@@ -193,7 +193,7 @@ export default function Recorrencias() {
             <div className="estado-recorrencias">
               <span aria-hidden="true">⟳</span>
               <strong>Nenhum pagamento recorrente</strong>
-              <p>Crie uma regra a partir de um Pix ou pagamento compatível.</p>
+              <p>Crie uma regra a partir de um Pix ou transferência. Recorrência de boleto está indisponível.</p>
               <button type="button" className="botao-nova-recorrencia" onClick={() => setNovaAberta(true)}>Nova recorrência</button>
             </div>
           ) : (
@@ -211,12 +211,13 @@ export default function Recorrencias() {
                     <div><dt>Execuções criadas</dt><dd>{item.execucoes_criadas}{item.limite_execucoes ? ` de ${item.limite_execucoes}` : ''}</dd></div>
                     {item.data_final && <div><dt>Data final</dt><dd>{new Date(`${item.data_final}T12:00:00-03:00`).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</dd></div>}
                   </dl>
+                  {item.tipo_operacao === 'BOLETO' && <p className="nota-dia-mensal">A modalidade foi desativada. Regras antigas serão pausadas automaticamente e não poderão ser reativadas. Cancele esta regra para encerrar.</p>}
                   {item.frequencia === 'MENSAL' && <p className="nota-dia-mensal">No dia 29, 30 ou 31, meses mais curtos usam o último dia do mês.</p>}
 
                   <div className="acoes-cartao-recorrencia">
-                    {(item.status === 'ATIVA' || item.status === 'PAUSADA') && item.proxima_execucao && <button type="button" onClick={() => abrirEdicao(item)}>Editar próximas</button>}
+                    {item.tipo_operacao !== 'BOLETO' && (item.status === 'ATIVA' || item.status === 'PAUSADA') && item.proxima_execucao && <button type="button" onClick={() => abrirEdicao(item)}>Editar próximas</button>}
                     {item.status === 'ATIVA' && <button type="button" disabled={processando === item.id_recorrencia} onClick={() => executarAcao(item.id_recorrencia, 'pausar', pausarRecorrencia)}>{processando === item.id_recorrencia ? 'Salvando…' : 'Pausar'}</button>}
-                    {item.status === 'PAUSADA' && item.proxima_execucao && <button type="button" disabled={processando === item.id_recorrencia} onClick={() => executarAcao(item.id_recorrencia, 'reativar', reativarRecorrencia)}>{processando === item.id_recorrencia ? 'Salvando…' : 'Reativar'}</button>}
+                    {item.tipo_operacao !== 'BOLETO' && item.status === 'PAUSADA' && item.proxima_execucao && <button type="button" disabled={processando === item.id_recorrencia} onClick={() => executarAcao(item.id_recorrencia, 'reativar', reativarRecorrencia)}>{processando === item.id_recorrencia ? 'Salvando…' : 'Reativar'}</button>}
                     {(item.status === 'ATIVA' || item.status === 'PAUSADA') && (
                       cancelarId === item.id_recorrencia ? (
                         <div className="confirmar-cancelamento-recorrencia" role="group" aria-label="Confirmar cancelamento da recorrência">

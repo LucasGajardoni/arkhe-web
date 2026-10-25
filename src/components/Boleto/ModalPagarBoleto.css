@@ -320,6 +320,16 @@
   font-weight: 700;
 }
 
+.aviso-boleto-recorrencia-indisponivel {
+  margin: 13px 0 0;
+  padding: 11px;
+  border-radius: 9px;
+  color: #795a1b;
+  background: #fbf5e4;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
 .confirmacao-pagar-codigo,
 .sucesso-pagamento-codigo {
   display: flex;

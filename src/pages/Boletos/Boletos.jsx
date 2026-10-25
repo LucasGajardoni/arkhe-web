@@ -90,7 +90,7 @@ export default function Boletos() {
   const tipoCobranca = contaPJ ? 'receber' : 'pagar'
 
   useEffect(() => {
-    if (!location.state?.iniciarAgendamento && !location.state?.iniciarRecorrencia) return
+    if (!location.state?.iniciarAgendamento) return
     const abrir = window.setTimeout(() => {
       if (!contaPJ) setPagamentoAberto(true)
       navigate(location.pathname, { replace: true, state: null })

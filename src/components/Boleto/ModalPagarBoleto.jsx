@@ -1,9 +1,7 @@
 import { useRef, useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
-import FormRecorrencia from '../Agendamentos/FormRecorrencia.jsx'
 import { criarAgendamento } from '../../services/agendamentosService.js'
-import { criarRecorrencia } from '../../services/recorrenciasService.js'
 import {
   buscarCobrancaPorCodigo,
   pagarCobranca,
@@ -15,7 +13,6 @@ import './ModalPagarBoleto.css'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const dataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const dataHoraSp = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Sao_Paulo' })
 
 function limparCodigo(valor) {
   return String(valor || '').replace(/\s+/g, '')
@@ -50,15 +47,13 @@ function formatarDataHora(valor) {
 }
 
 export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fechar, atualizar }) {
-  const [etapa, setEtapa] = useState(modoInicial)
+  const [etapa, setEtapa] = useState(modoInicial === 'recorrencia' ? 'entrada' : modoInicial)
   const [codigo, setCodigo] = useState('')
   const [boleto, setBoleto] = useState(null)
   const [resultadoPagamento, setResultadoPagamento] = useState(null)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState('')
   const [idAgendamento, setIdAgendamento] = useState(null)
-  const [idRecorrencia, setIdRecorrencia] = useState(null)
-  const [proximaRecorrencia, setProximaRecorrencia] = useState(null)
   const processandoRef = useRef(false)
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
@@ -134,30 +129,6 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
     }
   }
 
-  async function confirmarRecorrencia(configuracao) {
-    if (!boleto || processandoRef.current) return
-    processandoRef.current = true
-    setProcessando(true)
-    setErro('')
-    try {
-      const resposta = await criarRecorrencia({
-        tipo_operacao: 'BOLETO',
-        id_cobranca: boleto.id_cobranca,
-        valor: Number(boleto.valor),
-        ...configuracao,
-      })
-      setIdRecorrencia(resposta.id_recorrencia)
-      setProximaRecorrencia(resposta.proxima_execucao)
-      setEtapa('recorrencia_criada')
-      await atualizar()
-    } catch (falha) {
-      setErro(falha.message || 'Não foi possível criar a recorrência.')
-    } finally {
-      processandoRef.current = false
-      setProcessando(false)
-    }
-  }
-
   let conteudo
   let titulo = 'Pagar boleto'
   let etapaAtual = 1
@@ -169,10 +140,8 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
     titulo = 'Confirmar pagamento'
     etapaAtual = 3
   }
-  if (etapa === 'agendamento' || etapa === 'recorrencia') etapaAtual = 4
+  if (etapa === 'agendamento') etapaAtual = 4
   if (etapa === 'agendamento') titulo = 'Agendar boleto'
-  if (etapa === 'recorrencia') titulo = 'Configurar recorrência'
-  if (etapa === 'recorrencia_criada') titulo = 'Recorrência autorizada'
   if (etapa === 'agendado') titulo = 'Boleto agendado'
   if (etapa === 'sucesso') titulo = 'Pagamento concluído'
 
@@ -246,12 +215,12 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
         </dl>
 
         {pago && <p className="aviso-boleto-pago">Este boleto já foi pago e não pode ser pago novamente.</p>}
+        {!pago && <p className="aviso-boleto-recorrencia-indisponivel" role="note">Recorrência de boleto indisponível: cada parcela precisa de uma nova cobrança válida. Pague cada novo boleto pelo fluxo normal.</p>}
         {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
 
         <footer>
           <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa('entrada') }}>Voltar</button>
           {!pago && <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa('agendamento') }}>Agendar para depois</button>}
-          {!pago && <button className="botao botao-secundario" type="button" onClick={() => { setErro(''); setEtapa('recorrencia') }}>Tornar recorrente</button>}
           <button className="botao botao-principal" type="button" disabled={pago} onClick={() => setEtapa('confirmacao')}>Continuar</button>
         </footer>
       </div>
@@ -285,33 +254,6 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
         aoVoltar={() => { setErro(''); setEtapa('revisao') }}
         aoConfirmar={confirmarAgendamento}
       />
-    )
-  } else if (etapa === 'recorrencia') {
-    conteudo = (
-      <FormRecorrencia
-        tipo="Pagamento de boleto"
-        valor={Number(boleto?.valor) || 0}
-        destinatario={beneficiarioBoleto(boleto || {})}
-        observacao="Boletos comuns têm código de uso único. Depois que esta cobrança for paga, as próximas execuções serão recusadas até você alterar ou cancelar a recorrência."
-        erro={erro}
-        processando={processando}
-        aoVoltar={() => { setErro(''); setEtapa('revisao') }}
-        aoConfirmar={confirmarRecorrencia}
-      />
-    )
-  } else if (etapa === 'recorrencia_criada') {
-    conteudo = (
-      <div className="sucesso-pagamento-codigo" role="status">
-        <span>✓</span>
-        <h3>Recorrência autorizada</h3>
-        <strong>{moeda.format(Number(boleto?.valor) || 0)}</strong>
-        <p>{beneficiarioBoleto(boleto || {})}</p>
-        <small>Nenhum valor foi movimentado agora. Saldo, limites e permissões serão verificados em cada execução.</small>
-        <small>Boletos comuns têm código único; as próximas parcelas podem ser recusadas se a cobrança já estiver paga.</small>
-        {proximaRecorrencia && <small>Próxima execução: {dataHoraSp.format(new Date(`${proximaRecorrencia}-03:00`))}</small>}
-        {idRecorrencia && <small>Recorrência #{idRecorrencia}</small>}
-        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
-      </div>
     )
   } else if (etapa === 'agendado') {
     conteudo = (
@@ -354,9 +296,9 @@ export default function ModalPagarBoleto({ usuario, modoInicial = 'entrada', fec
           </div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
-        {!['sucesso', 'agendado', 'recorrencia_criada'].includes(etapa) && (
-          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de ${['agendamento', 'recorrencia'].includes(etapa) ? 4 : 3}`}>
-            <span style={{ width: `${(etapaAtual / (['agendamento', 'recorrencia'].includes(etapa) ? 4 : 3)) * 100}%` }} />
+        {!['sucesso', 'agendado'].includes(etapa) && (
+          <p className="progresso-operacao" aria-label={`Etapa ${etapaAtual} de ${etapa === 'agendamento' ? 4 : 3}`}>
+            <span style={{ width: `${(etapaAtual / (etapa === 'agendamento' ? 4 : 3)) * 100}%` }} />
           </p>
         )}
         {conteudo}
