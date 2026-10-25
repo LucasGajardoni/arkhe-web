@@ -20,6 +20,13 @@ function horaMensagem(valor) {
   return Number.isNaN(data.getTime()) ? '' : new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(data)
 }
 
+function mensagemErro(falha, padrao) {
+  if (/GEMINI_API_KEY.*não está configurada/i.test(falha?.message || '')) {
+    return 'O MAURO está temporariamente indisponível. A configuração do assistente no Arkhé ainda precisa ser concluída.'
+  }
+  return falha?.message || padrao
+}
+
 export default function AssistenteMauro({ fechar, tipoConta }) {
   const [conversas, setConversas] = useState([])
   const [conversaAtiva, setConversaAtiva] = useState(null)
@@ -46,7 +53,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
           await novaConversa(ativo)
         }
       } catch (falha) {
-        if (ativo) setErro(falha.message || 'Não foi possível abrir o MAURO.')
+        if (ativo) setErro(mensagemErro(falha, 'Não foi possível abrir o MAURO.'))
       } finally {
         if (ativo) setCarregando(false)
       }
@@ -97,7 +104,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
         ? { ...item, titulo: item.titulo === 'Conversa com MAURO' ? mensagem.slice(0, 70) : item.titulo, ultima_mensagem: resultado.mensagem.conteudo }
         : item))
     } catch (falha) {
-      setErro(falha.message || 'Não consegui responder agora. Tente novamente.')
+      setErro(mensagemErro(falha, 'Não consegui responder agora. Tente novamente.'))
       setMensagens((atual) => atual.filter((item) => !(typeof item.id === 'string' && item.id.startsWith('local-'))))
       setTexto(mensagem)
     } finally {
