@@ -36,7 +36,6 @@ function atalhosPorTipo(contaPJ) {
       { icone: 'folha', titulo: 'Funcionários', detalhe: 'Cadastre sua equipe e gerencie salários', destino: 'funcionarios', empresa: true },
       { icone: 'extrato', titulo: 'Folha de pagamento', detalhe: 'Prepare, pague e acompanhe suas folhas', destino: 'folha', empresa: true },
       { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
-      { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
     ]
   }
 
@@ -45,7 +44,6 @@ function atalhosPorTipo(contaPJ) {
     { icone: 'boleto', titulo: 'Pagar boleto', detalhe: 'Digitar ou escanear', destino: 'pagar' },
     { icone: 'extrato', titulo: 'Extrato', detalhe: 'Ver movimentações', destino: 'extrato' },
     { icone: 'transferir', titulo: 'DDA', detalhe: 'Boletos da sua conta', destino: 'boletos' },
-    { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
     { icone: 'extrato', titulo: 'Agendamentos', detalhe: 'Acompanhar operações futuras', destino: 'agendamentos' },
   ]
 }
