@@ -5,6 +5,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+ARG BUILD_REVISION=9665b61
+RUN printf '%s' "$BUILD_REVISION" > /tmp/arkhe-build-revision
+
 COPY . .
 
 RUN npm run build
