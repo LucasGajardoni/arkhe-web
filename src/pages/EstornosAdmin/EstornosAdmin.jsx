@@ -30,6 +30,7 @@ export default function EstornosAdmin() {
   const [carregando, setCarregando] = useState(true)
   const [migracaoInstalada, setMigracaoInstalada] = useState(null)
   const [instalandoMigracao, setInstalandoMigracao] = useState(false)
+  const [confirmacaoMigracao, setConfirmacaoMigracao] = useState(false)
   const [backupCriado, setBackupCriado] = useState('')
   const [erro, setErro] = useState('')
   const [perfilAberto, setPerfilAberto] = useState(false)
@@ -58,13 +59,13 @@ export default function EstornosAdmin() {
   }, [carregar])
 
   async function instalarEstrutura() {
-    if (!window.confirm('O backend criará um backup do banco Firebird e, somente após confirmar o backup, aplicará a migração aditiva de estornos. Continuar?')) return
     setInstalandoMigracao(true)
     setErro('')
     setBackupCriado('')
     try {
       const resultado = await instalarMigracaoEstornos()
       setBackupCriado(resultado.arquivo_backup || '')
+      setConfirmacaoMigracao(false)
       await carregar()
     } catch (falha) {
       setErro(falha.message || 'Não foi possível instalar a estrutura de estornos.')
@@ -96,9 +97,15 @@ export default function EstornosAdmin() {
         {migracaoInstalada === false && <section className="cartao-migracao-estornos" aria-labelledby="titulo-migracao-estornos">
           <h2 id="titulo-migracao-estornos">Preparar estrutura no Firebird</h2>
           <p>A migração cria apenas a tabela de auditoria de cancelamentos e devoluções. O backend fará um backup do banco antes de aplicar as alterações.</p>
-          <button className="botao botao-primario" type="button" onClick={instalarEstrutura} disabled={instalandoMigracao || carregando}>
-            {instalandoMigracao ? 'Criando backup e instalando…' : 'Criar backup e instalar estrutura'}
-          </button>
+          {!confirmacaoMigracao ? <button className="botao botao-primario" type="button" onClick={() => setConfirmacaoMigracao(true)} disabled={instalandoMigracao || carregando}>
+            Criar backup e instalar estrutura
+          </button> : <div className="confirmacao-migracao-estornos" role="group" aria-label="Confirmar instalação da migração">
+            <p>Confirme para criar o backup no servidor Firebird e aplicar a migração aditiva. Nenhuma movimentação financeira será alterada.</p>
+            <button className="botao botao-secundario" type="button" onClick={() => setConfirmacaoMigracao(false)} disabled={instalandoMigracao}>Voltar</button>
+            <button className="botao botao-primario" type="button" onClick={instalarEstrutura} disabled={instalandoMigracao}>
+              {instalandoMigracao ? 'Criando backup e instalando…' : 'Confirmar backup e instalação'}
+            </button>
+          </div>}
           {backupCriado && <p role="status">Backup concluído: <code>{backupCriado}</code></p>}
         </section>}
         {migracaoInstalada === true && backupCriado && <p className="estado-estornos-admin" role="status">Estrutura instalada. Backup: <code>{backupCriado}</code></p>}

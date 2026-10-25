@@ -10,6 +10,8 @@
 .cartao-migracao-estornos h2 { margin:0 0 8px; color:#0d4d4d; font-size:18px; }
 .cartao-migracao-estornos p { color:#746e62; font-size:13px; line-height:1.55; }
 .cartao-migracao-estornos code, .estado-estornos-admin code { overflow-wrap:anywhere; color:#183735; }
+.confirmacao-migracao-estornos { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.confirmacao-migracao-estornos p { flex-basis:100%; margin:0 0 8px; }
 .lista-estornos-admin { display:grid; gap:14px; }
 .lista-estornos-admin article { padding:22px; border:1px solid #e5e2da; border-radius:16px; background:#fff; box-shadow:0 8px 28px rgba(26,44,39,.045); }
 .lista-estornos-admin article > header { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; }
