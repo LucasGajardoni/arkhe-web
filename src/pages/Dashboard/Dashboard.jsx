@@ -10,6 +10,7 @@ import CartaoResumo from '../../components/Cartao/CartaoResumo.jsx'
 import ArkhePay from '../../components/Maquininha/ArkhePay.jsx'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import WhatsAppArkhe from '../../components/WhatsAppArkhe/WhatsAppArkhe.jsx'
+import AssistenteMauro from '../../components/Mauro/AssistenteMauro.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
 import {
@@ -58,6 +59,7 @@ export default function Dashboard() {
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [emissaoAberta, setEmissaoAberta] = useState(false)
   const [pagamentoBoletoAberto, setPagamentoBoletoAberto] = useState(false)
+  const [mauroAberto, setMauroAberto] = useState(false)
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
   const usuario = perfil
@@ -189,6 +191,18 @@ export default function Dashboard() {
                 <Icone nome="seta" tamanho={16} />
               </button>
             ))}
+          </section>
+
+          <section className="mauro-lancador-dashboard" aria-label="Assistente do Arkhé">
+            <div className="mauro-lancador-simbolo" aria-hidden="true">✦</div>
+            <div className="mauro-lancador-texto">
+              <p>SEU ASSISTENTE DO ARKHÉ</p>
+              <h2>Converse com o MAURO</h2>
+              <span>Pergunte sobre saldo, movimentações, limites e sua vida financeira.</span>
+            </div>
+            <button type="button" onClick={() => setMauroAberto(true)}>
+              Falar com o MAURO <Icone nome="seta" tamanho={16} />
+            </button>
           </section>
 
           <div className="grade-dashboard">
@@ -343,6 +357,7 @@ export default function Dashboard() {
           atualizar={movimentacoes.carregar}
         />
       )}
+      {mauroAberto && <AssistenteMauro fechar={() => setMauroAberto(false)} tipoConta={usuario.tipoConta} />}
     </div>
   )
 }
