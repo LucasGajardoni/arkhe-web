@@ -45,6 +45,7 @@ function dataLegivel(valor) {
 export default function Agendamentos() {
   const navigate = useNavigate()
   const { perfil, atualizarPerfil, limparSessao, tratarErroSessao } = useSessao()
+  const [novoAberto, setNovoAberto] = useState(false)
   const [itens, setItens] = useState([])
   const [filtro, setFiltro] = useState('TODOS')
   const [carregando, setCarregando] = useState(true)
@@ -121,8 +122,40 @@ export default function Agendamentos() {
             <h1>Agendamentos</h1>
             <span>Confira o que está programado para sua conta.</span>
           </div>
-          <button type="button" onClick={() => carregar()} disabled={carregando}>Atualizar</button>
+          <div className="acoes-cabecalho-agendamentos">
+            <button
+              className="botao-novo-agendamento"
+              type="button"
+              aria-expanded={novoAberto}
+              aria-controls="opcoes-novo-agendamento"
+              onClick={() => setNovoAberto((aberto) => !aberto)}
+            >
+              <span aria-hidden="true">＋</span> Novo agendamento
+            </button>
+            <button type="button" onClick={() => carregar()} disabled={carregando}>Atualizar</button>
+          </div>
         </header>
+
+        {novoAberto && (
+          <section className="opcoes-novo-agendamento" id="opcoes-novo-agendamento" aria-label="Escolha o tipo de agendamento">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/pix', { state: { iniciarAgendamento: true } })}
+            >
+              <span className="opcao-agendamento-icone" aria-hidden="true">↗</span>
+              <span><strong>Pix</strong><small>Agende um Pix ou transferência</small></span>
+              <span aria-hidden="true">›</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard/boletos', { state: { iniciarAgendamento: true } })}
+            >
+              <span className="opcao-agendamento-icone" aria-hidden="true">▤</span>
+              <span><strong>Boleto</strong><small>Informe o código no fluxo de pagamento</small></span>
+              <span aria-hidden="true">›</span>
+            </button>
+          </section>
+        )}
 
         <section className="aviso-agendamentos">
           <strong>Sem débito antecipado</strong>

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import ModalDetalhesBoleto from '../../components/Boleto/ModalDetalhesBoleto.jsx'
 import ModalEmissaoBoleto from '../../components/Boleto/ModalEmissaoBoleto.jsx'
 import ModalPagarBoleto from '../../components/Boleto/ModalPagarBoleto.jsx'
@@ -75,6 +75,7 @@ function nomeRelacionado(cobranca, contaPJ) {
 
 export default function Boletos() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { perfil, atualizarPerfil, limparSessao } = useSessao()
   const contaPJ = perfil.tipoConta === 'PJ'
   const dados = useMovimentacoes()
@@ -87,6 +88,12 @@ export default function Boletos() {
   const [saindo, setSaindo] = useState(false)
   const [erroSessao, setErroSessao] = useState('')
   const tipoCobranca = contaPJ ? 'receber' : 'pagar'
+
+  useEffect(() => {
+    if (!location.state?.iniciarAgendamento) return
+    if (!contaPJ) setPagamentoAberto(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [contaPJ, location.key, location.pathname, location.state, navigate])
 
   const cobrancas = useMemo(() => dados.cobrancas
     .filter((item) => item.tipo === tipoCobranca)

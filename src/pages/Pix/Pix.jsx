@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.jsx'
 import Icone from '../../components/Dashboard/Icone.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
@@ -26,6 +26,7 @@ const rotulos = {
 
 export default function Pix() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { perfil, atualizarPerfil, limparSessao } = useSessao()
   const usuario = perfil
   const pix = usePix(usuario)
@@ -37,6 +38,12 @@ export default function Pix() {
   const movimentacoes = useMovimentacoes()
   const contaPJ = usuario.tipoConta === 'PJ'
   const podeCadastrarChave = pix.tiposDisponiveis.length > 0
+
+  useEffect(() => {
+    if (!location.state?.iniciarAgendamento) return
+    setPagamentoAberto(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.key, location.pathname, location.state, navigate])
 
   async function sair() {
     if (saindo) return
