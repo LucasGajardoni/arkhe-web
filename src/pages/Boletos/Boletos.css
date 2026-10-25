@@ -290,6 +290,38 @@
   background: #fff0f0;
 }
 
+.status-boleto.cancelado,
+.situacao-detalhes-boleto.cancelado {
+  color: #5d6570;
+  background: #edf0f3;
+}
+
+.status-boleto.estornado,
+.situacao-detalhes-boleto.estornado {
+  color: #73521a;
+  background: #f8ecd3;
+}
+
+.motivo-estorno-boleto {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0;
+  color: #183735;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.motivo-estorno-boleto textarea {
+  min-height: 86px;
+  resize: vertical;
+  border: 1px solid #ded9cc;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+}
+
 .lista-boletos article > button > svg {
   color: #aaa392;
 }

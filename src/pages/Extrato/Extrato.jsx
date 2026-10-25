@@ -8,6 +8,7 @@ import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import { useMovimentacoes } from '../../hooks/useMovimentacoes.js'
 import { useSessao } from '../../hooks/useSessao.js'
+import { devolverMovimentacao, estornarBoleto } from '../../services/movimentacoesService.js'
 import { encerrarSessao } from '../../services/authService.js'
 import {
   agruparMovimentacoesPorData,
@@ -23,14 +24,34 @@ import './ExtratoComprovante.css'
 const LIMITE_INICIAL = 15
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
-function ModalDetalhesMovimentacao({ item, fechar }) {
+function ModalDetalhesMovimentacao({ item, fechar, atualizar }) {
   const { perfil } = useSessao()
   const navigate = useNavigate()
   const meta = metadadosMovimentacao(item)
   const contraparte = nomeContraparteMovimentacao(item)
   const detalheData = formatarDataHoraMovimentacao(item)
   const valor = valorMovimentacao(item)
-  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar)
+  const [acao, setAcao] = useState('')
+  const [motivo, setMotivo] = useState('')
+  const [erroAcao, setErroAcao] = useState('')
+  const [processandoAcao, setProcessandoAcao] = useState(false)
+  const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processandoAcao)
+
+  async function confirmarAcao() {
+    if (processandoAcao || motivo.trim().length < 5) return
+    setProcessandoAcao(true)
+    setErroAcao('')
+    try {
+      if (acao === 'confirmar_devolucao') await devolverMovimentacao(item.id_movimentacao, motivo)
+      else await estornarBoleto(item.id_movimentacao, motivo)
+      await atualizar()
+      setAcao('concluida')
+    } catch (falha) {
+      setErroAcao(falha.message || 'Não foi possível concluir esta operação.')
+    } finally {
+      setProcessandoAcao(false)
+    }
+  }
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
@@ -47,7 +68,7 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
         <div className="conteudo-detalhes-movimentacao">
           <div className="status-detalhes-movimentacao">
             <span aria-hidden="true" />
-            <strong>Transação concluída</strong>
+            <strong>{item.status_operacao === 'DEVOLVIDA' ? 'Devolução concluída' : item.status_operacao === 'DEVOLUCAO' ? 'Movimentação de devolução' : 'Transação concluída'}</strong>
             <small>{meta.entrada ? 'Entrada na conta' : 'Saída da conta'}</small>
           </div>
 
@@ -67,6 +88,10 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
             {item.id_movimentacao && <div><dt>Identificação Arkhé</dt><dd>ARKHE-{String(item.id_movimentacao).padStart(12, '0')}</dd></div>}
             {item.id_cobranca && <div><dt>Cobrança vinculada</dt><dd>#{item.id_cobranca}</dd></div>}
             {item.id_folha && <div><dt>Folha vinculada</dt><dd>#{item.id_folha}</dd></div>}
+            {item.status_operacao === 'DEVOLVIDA' && <div><dt>Devolução</dt><dd>{item.id_movimentacao_devolucao ? `Movimentação #${item.id_movimentacao_devolucao}` : 'Concluída'}{item.id_estorno ? ` · registro #${item.id_estorno}` : ''}</dd></div>}
+            {item.status_operacao === 'DEVOLUCAO' && item.id_movimentacao_original && <div><dt>Operação original</dt><dd>Movimentação #{item.id_movimentacao_original}{item.id_estorno ? ` · registro #${item.id_estorno}` : ''}</dd></div>}
+            {item.motivo_estorno && <div><dt>Motivo registrado</dt><dd>{item.motivo_estorno}</dd></div>}
+            {item.data_estorno && <div><dt>Data da devolução</dt><dd>{item.data_estorno}</dd></div>}
           </dl>
 
           {!meta.entrada && item.id_movimentacao && (
@@ -77,9 +102,37 @@ function ModalDetalhesMovimentacao({ item, fechar }) {
             {perfil.tipoConta === 'PJ' && item.origem === 'folha_pagamento' && item.id_folha && (
               <button className="botao botao-secundario" type="button" onClick={() => navigate(`/dashboard/folha?folha=${encodeURIComponent(item.id_folha)}`)}>Ver folha</button>
             )}
-            <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
+            {item.pode_devolver && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_devolucao') }}>Devolver pagamento</button>}
+            {item.pode_estornar_boleto && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_estorno') }}>Estornar pagamento</button>}
+            <button className="botao botao-secundario" type="button" onClick={fechar}>Concluir</button>
           </footer>
         </div>
+
+        {['confirmar_devolucao', 'confirmar_estorno'].includes(acao) && (
+          <div className="fundo-modal-perfil" role="presentation">
+            <section className="modal-perfil confirmacao-estorno-extrato" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-estorno">
+              <p>CONFIRMAÇÃO FINANCEIRA</p>
+              <h2 id="titulo-confirmar-estorno">{acao === 'confirmar_estorno' ? 'Estornar pagamento de boleto?' : 'Devolver pagamento?'}</h2>
+              <p>Será criada uma movimentação inversa de <strong>{moeda.format(valor)}</strong>. O saldo da conta recebedora será debitado e a movimentação original permanecerá no extrato.</p>
+              <label className="motivo-estorno-boleto">Motivo
+                <textarea value={motivo} onChange={(evento) => setMotivo(evento.target.value)} maxLength={500} minLength={5} required placeholder="Informe o motivo da devolução." />
+              </label>
+              {erroAcao && <p className="mensagem-modal-perfil erro" role="alert">{erroAcao}</p>}
+              <footer>
+                <button className="botao botao-secundario" type="button" disabled={processandoAcao} onClick={() => setAcao('')}>Voltar</button>
+                <button className="botao botao-principal" type="button" disabled={processandoAcao || motivo.trim().length < 5} onClick={confirmarAcao}>{processandoAcao ? 'Processando…' : 'Confirmar devolução'}</button>
+              </footer>
+            </section>
+          </div>
+        )}
+
+        {acao === 'concluida' && (
+          <div className="fundo-modal-perfil" role="presentation"><section className="modal-perfil confirmacao-estorno-extrato" role="status">
+            <h2>Devolução concluída</h2>
+            <p>O lançamento inverso foi registrado e o extrato foi atualizado.</p>
+            <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
+          </section></div>
+        )}
       </section>
     </div>
   )
@@ -192,7 +245,10 @@ export default function Extrato() {
                       const contraparte = nomeContraparteMovimentacao(item)
                       const detalheData = formatarDataHoraMovimentacao(item)
                       const valor = valorMovimentacao(item)
-                      const complemento = meta.detalhe ? `${detalheData} · ${meta.detalhe}` : detalheData
+                      const statusFinanceiro = item.status_operacao === 'DEVOLVIDA'
+                        ? 'Devolvido integralmente'
+                        : item.status_operacao === 'DEVOLUCAO' ? 'Devolução registrada' : ''
+                      const complemento = [detalheData, meta.detalhe, statusFinanceiro].filter(Boolean).join(' · ')
 
                       return (
                         <article key={item.id_movimentacao || `${item.data_movimentacao}-${indice}`}>
@@ -238,7 +294,7 @@ export default function Extrato() {
       <NavegacaoMobile secao="extrato" tipoConta={perfil.tipoConta} />
       {perfilAberto && <ModalPerfil usuario={perfil} fechar={() => setPerfilAberto(false)} aoAtualizar={atualizarPerfil} />}
       {movimentacaoSelecionada && (
-        <ModalDetalhesMovimentacao item={movimentacaoSelecionada} fechar={() => setMovimentacaoSelecionada(null)} />
+        <ModalDetalhesMovimentacao item={movimentacaoSelecionada} atualizar={dados.carregar} fechar={() => setMovimentacaoSelecionada(null)} />
       )}
     </div>
   )

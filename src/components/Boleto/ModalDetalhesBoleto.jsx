@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useModalAcessivel } from '../../hooks/useModalAcessivel.js'
 import FormAgendamento from '../Agendamentos/FormAgendamento.jsx'
 import { criarAgendamento } from '../../services/agendamentosService.js'
-import { pagarCobranca } from '../../services/movimentacoesService.js'
+import { cancelarCobranca, pagarCobranca } from '../../services/movimentacoesService.js'
 import { formatarDataBrasileira } from '../../utils/formatadores.js'
 import AcoesComprovante from '../Comprovante/AcoesComprovante.jsx'
 import AcoesBoletoPdf from './AcoesBoletoPdf.jsx'
@@ -36,16 +36,19 @@ export default function ModalDetalhesBoleto({
   const [erro, setErro] = useState('')
   const [resultadoPagamento, setResultadoPagamento] = useState(null)
   const [idAgendamento, setIdAgendamento] = useState(null)
+  const [motivoCancelamento, setMotivoCancelamento] = useState('')
   const pago = Number(boleto.status) === 1
+  const cancelado = Number(boleto.status) === 2
   const vencimento = somenteData(boleto.data_vencimento)
   const dataPagamento = somenteData(boleto.data_pagamento)
   let textoSituacao = situacao.texto
-  if (contaPJ && pago) textoSituacao = 'Pagamento recebido'
+  if (contaPJ && pago && boleto.status_operacao !== 'ESTORNADO') textoSituacao = 'Pagamento recebido'
+  if (boleto.status_operacao === 'ESTORNADO') textoSituacao = 'Estornado'
   if (contaPJ && !pago && situacao.classe === 'pendente') textoSituacao = 'Pagamento pendente'
   const { modalRef, fecharAoClicarFora } = useModalAcessivel(fechar, processando)
 
   async function confirmarPagamento() {
-    if (processando || contaPJ || pago) return
+    if (processando || contaPJ || pago || cancelado) return
 
     setProcessando(true)
     setErro('')
@@ -62,8 +65,23 @@ export default function ModalDetalhesBoleto({
     }
   }
 
+  async function confirmarCancelamento() {
+    if (processando || !boleto.pode_cancelar) return
+    setProcessando(true)
+    setErro('')
+    try {
+      await cancelarCobranca(boleto.id_cobranca, motivoCancelamento)
+      setEtapa('cancelado')
+      await atualizar()
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível cancelar a cobrança.')
+    } finally {
+      setProcessando(false)
+    }
+  }
+
   async function confirmarAgendamento(dataAgendada) {
-    if (processando || contaPJ || pago) return
+    if (processando || contaPJ || pago || cancelado) return
     setProcessando(true)
     setErro('')
     try {
@@ -85,7 +103,35 @@ export default function ModalDetalhesBoleto({
 
   let conteudo
 
-  if (etapa === 'confirmacao') {
+  if (etapa === 'cancelar') {
+    conteudo = (
+      <div className="conteudo-detalhes-boleto confirmacao-baixa-boleto">
+        <span>!</span>
+        <h3>Cancelar esta cobrança?</h3>
+        <p>A cobrança deixará de aceitar pagamentos. Esta ação não movimenta saldo.</p>
+        <label className="motivo-estorno-boleto">Motivo do cancelamento
+          <textarea value={motivoCancelamento} onChange={(evento) => setMotivoCancelamento(evento.target.value)} maxLength={500} minLength={5} required placeholder="Explique brevemente o motivo." />
+        </label>
+        {erro && <p className="mensagem-modal-perfil erro" role="alert">{erro}</p>}
+        <footer>
+          <button className="botao botao-secundario" type="button" disabled={processando} onClick={() => { setErro(''); setEtapa('detalhes') }}>Voltar</button>
+          <button className="botao botao-principal" type="button" disabled={processando || motivoCancelamento.trim().length < 5} onClick={confirmarCancelamento}>
+            {processando ? 'Cancelando…' : 'Confirmar cancelamento'}
+          </button>
+        </footer>
+      </div>
+    )
+  } else if (etapa === 'cancelado') {
+    conteudo = (
+      <div className="sucesso-baixa-boleto" role="status">
+        <span>✓</span>
+        <h3>Cobrança cancelada</h3>
+        <strong>{moeda.format(Number(boleto.valor) || 0)}</strong>
+        <p>Nenhum saldo foi movimentado. A cobrança foi preservada no histórico como cancelada.</p>
+        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
+      </div>
+    )
+  } else if (etapa === 'confirmacao') {
     conteudo = (
       <div className="conteudo-detalhes-boleto confirmacao-baixa-boleto">
         <span>!</span>
@@ -139,16 +185,19 @@ export default function ModalDetalhesBoleto({
     conteudo = (
       <div className="conteudo-detalhes-boleto">
         <p className={`situacao-detalhes-boleto ${situacao.classe}`}>
-          {textoSituacao}
+          {boleto.status_operacao === 'CANCELADO' ? 'Cancelado' : textoSituacao}
         </p>
 
         <dl>
           <div><dt>{contaPJ ? 'Pagador' : 'Recebedor'}</dt><dd>{nomeRelacionado}</dd></div>
           <div><dt>Valor</dt><dd>{moeda.format(Number(boleto.valor) || 0)}</dd></div>
           <div><dt>Vencimento</dt><dd>{vencimento ? formatarDataBrasileira(vencimento) : 'Não informado'}</dd></div>
-          <div><dt>Situação</dt><dd>{textoSituacao}</dd></div>
+          <div><dt>Situação</dt><dd>{boleto.status_operacao === 'CANCELADO' ? 'Cancelado' : textoSituacao}</dd></div>
           <div><dt>Conta atual</dt><dd>{descricaoConta(usuario)}</dd></div>
           {boleto.id_cobranca && <div><dt>ID da cobrança</dt><dd>#{boleto.id_cobranca}</dd></div>}
+          {boleto.estorno && <div><dt>Movimentação inversa</dt><dd>#{boleto.estorno.id_movimentacao_reversa}{boleto.estorno.id_estorno ? ` · estorno #${boleto.estorno.id_estorno}` : ''}</dd></div>}
+          {boleto.estorno?.motivo && <div><dt>Motivo do estorno</dt><dd>{boleto.estorno.motivo}</dd></div>}
+          {boleto.cancelamento?.motivo && <div><dt>Motivo do cancelamento</dt><dd>{boleto.cancelamento.motivo}</dd></div>}
           {boleto.codigo_pagamento && <div><dt>Código de pagamento</dt><dd className="codigo-detalhes-boleto">{boleto.codigo_pagamento}</dd></div>}
           {pago && dataPagamento && <div><dt>{contaPJ ? 'Recebido em' : 'Pago em'}</dt><dd>{formatarDataBrasileira(dataPagamento)}</dd></div>}
         </dl>
@@ -164,11 +213,14 @@ export default function ModalDetalhesBoleto({
 
         <footer>
           <button className="botao botao-secundario" type="button" onClick={fechar}>Fechar</button>
-          {!contaPJ && !pago && (
+          {!contaPJ && !pago && !cancelado && (
             <button className="botao botao-secundario" type="button" onClick={() => setEtapa('agendamento')}>Agendar para depois</button>
           )}
-          {!contaPJ && !pago && (
+          {!contaPJ && !pago && !cancelado && (
             <button className="botao botao-principal" type="button" onClick={() => setEtapa('confirmacao')}>Pagar boleto</button>
+          )}
+          {boleto.pode_cancelar && !pago && Number(boleto.status) === 0 && (
+            <button className="botao botao-secundario" type="button" onClick={() => setEtapa('cancelar')}>Cancelar cobrança</button>
           )}
         </footer>
       </div>

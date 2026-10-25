@@ -49,6 +49,68 @@ export function pagarCobranca(idCobranca) {
   )
 }
 
+function chaveIdempotencia() {
+  return globalThis.crypto?.randomUUID?.()
+    || `web-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`
+}
+
+export function cancelarCobranca(idCobranca, motivo) {
+  return requisitarMovimentacoes(
+    `/api/v1/cobrancas/${encodeURIComponent(idCobranca)}/cancelar`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ confirmacao: true, motivo, chave_idempotencia: chaveIdempotencia() }),
+    },
+    'Não foi possível cancelar a cobrança.',
+  )
+}
+
+export function devolverMovimentacao(idMovimentacao, motivo) {
+  return requisitarMovimentacoes(
+    `/api/v1/movimentacoes/${encodeURIComponent(idMovimentacao)}/devolver`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ confirmacao: true, motivo, chave_idempotencia: chaveIdempotencia() }),
+    },
+    'Não foi possível devolver esta movimentação.',
+  )
+}
+
+export function estornarBoleto(idMovimentacao, motivo) {
+  return requisitarMovimentacoes(
+    `/api/v1/movimentacoes/${encodeURIComponent(idMovimentacao)}/estornar`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ confirmacao: true, motivo, chave_idempotencia: chaveIdempotencia() }),
+    },
+    'Não foi possível estornar este boleto.',
+  )
+}
+
+export function listarEstornosAdmin() {
+  return requisitarMovimentacoes(
+    '/api/v1/estornos/admin?limite=200',
+    { method: 'GET' },
+    'Não foi possível carregar o histórico administrativo.',
+  )
+}
+
+export function consultarMigracaoEstornos() {
+  return requisitarMovimentacoes(
+    '/api/v1/estornos/admin/migracao',
+    { method: 'GET' },
+    'Não foi possível consultar a instalação da estrutura de estornos.',
+  )
+}
+
+export function instalarMigracaoEstornos() {
+  return requisitarMovimentacoes(
+    '/api/v1/estornos/admin/migracao',
+    { method: 'POST', body: JSON.stringify({ confirmacao: true }) },
+    'Não foi possível criar o backup e instalar a estrutura de estornos.',
+  )
+}
+
 export function buscarCobrancaPorCodigo(codigoPagamento) {
   return requisitarMovimentacoes(
     '/buscar_cobranca_codigo',

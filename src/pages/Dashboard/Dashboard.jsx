@@ -67,8 +67,8 @@ export default function Dashboard() {
   const cobrancasDashboard = movimentacoes.cobrancas.filter(
     (item) => item.tipo === tipoCobrancaDashboard,
   )
-  const cobrancasPagas = cobrancasDashboard.filter((item) => Number(item.status) === 1)
-  const cobrancasPendentes = cobrancasDashboard.filter((item) => Number(item.status) !== 1)
+  const cobrancasPagas = cobrancasDashboard.filter((item) => Number(item.status) === 1 && item.status_operacao !== 'ESTORNADO')
+  const cobrancasPendentes = cobrancasDashboard.filter((item) => ![1, 2].includes(Number(item.status)))
   const totalPagoBoletos = cobrancasPagas.reduce(
     (total, item) => total + (Number(item.valor) || 0),
     0,

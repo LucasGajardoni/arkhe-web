@@ -41,13 +41,19 @@ function cobrancaPaga(cobranca) {
   return Number(cobranca.status) === 1
 }
 
+function cobrancaCancelada(cobranca) {
+  return Number(cobranca.status) === 2
+}
+
 function cobrancaVencida(cobranca) {
   const vencimento = somenteData(cobranca.data_vencimento)
-  return !cobrancaPaga(cobranca) && Boolean(vencimento) && vencimento < dataLocalHoje()
+  return !cobrancaPaga(cobranca) && !cobrancaCancelada(cobranca) && Boolean(vencimento) && vencimento < dataLocalHoje()
 }
 
 function situacaoCobranca(cobranca) {
+  if (cobranca.status_operacao === 'ESTORNADO') return { texto: 'Estornado', classe: 'estornado', prioridade: 3 }
   if (cobrancaPaga(cobranca)) return { texto: 'Pago', classe: 'pago', prioridade: 2 }
+  if (cobrancaCancelada(cobranca)) return { texto: 'Cancelado', classe: 'cancelado', prioridade: 3 }
   if (cobrancaVencida(cobranca)) return { texto: 'Vencido', classe: 'vencido', prioridade: 1 }
   return { texto: 'Pendente', classe: 'pendente', prioridade: 0 }
 }
@@ -103,8 +109,8 @@ export default function Boletos() {
     .sort(ordenarCobrancas), [dados.cobrancas, tipoCobranca])
 
   const resumo = useMemo(() => {
-    const pagas = cobrancas.filter(cobrancaPaga)
-    const pendentes = cobrancas.filter((item) => !cobrancaPaga(item))
+    const pagas = cobrancas.filter((item) => cobrancaPaga(item) && item.status_operacao !== 'ESTORNADO')
+    const pendentes = cobrancas.filter((item) => !cobrancaPaga(item) && !cobrancaCancelada(item))
     const vencidas = cobrancas.filter(cobrancaVencida)
     const somar = (lista) => lista.reduce((total, item) => total + (Number(item.valor) || 0), 0)
 
@@ -122,8 +128,9 @@ export default function Boletos() {
   const lista = useMemo(() => cobrancas.filter((item) => {
     if (filtro === 'todos') return true
     if (filtro === 'pagos') return cobrancaPaga(item)
+    if (filtro === 'cancelados') return cobrancaCancelada(item)
     if (filtro === 'vencidos') return cobrancaVencida(item)
-    if (filtro === 'pendentes') return !cobrancaPaga(item) && !cobrancaVencida(item)
+    if (filtro === 'pendentes') return !cobrancaPaga(item) && !cobrancaCancelada(item) && !cobrancaVencida(item)
     return true
   }), [cobrancas, filtro])
   const listaVisivel = lista.slice(0, limite)
@@ -150,7 +157,7 @@ export default function Boletos() {
     return dadosDisponiveis ? moeda.format(valor) : '—'
   }
 
-  const filtros = [['todos', 'Todos'], ['pendentes', 'Pendentes'], ['vencidos', 'Vencidos'], ['pagos', contaPJ ? 'Recebidos' : 'Pagos']]
+  const filtros = [['todos', 'Todos'], ['pendentes', 'Pendentes'], ['vencidos', 'Vencidos'], ['pagos', contaPJ ? 'Recebidos' : 'Pagos'], ['cancelados', 'Cancelados']]
 
   return (
     <div className="pagina-dashboard pagina-boletos">

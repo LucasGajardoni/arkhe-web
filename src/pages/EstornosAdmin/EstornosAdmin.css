@@ -1,0 +1,27 @@
+.corpo-estornos-admin { padding-top: 36px; padding-bottom: 70px; }
+.cabecalho-estornos-admin { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.cabecalho-estornos-admin p { margin:0 0 6px; color:#b38a39; font-size:10px; font-weight:800; letter-spacing:.1em; }
+.cabecalho-estornos-admin h1 { margin:0; color:#0d4d4d; font-size:clamp(26px,4vw,38px); }
+.cabecalho-estornos-admin span { display:block; margin-top:8px; color:#746e62; font-size:13px; }
+.cabecalho-estornos-admin > div:last-child { display:flex; flex-wrap:wrap; gap:8px; }
+.estado-estornos-admin { padding:22px; border:1px solid #e5e2da; border-radius:14px; background:#fff; color:#746e62; }
+.estado-estornos-admin.erro { color:#8c2626; }
+.cartao-migracao-estornos { margin:0 0 20px; padding:22px; border:1px solid #e4d8b9; border-radius:16px; background:#fffdf7; }
+.cartao-migracao-estornos h2 { margin:0 0 8px; color:#0d4d4d; font-size:18px; }
+.cartao-migracao-estornos p { color:#746e62; font-size:13px; line-height:1.55; }
+.cartao-migracao-estornos code, .estado-estornos-admin code { overflow-wrap:anywhere; color:#183735; }
+.lista-estornos-admin { display:grid; gap:14px; }
+.lista-estornos-admin article { padding:22px; border:1px solid #e5e2da; border-radius:16px; background:#fff; box-shadow:0 8px 28px rgba(26,44,39,.045); }
+.lista-estornos-admin article > header { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; }
+.lista-estornos-admin article small { color:#958a75; font-size:9px; font-weight:800; letter-spacing:.08em; }
+.lista-estornos-admin article h2 { margin:6px 0 0; color:#0d4d4d; font-size:18px; }
+.lista-estornos-admin dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:9px; margin:18px 0 12px; }
+.lista-estornos-admin dl > div { padding:11px; border-radius:9px; background:#f6f3ea; }
+.lista-estornos-admin dt { color:#8a8374; font-size:9px; }
+.lista-estornos-admin dd { margin:5px 0 0; color:#183735; font-size:12px; font-weight:800; overflow-wrap:anywhere; }
+.lista-estornos-admin article > p { margin:14px 0 0; color:#615b50; font-size:12px; line-height:1.6; }
+.status-estorno-admin { padding:6px 10px; border-radius:20px; background:#edf0f3; color:#5d6570; font-size:10px; font-weight:800; }
+.status-estorno-admin.concluido { background:#e3f3ee; color:#0d625d; }
+.status-estorno-admin.cancelado { background:#edf0f3; color:#5d6570; }
+.status-estorno-admin.recusado { background:#fff0f0; color:#8c2626; }
+@media(max-width:650px) { .cabecalho-estornos-admin { align-items:stretch; flex-direction:column; } .cabecalho-estornos-admin>div:last-child { display:grid; grid-template-columns:1fr; } }

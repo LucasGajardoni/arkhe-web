@@ -208,6 +208,7 @@ export default function Limites() {
       {administradorAtual && formulario && <section className="admin-limites">
         <header className="admin-limites-cabecalho">
           <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>Configurar políticas</h2><p>A autorização é validada pelo backend e é independente do papel de uma conta PJ.</p></div>
+          <button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/estornos')}>Histórico de estornos</button>
         </header>
         <form onSubmit={salvarPolitica}>
           <div className="filtros-limites">
