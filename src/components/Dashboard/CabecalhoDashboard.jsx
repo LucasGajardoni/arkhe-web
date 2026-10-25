@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import arkheLogo from '../../assets/arkhe-logo.svg'
 import Icone from './Icone.jsx'
+import NotificacoesDashboard from './NotificacoesDashboard.jsx'
 import { proprietarioPJ, rotuloConta as descreverConta } from '../../utils/contas.js'
 
 export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPerfil, sair }) {
@@ -40,6 +41,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
         <div className="perfil-topo-dashboard">
           {proprietarioPJ(usuario) && <button className={`atalho-equipe ${secao === 'acessos' ? 'ativo' : ''}`} type="button" title="Gerenciar quem pode operar esta conta" aria-current={secao === 'acessos' ? 'page' : undefined} onClick={() => navigate('/dashboard/acessos')}>Acessos</button>}
           <button className="trocar-conta-dashboard" type="button" onClick={() => navigate('/selecionar-conta')}>Trocar conta</button>
+          <NotificacoesDashboard />
           <button className="usuario-dashboard" type="button" aria-label={`Abrir perfil de ${usuario?.nome || 'cliente'}`} onClick={abrirPerfil}>
             <span>{iniciais}</span>
             <div>
