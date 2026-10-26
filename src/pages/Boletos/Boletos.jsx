@@ -206,6 +206,12 @@ export default function Boletos() {
           </section>
         )}
 
+        <div className="aviso-devolucoes-boletos">
+          {contaPJ
+            ? 'Se o boleto ainda não foi pago, o emissor pode cancelar a cobrança ao abrir seus detalhes. Cobranças pagas não podem ser canceladas.'
+            : 'Um boleto já pago não pode ser cancelado pelo pagador. O estorno do pagamento exige autorização administrativa.'}
+          <button type="button" onClick={() => navigate('/dashboard/devolucoes')}>Entenda devoluções e veja seu histórico</button>
+        </div>
         <section className="painel-boletos" aria-busy={dados.carregando}>
           <header>
             <div>
