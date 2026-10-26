@@ -414,11 +414,42 @@
 .atalhos-dashboard > .atalho-empresa-dashboard > span:first-child { width: 50px; height: 50px; background: var(--verde-escuro); color: var(--dourado-claro); border-radius: 15px; }
 .atalho-empresa-dashboard .texto-atalho-dashboard strong { color: var(--verde-escuro); font-size: 17px; white-space: normal; }
 .atalho-empresa-dashboard .texto-atalho-dashboard small { display: block; margin-top: 4px; color: #52645a; font-size: 12px; white-space: normal; }
-.cabecalho-dashboard-pj .barra-dashboard { gap: 18px; }
-.cabecalho-dashboard-pj .barra-dashboard > nav { gap: 16px; }
-.cabecalho-dashboard-pj .barra-dashboard > nav button { font-size: 12px; white-space: nowrap; }
-@media (min-width: 901px) and (max-width: 1100px) {
-  .cabecalho-dashboard-pj .barra-dashboard > nav { order: 3; width: 100%; justify-content: center; height: 44px; }
+/* A conta PJ tem mais atalhos: nunca comprimir navegacao e perfil. */
+.cabecalho-dashboard-pj .barra-dashboard {
+  width: min(1780px, calc(100% - 48px));
+  gap: 18px;
+}
+.cabecalho-dashboard-pj .marca-dashboard,
+.cabecalho-dashboard-pj .perfil-topo-dashboard { flex-shrink: 0; }
+.cabecalho-dashboard-pj .barra-dashboard > nav { min-width: 0; gap: clamp(12px, 1.3vw, 22px); }
+.cabecalho-dashboard-pj .barra-dashboard > nav button { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.cabecalho-dashboard-pj .usuario-dashboard { min-width: 0; }
+.cabecalho-dashboard-pj .usuario-dashboard > div { min-width: 0; max-width: 154px; }
+.cabecalho-dashboard-pj .usuario-dashboard > div > small,
+.cabecalho-dashboard-pj .usuario-dashboard > div > strong {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (min-width: 901px) and (max-width: 1800px) {
+  .cabecalho-dashboard-pj { height: auto; min-height: 118px; }
+  .cabecalho-dashboard-pj .barra-dashboard {
+    display: grid; grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 70px 44px; column-gap: 18px; row-gap: 0;
+    align-items: center; padding-top: 0; padding-bottom: 0;
+  }
+  .cabecalho-dashboard-pj .marca-dashboard { grid-column: 1; grid-row: 1; }
+  .cabecalho-dashboard-pj .perfil-topo-dashboard { grid-column: 2; grid-row: 1; justify-self: end; }
+  .cabecalho-dashboard-pj .barra-dashboard > nav {
+    grid-column: 1 / -1; grid-row: 2; order: initial;
+    display: flex; width: 100%; height: 44px;
+    justify-content: flex-start; overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .cabecalho-dashboard-pj .barra-dashboard > nav button { height: 100%; }
+}
+@media (max-width: 1120px) and (min-width: 901px) {
+  .cabecalho-dashboard-pj .usuario-dashboard > div { display: none; }
+  .cabecalho-dashboard-pj .perfil-topo-dashboard { gap: 5px; }
+  .cabecalho-dashboard-pj .atalho-equipe,.cabecalho-dashboard-pj .atalho-admin-banco { font-size: 10px; padding: 7px 8px; }
 }
 
 .grade-dashboard {
