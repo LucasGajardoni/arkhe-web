@@ -18,6 +18,12 @@ const sugestoes = [
 ]
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const LIMITE_AUDIO_BYTES = 8 * 1024 * 1024
+
+function formatarDuracaoAudio(milissegundos) {
+  const segundos = Math.floor(milissegundos / 1000)
+  return `${String(Math.floor(segundos / 60)).padStart(2, '0')}:${String(segundos % 60).padStart(2, '0')}`
+}
 
 function rotuloStatusPix(status) {
   return ({
@@ -116,6 +122,8 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const [processandoPix, setProcessandoPix] = useState(false)
   const [historicoMobileAberto, setHistoricoMobileAberto] = useState(false)
   const [gravandoAudio, setGravandoAudio] = useState(false)
+  const [tempoAudioMs, setTempoAudioMs] = useState(0)
+  const [audioNiveis, setAudioNiveis] = useState([])
   const [transcrevendoAudio, setTranscrevendoAudio] = useState(false)
   const [textoTranscrito, setTextoTranscrito] = useState(false)
   const listaRef = useRef(null)
@@ -125,6 +133,10 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const partesAudioRef = useRef([])
   const cancelarAudioRef = useRef(false)
   const temporizadorAudioRef = useRef(null)
+  const audioContextRef = useRef(null)
+  const frameAudioRef = useRef(null)
+  const inicioAudioRef = useRef(0)
+  const audioExcedeuLimiteRef = useRef(false)
 
   useEffect(() => {
     let ativo = true
@@ -157,9 +169,13 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
 
   useEffect(() => () => {
     cancelarAudioRef.current = true
-    clearTimeout(temporizadorAudioRef.current)
+    clearInterval(temporizadorAudioRef.current)
+    if (frameAudioRef.current) cancelAnimationFrame(frameAudioRef.current)
     if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
     streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(() => {})
+    }
   }, [])
 
   async function selecionarConversa(id, aindaAtivo = true) {
@@ -223,11 +239,17 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   }
 
   function pararFluxoDeAudio() {
-    clearTimeout(temporizadorAudioRef.current)
+    clearInterval(temporizadorAudioRef.current)
+    if (frameAudioRef.current) cancelAnimationFrame(frameAudioRef.current)
+    frameAudioRef.current = null
     streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
     streamAudioRef.current = null
     gravadorRef.current = null
+    const contextoAudio = audioContextRef.current
+    audioContextRef.current = null
+    if (contextoAudio && contextoAudio.state !== 'closed') contextoAudio.close().catch(() => {})
     setGravandoAudio(false)
+    setAudioNiveis([])
   }
 
   async function iniciarAudio() {
@@ -239,19 +261,60 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     try {
       cancelarAudioRef.current = false
       partesAudioRef.current = []
+      audioExcedeuLimiteRef.current = false
+      setTempoAudioMs(0)
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamAudioRef.current = stream
+      const AudioContextDisponivel = window.AudioContext || window.webkitAudioContext
+      let analisador = null
+      if (AudioContextDisponivel) {
+        const contextoAudio = new AudioContextDisponivel()
+        audioContextRef.current = contextoAudio
+        await contextoAudio.resume()
+        analisador = contextoAudio.createAnalyser()
+        analisador.fftSize = 256
+        contextoAudio.createMediaStreamSource(stream).connect(analisador)
+          const frequencias = new Uint8Array(analisador.frequencyBinCount)
+        let ultimaAtualizacao = 0
+        const atualizarFormaDeOnda = (instante) => {
+          frameAudioRef.current = requestAnimationFrame(atualizarFormaDeOnda)
+          if (instante - ultimaAtualizacao < 70) return
+          ultimaAtualizacao = instante
+          analisador.getByteFrequencyData(frequencias)
+          const quantidadeBarras = 28
+          setAudioNiveis(Array.from({ length: quantidadeBarras }, (_, indice) => {
+            const inicioFaixa = Math.floor(indice * frequencias.length / quantidadeBarras)
+            const fimFaixa = Math.max(inicioFaixa + 1, Math.floor((indice + 1) * frequencias.length / quantidadeBarras))
+            const faixa = frequencias.slice(inicioFaixa, fimFaixa)
+            const media = faixa.reduce((soma, nivel) => soma + nivel, 0) / faixa.length
+            return Math.max(0.14, Math.min(1, media / 125))
+          }))
+        }
+        frameAudioRef.current = requestAnimationFrame(atualizarFormaDeOnda)
+      }
       const tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg']
       const mimeType = tipos.find((tipo) => MediaRecorder.isTypeSupported?.(tipo))
       const gravador = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       gravadorRef.current = gravador
       gravador.ondataavailable = (evento) => {
-        if (evento.data?.size) partesAudioRef.current.push(evento.data)
+        if (evento.data?.size) {
+          partesAudioRef.current.push(evento.data)
+          const totalBytes = partesAudioRef.current.reduce((total, parte) => total + parte.size, 0)
+          if (totalBytes > LIMITE_AUDIO_BYTES) {
+            audioExcedeuLimiteRef.current = true
+            if (gravador.state === 'recording') gravador.stop()
+          }
+        }
       }
       gravador.onstop = async () => {
-        const blob = new Blob(partesAudioRef.current, { type: gravador.mimeType || 'audio/webm' })
+        const tipoAudio = (gravador.mimeType || 'audio/webm').split(';', 1)[0]
+        const blob = new Blob(partesAudioRef.current, { type: tipoAudio })
         partesAudioRef.current = []
         pararFluxoDeAudio()
+        if (audioExcedeuLimiteRef.current) {
+          setErro('A gravação atingiu o limite de 8 MB. Conclua áudios mais longos em trechos menores.')
+          return
+        }
         if (cancelarAudioRef.current || !blob.size) return
         setTranscrevendoAudio(true)
         try {
@@ -260,16 +323,17 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
           setTextoTranscrito(Boolean(resultado.transcricao))
           entradaRef.current?.focus()
         } catch (falha) {
-          setErro(falha.message || 'Não foi possível transcrever o áudio.')
+          setErro(falha.message || 'Não consegui transcrever o áudio. Tente novamente ou digite sua pergunta.')
         } finally {
           setTranscrevendoAudio(false)
         }
       }
-      gravador.start()
+      gravador.start(1000)
       setGravandoAudio(true)
-      temporizadorAudioRef.current = setTimeout(() => {
-        if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
-      }, 30000)
+      inicioAudioRef.current = Date.now()
+      temporizadorAudioRef.current = setInterval(() => {
+        setTempoAudioMs(Date.now() - inicioAudioRef.current)
+      }, 250)
     } catch (falha) {
       pararFluxoDeAudio()
       setErro(falha.name === 'NotAllowedError'
@@ -449,8 +513,13 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
 
           {erro && <p className="mauro-erro" role="alert">{erro}</p>}
           {gravandoAudio && (
-            <div className="mauro-audio-status" role="status">
-              <span><i /> Gravando áudio · até 30 segundos</span>
+            <div className="mauro-audio-status">
+              <span className="mauro-audio-legenda" role="status" aria-live="polite" aria-label={`Gravando pergunta, ${formatarDuracaoAudio(tempoAudioMs)}.`}>
+                <i aria-hidden="true" /> Gravando pergunta <time aria-hidden="true">{formatarDuracaoAudio(tempoAudioMs)}</time>
+              </span>
+              <div className="mauro-audio-waveform" aria-hidden="true">
+                {audioNiveis.map((nivel, indice) => <i key={indice} style={{ height: `${4 + nivel * 22}px` }} />)}
+              </div>
               <button type="button" onClick={concluirAudio}>Concluir gravação</button>
               <button type="button" onClick={cancelarAudio}>Cancelar</button>
             </div>
@@ -470,7 +539,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
             <button type="submit" disabled={!texto.trim() || respondendo || carregando} aria-label="Enviar mensagem">
               {respondendo ? <span className="mauro-enviando" /> : <span aria-hidden="true">↑</span>}
             </button>
-            <small>O áudio é transcrito pelo backend Gemini e não é salvo. Revise o texto antes de enviar. O MAURO consulta sua conta ativa; Pix só é enviado após sua confirmação e PIN.</small>
+            <small>O áudio é transcrito pelo backend Gemini e não é salvo. Revise o texto antes de enviar. O MAURO consulta sua conta ativa; Pix só é enviado após sua confirmação e PIN. Grave até 8 MB por mensagem.</small>
           </form>
         </div>
       </section>

@@ -12,9 +12,20 @@ export const enviarMensagemMauro = (id, mensagem) => requisitarApi(
 
 export const transcreverAudioMauro = (id, audio) => {
   const dados = new FormData()
-  dados.append('audio', audio, 'mauro-audio.webm')
+  const extensao = String(audio?.type || '').split(';', 1)[0].endsWith('/ogg') ? 'ogg' : 'webm'
+  dados.append('audio', audio, `mauro-audio.${extensao}`)
   return requisitarApi(`${base}/${encodeURIComponent(id)}/audio/transcrever`, {
     method: 'POST', dados,
+  }).catch((falha) => {
+    if (falha.message === 'Não foi possível concluir a solicitação.') {
+      const mensagem = falha.status === 413
+        ? 'A gravação passou do limite de 8 MB. Grave um trecho menor e tente novamente.'
+        : falha.status >= 500
+          ? 'O serviço de voz do MAURO falhou ao processar o áudio. Tente novamente em instantes ou digite sua pergunta.'
+          : 'Não consegui enviar o áudio para transcrição. Verifique a conexão e tente novamente.'
+      throw new Error(mensagem)
+    }
+    throw falha
   })
 }
 

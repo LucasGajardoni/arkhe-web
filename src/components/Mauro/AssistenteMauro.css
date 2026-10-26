@@ -129,7 +129,11 @@
 .mauro-compositor > .mauro-microfone.gravando { color: #a43e35; background: #fff0ec; }
 .mauro-audio-status,.mauro-audio-revisao { display: flex; align-items: center; gap: 10px; margin: 0 22px 8px; padding: 8px 11px; border-radius: 9px; color: #34574e; background: #edf5ee; font-size: 10px; }
 .mauro-audio-status > span { display: flex; align-items: center; gap: 7px; margin-right: auto; }
+.mauro-audio-legenda time { min-width: 34px; color: #174b45; font-variant-numeric: tabular-nums; font-weight: 700; }
 .mauro-audio-status i { width: 8px; height: 8px; border-radius: 50%; background: #b7443b; box-shadow: 0 0 0 4px #f7ddda; }
+.mauro-audio-waveform { display: flex; width: 118px; height: 28px; align-items: center; justify-content: center; gap: 2px; overflow: hidden; }
+.mauro-audio-waveform i { width: 2px; min-height: 4px; border-radius: 3px; background: #27877a; box-shadow: none; transition: height 80ms linear; }
+.mauro-audio-waveform:empty::before { width: 100%; height: 2px; border-radius: 2px; background: #abc9bf; content: ''; }
 .mauro-audio-status button { padding: 6px 9px; border: 1px solid #cedcd0; border-radius: 7px; color: #174b45; background: #fff; font: inherit; cursor: pointer; }
 .mauro-audio-revisao { display: block; }
 .mauro-enviando { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: mauro-giro .7s linear infinite; }
