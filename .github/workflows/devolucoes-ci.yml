@@ -1,0 +1,29 @@
+name: Validate refunds UX
+on:
+  push:
+    branches:
+      - 'fix/devolucoes-historico-conta-20261026'
+  pull_request:
+    paths:
+      - 'src/pages/Devolucoes/**'
+      - 'src/pages/Extrato/**'
+      - 'src/pages/Boletos/**'
+      - 'src/pages/AdminBanco/**'
+      - 'src/pages/EstornosAdmin/**'
+      - 'src/pages/Limites/**'
+      - 'src/services/movimentacoesService.js'
+      - 'src/App.jsx'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx eslint src/pages/Devolucoes/Devolucoes.jsx src/pages/Extrato/Extrato.jsx src/pages/Boletos/Boletos.jsx src/pages/AdminBanco/AdminBanco.jsx src/pages/EstornosAdmin/EstornosAdmin.jsx src/pages/Limites/Limites.jsx src/services/movimentacoesService.js src/App.jsx
+      - run: npm run build
