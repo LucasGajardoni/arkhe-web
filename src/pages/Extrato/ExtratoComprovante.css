@@ -178,3 +178,6 @@
     text-align: left;
   }
 }
+
+
+.aviso-devolucao-extrato { margin:12px 0 5px; padding:12px 14px; background:#f2f7f2; border:1px solid #dbe9dc; border-radius:10px; color:#46615a; font-size:12px; line-height:1.6; }
