@@ -426,7 +426,7 @@
 }
 .cabecalho-dashboard-pj .marca-dashboard,
 .cabecalho-dashboard-pj .perfil-topo-dashboard { flex-shrink: 0; }
-.cabecalho-dashboard-pj .barra-dashboard > nav { min-width: 0; gap: clamp(12px, 1.3vw, 22px); }
+.cabecalho-dashboard-pj .barra-dashboard > nav { min-width: 0; gap: clamp(12px, 1.3vw, 22px); justify-content: safe center; }
 .cabecalho-dashboard-pj .barra-dashboard > nav button { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 .cabecalho-dashboard-pj .usuario-dashboard { min-width: 0; }
 .cabecalho-dashboard-pj .usuario-dashboard > div { min-width: 0; max-width: 154px; }
