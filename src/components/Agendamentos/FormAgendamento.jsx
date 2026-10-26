@@ -8,7 +8,7 @@ function formatoLocal(data) {
   return `${data.getFullYear()}-${pad(data.getMonth() + 1)}-${pad(data.getDate())}T${pad(data.getHours())}:${pad(data.getMinutes())}`
 }
 
-export function horarioMinimoAgendamento() {
+function horarioMinimoAgendamento() {
   return formatoLocal(new Date(Date.now() + 2 * 60 * 1000))
 }
 
@@ -18,7 +18,7 @@ function horarioInicial() {
 
 export default function FormAgendamento({ valor, destinatario, tipo, erro, processando, aoVoltar, aoConfirmar }) {
   const [data, setData] = useState(horarioInicial)
-  const minimo = useMemo(horarioMinimoAgendamento, [])
+  const minimo = useMemo(() => horarioMinimoAgendamento(), [])
 
   return (
     <div className="form-agendamento">

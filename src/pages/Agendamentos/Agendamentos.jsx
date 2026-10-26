@@ -58,10 +58,10 @@ export default function Agendamentos() {
 
   const carregar = useCallback(async (silencioso = false) => {
     if (!silencioso) setCarregando(true)
-    setErro('')
     try {
       const resposta = await listarAgendamentos()
       setItens(Array.isArray(resposta.agendamentos) ? resposta.agendamentos : [])
+      setErro('')
     } catch (falha) {
       if (falha.status === 401 || falha.status === 403) {
         tratarErroSessao?.(falha)
@@ -73,9 +73,12 @@ export default function Agendamentos() {
   }, [tratarErroSessao])
 
   useEffect(() => {
-    carregar()
+    const cargaInicial = window.setTimeout(() => { void carregar() }, 0)
     const intervalo = window.setInterval(() => carregar(true), 30000)
-    return () => window.clearInterval(intervalo)
+    return () => {
+      window.clearTimeout(cargaInicial)
+      window.clearInterval(intervalo)
+    }
   }, [carregar])
 
   const visiveis = useMemo(() => (

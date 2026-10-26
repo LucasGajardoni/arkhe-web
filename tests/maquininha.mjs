@@ -114,6 +114,13 @@ async function pagar(page) {
   await page.getByLabel('PIN de 6 dígitos', { exact: true }).fill('123456')
   await page.getByRole('button', { name: 'Confirmar pagamento' }).click()
 }
+function vendaEnviada(state) {
+  const dados = state.requests.find((r) => r.path === '/maquininha/comprar').json
+  assert.match(dados.chave_idempotencia, /^[A-Za-z0-9][A-Za-z0-9_.:-]{7,127}$/)
+  const { chave_idempotencia, ...venda } = dados
+  assert.equal(typeof chave_idempotencia, 'string')
+  return venda
+}
 const casos = []
 const caso = (nome, options, run) => casos.push({ nome, options, run })
 
@@ -129,7 +136,7 @@ caso('fluxo-completo-fragmentos-duplicados-privacidade', {}, async ({ page, stat
   await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
   await page.waitForFunction(() => window.__pay.comandos.includes('APROVADO|10.00\n'))
   assert(state.requests.filter((r) => r.path === '/buscar_movimentacoes').length > antes)
-  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json, { uid: '0D94A4A5', pin: '123456', valor: 10, tipo: 'DEBITO', parcelas: 1 })
+  assert.deepEqual(vendaEnviada(state), { uid: '0D94A4A5', pin: '123456', valor: 10, tipo: 'DEBITO', parcelas: 1 })
   assert.deepEqual(await page.evaluate(() => window.__pay.comandos), ['INICIAR|10.00|DEBITO\n', 'PROCESSANDO\n', 'APROVADO|10.00\n'])
   assert.deepEqual(await page.evaluate(() => window.__pay.aberturas), [{ baudRate: 115200 }])
   assert.equal(await page.evaluate(() => window.__pay.semGesto), false)
@@ -155,7 +162,7 @@ caso('credito-parcelado', {}, async ({ page, state }) => {
   assert(await page.getByRole('dialog').getByText(/Crédito 3x/).isVisible())
   await pagar(page)
   await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
-  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json,
+  assert.deepEqual(vendaEnviada(state),
     { uid: '0D94A4A5', pin: '123456', valor: 120, tipo: 'CREDITO', parcelas: 3 })
   assert(await panel(page).getByText('Crédito · 3x', { exact: true }).isVisible())
 })
@@ -170,7 +177,7 @@ caso('credito-quinze-parcelas', {}, async ({ page, state }) => {
   assert(await page.getByRole('dialog').getByText(/Crédito 15x/).isVisible())
   await pagar(page)
   await visible(panel(page).getByRole('heading', { name: 'Pagamento aprovado' }))
-  assert.deepEqual(state.requests.find((r) => r.path === '/maquininha/comprar').json,
+  assert.deepEqual(vendaEnviada(state),
     { uid: '0D94A4A5', pin: '123456', valor: 150, tipo: 'CREDITO', parcelas: 15 })
 })
 caso('pf-preserva-panorama', { pf: true }, async ({ page }) => {

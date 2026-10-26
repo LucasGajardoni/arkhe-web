@@ -151,9 +151,12 @@ console.log(boleto.id_cobranca, boleto.codigo_pagamento, boleto.url_pdf)`
 
 const exemploVenda = `${exemploHeaders}
 
+// Crie uma chave por venda. Reutilize a mesma chave apenas para retry dessa venda.
+const idempotencyKey = crypto.randomUUID()
+
 const response = await fetch('${baseUrl}/api/v1/vendas/cartao', {
   method: 'POST',
-  headers: { ...headers, 'Content-Type': 'application/json' },
+  headers: { ...headers, 'Content-Type': 'application/json', 'X-Idempotency-Key': idempotencyKey },
   body: JSON.stringify(${JSON.stringify(dadosVenda, null, 2)})
 })
 const venda = await response.json()

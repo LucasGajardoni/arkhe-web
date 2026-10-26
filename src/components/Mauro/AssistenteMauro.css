@@ -119,12 +119,19 @@
 .mauro-digitando span:nth-child(3) { margin-right: 5px; animation-delay: .28s; }
 @keyframes mauro-pulsar { 0%, 80%, 100% { transform: translateY(0); opacity: .45; } 40% { transform: translateY(-4px); opacity: 1; } }
 .mauro-erro { margin: 0 24px 8px; padding: 9px 12px; border-radius: 9px; color: #873a32; background: #fff0ed; font-size: 10px; }
-.mauro-compositor { display: grid; grid-template-columns: 1fr 42px; align-items: center; gap: 7px; margin: 0 22px 18px; padding: 7px 8px 6px 14px; border: 1px solid #dedbd2; border-radius: 14px; background: #fff; box-shadow: 0 7px 20px rgba(20,45,40,.045); }
+.mauro-compositor { display: grid; grid-template-columns: minmax(0, 1fr) 40px 40px; align-items: center; gap: 7px; margin: 0 22px 18px; padding: 7px 8px 6px 14px; border: 1px solid #dedbd2; border-radius: 14px; background: #fff; box-shadow: 0 7px 20px rgba(20,45,40,.045); }
 .mauro-compositor textarea { width: 100%; max-height: 110px; resize: vertical; padding: 8px 0; border: 0; outline: 0; color: #233d38; background: transparent; font: inherit; font-size: 12px; }
 .mauro-compositor textarea::placeholder { color: #aaa79d; }
 .mauro-compositor > button { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: #e4cb79; background: #10514c; cursor: pointer; font-size: 22px; }
 .mauro-compositor > button:disabled { cursor: default; opacity: .48; }
 .mauro-compositor > small { grid-column: 1 / -1; padding: 0 1px 1px; color: #9a9689; font-size: 8px; }
+.mauro-compositor > .mauro-microfone { border: 1px solid #d7e2d9; color: #15524d; background: #eef4ef; font-size: 17px; }
+.mauro-compositor > .mauro-microfone.gravando { color: #a43e35; background: #fff0ec; }
+.mauro-audio-status,.mauro-audio-revisao { display: flex; align-items: center; gap: 10px; margin: 0 22px 8px; padding: 8px 11px; border-radius: 9px; color: #34574e; background: #edf5ee; font-size: 10px; }
+.mauro-audio-status > span { display: flex; align-items: center; gap: 7px; margin-right: auto; }
+.mauro-audio-status i { width: 8px; height: 8px; border-radius: 50%; background: #b7443b; box-shadow: 0 0 0 4px #f7ddda; }
+.mauro-audio-status button { padding: 6px 9px; border: 1px solid #cedcd0; border-radius: 7px; color: #174b45; background: #fff; font: inherit; cursor: pointer; }
+.mauro-audio-revisao { display: block; }
 .mauro-enviando { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: mauro-giro .7s linear infinite; }
 @keyframes mauro-giro { to { transform: rotate(360deg); } }
 .visualmente-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
@@ -144,6 +151,8 @@
   .mauro-historico-mobile > button small { color: #827e73; font-size: 9px; }
   .mauro-mensagens { padding: 20px 14px; }
   .mauro-compositor { margin: 0 12px 12px; }
+  .mauro-audio-status,.mauro-audio-revisao { margin-right: 12px; margin-left: 12px; }
+  .mauro-audio-status { flex-wrap: wrap; }
   .mauro-sugestoes { grid-template-columns: 1fr; gap: 7px; margin-top: 18px; }
   .mauro-sugestoes button { min-height: 44px; font-size: 11px; }
   .mauro-mensagem { max-width: 94%; }
