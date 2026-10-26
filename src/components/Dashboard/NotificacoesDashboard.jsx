@@ -11,6 +11,46 @@ import './NotificacoesDashboard.css'
 
 const TAMANHO_PAGINA = 100
 const INTERVALO_ATUALIZACAO = 20000
+const decodificadorUtf8 = new TextDecoder('utf-8', { fatal: true })
+const caracteresWindows1252 = new Map([
+  [0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84],
+  [0x2026, 0x85], [0x2020, 0x86], [0x2021, 0x87], [0x02c6, 0x88],
+  [0x2030, 0x89], [0x0160, 0x8a], [0x2039, 0x8b], [0x0152, 0x8c],
+  [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92], [0x201c, 0x93],
+  [0x201d, 0x94], [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97],
+  [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a], [0x203a, 0x9b],
+  [0x0153, 0x9c], [0x017e, 0x9e], [0x0178, 0x9f],
+])
+const trechoMojibake = /(?:Ã|Â)[\u0080-\u00ff\u0192\u201a\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178]+/g
+
+function corrigirTextoNotificacao(texto) {
+  let resultado = String(texto ?? '')
+
+  // Algumas mensagens antigas chegam com bytes UTF-8 interpretados como Latin-1.
+  // Corrige apenas os trechos reconhecíveis e deixa textos já corretos intactos.
+  for (let tentativa = 0; tentativa < 2; tentativa += 1) {
+    const corrigido = resultado.replace(trechoMojibake, (trecho) => {
+      const bytes = []
+      for (const caractere of trecho) {
+        const codigo = caractere.codePointAt(0)
+        if (codigo <= 0xff) bytes.push(codigo)
+        else if (caracteresWindows1252.has(codigo)) bytes.push(caracteresWindows1252.get(codigo))
+        else return trecho
+      }
+
+      try {
+        return decodificadorUtf8.decode(Uint8Array.from(bytes))
+      } catch {
+        return trecho
+      }
+    })
+
+    if (corrigido === resultado) break
+    resultado = corrigido
+  }
+
+  return resultado
+}
 
 const categorias = [
   { chave: 'PIX', nome: 'Pix', descricao: 'Recebimentos, pagamentos e cobranças Pix' },
@@ -243,11 +283,11 @@ export default function NotificacoesDashboard() {
                   </span>
                   <div className="texto-notificacao">
                     <div className="linha-titulo-notificacao">
-                      <strong>{item.titulo}</strong>
+                      <strong>{corrigirTextoNotificacao(item.titulo)}</strong>
                       {item.elegivel_para_nao_lidas && <span className="ponto-nao-lida" aria-label="Não lida" />}
                     </div>
                     <small className="categoria-notificacao">{resumoCategoria(item.categoria)} · {dataFormatada(item.criada_em)}</small>
-                    <p>{item.mensagem}</p>
+                    <p>{corrigirTextoNotificacao(item.mensagem)}</p>
                     {item.suprimida_por_preferencia && <small className="estado-notificacao">Ocultada do inbox pelas preferências</small>}
                     {item.lida && <small className="estado-notificacao">Lida</small>}
                     {item.elegivel_para_nao_lidas && (
