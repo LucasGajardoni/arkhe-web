@@ -1,0 +1,23 @@
+name: Validate AI UX and CPF docs
+on:
+  push:
+    branches: ['feat/seguranca-ia-verificacao-cpf-20261026']
+  pull_request:
+    paths:
+      - 'src/pages/ApiDocs/ApiDocs.jsx'
+      - 'src/components/Mauro/AssistenteMauro.jsx'
+      - 'src/pages/AdminBanco/MauroAdmin.jsx'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx eslint src/pages/ApiDocs/ApiDocs.jsx src/components/Mauro/AssistenteMauro.jsx src/pages/AdminBanco/MauroAdmin.jsx
+      - run: npm run build

@@ -19,6 +19,17 @@ const response = await fetch('${baseUrl}/api/v1/conta', {
 const data = await response.json()
 console.log(data)`
 
+const exemploConsultaCpf = `${exemploHeaders}
+
+const response = await fetch('${baseUrl}/api/v1/contas/verificar-cpf', {
+  method: 'POST',
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ cpf: '529.982.247-25' })
+})
+if (!response.ok) throw new Error('Consulta de CPF indisponível ou não autorizada')
+const data = await response.json()
+console.log(data.possui_conta) // true ou false, sem dados pessoais`
+
 const exemploSaldo = `${exemploHeaders}
 
 const response = await fetch('${baseUrl}/api/v1/saldo', {
@@ -253,6 +264,7 @@ const respostaConsultaCobranca = `{
 
 const endpoints = [
   ['endpoint-conta', 'Conta'],
+  ['endpoint-consulta-cpf', 'Verificar CPF (restrito)'],
   ['endpoint-saldo', 'Saldo'],
   ['endpoint-movimentacoes', 'Movimentações'],
   ['endpoint-resumo', 'Resumo financeiro'],
@@ -357,6 +369,22 @@ export default function DocumentacaoApi() {
                 <BlocoCodigo titulo="JavaScript" codigo={exemploConta} />
                 <h3>Exemplo de resposta</h3>
                 <BlocoCodigo titulo="JSON" codigo={respostaConta} />
+              </div>
+            </article>
+
+            <article className="endpoint-api" id="endpoint-consulta-cpf">
+              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/contas/verificar-cpf">Consulta restrita: informa somente se um CPF válido está vinculado a uma conta Arkhé.</CabecalhoEndpoint>
+              <div className="detalhes-endpoint-api">
+                <p className="alerta-seguranca-api"><strong>Permissão especial obrigatória.</strong> Por proteção dos dados pessoais, credenciais PJ comuns não podem consultar livremente CPFs de terceiros. O administrador precisa aprovar explicitamente o Client ID na configuração <code>ARKHE_API_CONSULTA_CPF_CLIENT_IDS</code>.</p>
+                <p>Faça a consulta exclusivamente no servidor da integração, com finalidade legítima e base apropriada para tratar esse CPF. Não utilize em cadastros públicos ou para descobrir indiscriminadamente quem é cliente.</p>
+                <h3>Corpo da requisição</h3>
+                <BlocoCodigo titulo="JSON" codigo={'{ "cpf": "529.982.247-25" }'} />
+                <h3>Exemplo JavaScript (servidor)</h3>
+                <BlocoCodigo titulo="JavaScript" codigo={exemploConsultaCpf} />
+                <h3>Resposta de exemplo</h3>
+                <BlocoCodigo titulo="JSON" codigo={'{ "possui_conta": true }'} />
+                <p><code>true</code> significa que existe pelo menos uma conta vinculada ao CPF; <code>false</code>, nenhuma. Não significa que a conta esteja ativa. Não são retornados nome, saldo, número da conta nem informações pessoais.</p>
+                <p>Erros: <code>400</code> CPF inválido, <code>401</code> credenciais ausentes/incorretas, <code>403</code> integração sem permissão especial, <code>429</code> excesso de consultas e <code>503</code> Redis indisponível. Limites: 10/minuto por integração e 20/dia por CPF, entre integrações autorizadas.</p>
               </div>
             </article>
 
