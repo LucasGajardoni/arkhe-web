@@ -52,6 +52,21 @@
 .historico-limites article { display:grid; gap:4px; padding:12px 13px; border-radius:10px; background:#f8f7f2; }
 .historico-limites article span,.historico-limites article small,.historico-limites > p { color:#857d6d; font-size:10px; }
 .historico-limites article strong { color:#344a45; font-size:12px; }
+.limites-da-conta { margin:0 0 28px; border-color:#d7e8df; }
+.aviso-teto-limites { display:flex; align-items:center; padding:12px 14px; border-radius:10px; color:#52665e; background:#f2f7f2; font-size:11px; line-height:1.5; }
+.credito-cartao-admin { margin-top:30px; padding-top:24px; border-top:1px solid #ece9e1; }
+.credito-cartao-cabecalho h3 { margin:2px 0 6px; color:#0d4d4d; font-size:18px; }
+.credito-cartao-cabecalho p:last-child { max-width:750px; margin:0; color:#736c5e; font-size:12px; line-height:1.55; }
+.cartoes-limites-lista { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin:18px 0; }
+.cartoes-limites-lista article { display:grid; gap:6px; padding:14px; border:1px solid #e8e5dc; border-radius:11px; background:#fbfaf7; }
+.cartoes-limites-lista span,.cartoes-limites-lista small { color:#756f62; font-size:10px; }
+.cartoes-limites-lista strong { color:#0d4d4d; font-size:16px; }
+.form-cartao-credito { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; margin-top:18px; }
+.form-cartao-credito > label:not(.motivo-limites) { display:flex; flex-direction:column; gap:7px; color:#655e52; font-size:12px; font-weight:700; }
+.form-cartao-credito select,.form-cartao-credito input { width:100%; min-height:42px; padding:9px 11px; border:1px solid #dedbd1; border-radius:9px; color:#263c38; background:#fff; font:inherit; }
+.form-cartao-credito > p { align-self:center; margin:0; color:#736c5e; font-size:11px; }
+.form-cartao-credito .motivo-limites { grid-column:1/-1; }
+.form-cartao-credito > button { justify-self:start; }
 @media (max-width:700px) {
   .conteudo-limites { width:min(100% - 28px,1180px); padding-top:25px; }
   .topo-limites { align-items:flex-start; }
@@ -59,4 +74,6 @@
   .metricas-limites,.operacoes-limites,.filtros-limites,.grade-politicas-limites { grid-template-columns:1fr; }
   .resumo-limites,.admin-limites { padding:18px; }
   .metricas-limites strong { font-size:19px; }
+  .form-cartao-credito { grid-template-columns:1fr; }
+  .form-cartao-credito .motivo-limites { grid-column:auto; }
 }

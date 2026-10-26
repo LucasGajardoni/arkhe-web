@@ -8,8 +8,13 @@ import { useSessao } from '../../hooks/useSessao.js'
 import { encerrarSessao } from '../../services/authService.js'
 import {
   atualizarPoliticasLimites,
+  atualizarConfiguracaoLimitesConta,
+  atualizarLimiteCreditoCartao,
   listarHistoricoLimites,
+  listarHistoricoLimitesCartoes,
   listarPoliticasLimites,
+  listarCartoesLimitesAdmin,
+  obterConfiguracaoLimitesConta,
   obterLimitesConta,
 } from '../../services/limitesService.js'
 import '../Dashboard/Dashboard.css'
@@ -24,7 +29,7 @@ const PERIODOS_LABEL = {
 }
 const OPERACAO_LABEL = {
   TRANSFERENCIA: 'Transferências e Pix',
-  PAGAMENTO: 'Pagamentos e cartões',
+  PAGAMENTO: 'Pagamentos',
 }
 const moeda = (valor) => valor == null
   ? 'Sem limite adicional'
@@ -49,6 +54,20 @@ function montarFormulario(politicas, tipoConta, periodo) {
   }
 }
 
+function montarFormularioConta(configuracao, periodo) {
+  const regra = configuracao?.periodos?.find((item) => item.periodo === periodo)
+  return {
+    limite_acumulado: regra?.limite_acumulado_conta == null ? '' : String(regra.limite_acumulado_conta),
+    operacoes: Object.fromEntries(OPERACOES.map((operacao) => {
+      const valores = regra?.operacoes?.[operacao]
+      return [operacao, {
+        limite_por_operacao: valores?.limite_por_operacao_conta == null ? '' : String(valores.limite_por_operacao_conta),
+        limite_por_operacao_favorito: valores?.limite_por_operacao_favorito_conta == null ? '' : String(valores.limite_por_operacao_favorito_conta),
+      }]
+    })),
+  }
+}
+
 export default function Limites() {
   const { perfil, atualizarPerfil, limparSessao, tratarErroSessao } = useSessao()
   const navigate = useNavigate()
@@ -58,6 +77,17 @@ export default function Limites() {
   const [adminDaConta, setAdminDaConta] = useState(null)
   const [politicas, setPoliticas] = useState({ operacoes: [], periodos: [] })
   const [historico, setHistorico] = useState([])
+  const [configuracaoConta, setConfiguracaoConta] = useState(null)
+  const [formularioConta, setFormularioConta] = useState(null)
+  const [periodoConta, setPeriodoConta] = useState('DIURNO')
+  const periodoContaRef = useRef('DIURNO')
+  const [motivoConta, setMotivoConta] = useState('')
+  const [cartoes, setCartoes] = useState([])
+  const [historicoCartoes, setHistoricoCartoes] = useState([])
+  const [cartaoSelecionado, setCartaoSelecionado] = useState('')
+  const cartaoSelecionadoRef = useRef('')
+  const [limiteCreditoCartao, setLimiteCreditoCartao] = useState('')
+  const [motivoCartao, setMotivoCartao] = useState('')
   const [tipoConta, setTipoConta] = useState('PF')
   const [periodo, setPeriodo] = useState('DIURNO')
   const tipoContaRef = useRef('PF')
@@ -78,14 +108,32 @@ export default function Limites() {
       if (!ativo) return
       setResumo(dados)
       setResumoDaConta(perfil.idConta)
+      if (dados.pode_configurar_conta) {
+        const configuracao = await obterConfiguracaoLimitesConta()
+        if (!ativo) return
+        setConfiguracaoConta(configuracao)
+        setFormularioConta(montarFormularioConta(configuracao, periodoContaRef.current))
+      } else {
+        setConfiguracaoConta(null)
+        setFormularioConta(null)
+      }
       if (dados.administrador) {
-        const [regras, registros] = await Promise.all([
+        const [regras, registros, listaCartoes, auditoriaCartoes] = await Promise.all([
           listarPoliticasLimites(),
           listarHistoricoLimites(),
+          listarCartoesLimitesAdmin(),
+          listarHistoricoLimitesCartoes(),
         ])
         if (!ativo) return
         setPoliticas(regras)
         setHistorico(registros.historico || [])
+        setCartoes(listaCartoes.cartoes || [])
+        setHistoricoCartoes(auditoriaCartoes.historico || [])
+        const cartaoAtualizado = listaCartoes.cartoes?.find((item) => String(item.id_cartao) === String(cartaoSelecionadoRef.current))
+          || listaCartoes.cartoes?.[0]
+        cartaoSelecionadoRef.current = String(cartaoAtualizado?.id_cartao || '')
+        setCartaoSelecionado(cartaoSelecionadoRef.current)
+        setLimiteCreditoCartao(String(cartaoAtualizado?.limite ?? ''))
         setFormulario(montarFormulario(regras, tipoContaRef.current, periodoRef.current))
       }
       setAdministrador(dados.administrador === true)
@@ -154,11 +202,72 @@ export default function Limites() {
     }
   }
 
+  function alterarLimiteConta(operacao, campo, valor) {
+    setFormularioConta((atualForm) => ({
+      ...atualForm,
+      operacoes: {
+        ...atualForm.operacoes,
+        [operacao]: { ...atualForm.operacoes[operacao], [campo]: valor },
+      },
+    }))
+  }
+
+  async function salvarLimitesConta(evento) {
+    evento.preventDefault()
+    setErro('')
+    setSucesso('')
+    setSalvando(true)
+    try {
+      await atualizarConfiguracaoLimitesConta({
+        periodo: periodoConta,
+        motivo: motivoConta.trim(),
+        limite_acumulado: formularioConta.limite_acumulado || null,
+        operacoes: Object.fromEntries(OPERACOES.map((operacao) => [operacao, {
+          limite_por_operacao: formularioConta.operacoes[operacao].limite_por_operacao || null,
+          limite_por_operacao_favorito: operacao === 'TRANSFERENCIA'
+            ? (formularioConta.operacoes[operacao].limite_por_operacao_favorito || null)
+            : null,
+        }])),
+      })
+      setSucesso('Limites desta conta atualizados. As demais contas não foram alteradas.')
+      setMotivoConta('')
+      setRevisao((atual) => atual + 1)
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível salvar os limites desta conta.')
+      tratarErroSessao(falha)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  async function salvarLimiteCreditoCartao(evento) {
+    evento.preventDefault()
+    setErro('')
+    setSucesso('')
+    setSalvando(true)
+    try {
+      await atualizarLimiteCreditoCartao(cartaoSelecionado, {
+        limite: limiteCreditoCartao,
+        motivo: motivoCartao.trim(),
+      })
+      setSucesso('Crédito do cartão atualizado em CARTAO.LIMITE e registrado na auditoria.')
+      setMotivoCartao('')
+      setRevisao((atual) => atual + 1)
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível atualizar o crédito deste cartão.')
+      tratarErroSessao(falha)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
   const atual = resumo?.limites?.[0]
   const contaAtualCarregando = carregadaDaConta !== perfil?.idConta
   const resumoAtual = resumoDaConta === perfil?.idConta ? resumo : null
   const atualDaConta = resumoDaConta === perfil?.idConta ? atual : null
   const administradorAtual = adminDaConta === perfil?.idConta && administrador
+  const configuracaoPeriodoConta = configuracaoConta?.periodos?.find((item) => item.periodo === periodoConta)
+  const cartaoAtual = cartoes.find((item) => String(item.id_cartao) === String(cartaoSelecionado))
   return <div className="pagina-dashboard pagina-limites">
     <CabecalhoDashboard usuario={perfil} secao="limites" abrirPerfil={() => setPerfilAberto(true)} sair={sair} />
     <main className="conteudo-dashboard-largo conteudo-limites">
@@ -166,7 +275,7 @@ export default function Limites() {
         <div>
           <p className="rotulo-secao">PROTEÇÃO DA CONTA</p>
           <h1>Limites de movimentação</h1>
-          <p>Consulte quanto já foi utilizado e o valor disponível neste período.</p>
+          <p>Consulte os limites operacionais da conta. O crédito do cartão é administrado separadamente.</p>
         </div>
         {resumoAtual && <span className="tipo-conta-limites">Conta {resumoAtual.tipo_conta}</span>}
       </header>
@@ -189,7 +298,7 @@ export default function Limites() {
 
         <section className="operacoes-limites" aria-label="Limites por tipo de operação">
           {atualDaConta.operacoes?.map((item) => <article className="cartao-operacao-limite" key={item.operacao}>
-            <div className="titulo-operacao-limite"><span><Icone nome={item.operacao === 'TRANSFERENCIA' ? 'transferir' : 'cartao'} tamanho={19} /></span><h2>{OPERACAO_LABEL[item.operacao]}</h2></div>
+            <div className="titulo-operacao-limite"><span><Icone nome={item.operacao === 'TRANSFERENCIA' ? 'transferir' : 'boleto'} tamanho={19} /></span><h2>{OPERACAO_LABEL[item.operacao]}</h2></div>
             <dl>
               <div><dt>Máximo por operação</dt><dd>{moeda(item.limite_por_operacao)}</dd></div>
               <div><dt>Disponível agora</dt><dd>{moeda(item.disponivel_agora)}</dd></div>
@@ -205,9 +314,42 @@ export default function Limites() {
         </section>
       </> : !erro && <div className="estado-limites">Não foi possível encontrar a conta ativa.</div>}
 
+      {resumo?.pode_configurar_conta && configuracaoPeriodoConta && formularioConta && <section className="admin-limites limites-da-conta">
+        <header className="admin-limites-cabecalho">
+          <div><p className="rotulo-secao">CONFIGURAÇÃO DA CONTA {configuracaoConta.tipo_conta}</p><h2>Meus limites individuais</h2><p>Esses valores valem somente para a conta ativa e nunca podem superar o teto definido pelo banco.</p></div>
+        </header>
+        <form onSubmit={salvarLimitesConta}>
+          <div className="filtros-limites">
+            <label>Período<select value={periodoConta} onChange={(event) => { const valor = event.target.value; periodoContaRef.current = valor; setPeriodoConta(valor); setFormularioConta(montarFormularioConta(configuracaoConta, valor)) }}>{PERIODOS.map((nome) => <option key={nome} value={nome}>{PERIODOS_LABEL[nome]}</option>)}</select></label>
+            <div className="aviso-teto-limites">Deixe um campo vazio para usar o teto atual do banco. Configurar um valor menor restringe apenas esta conta.</div>
+          </div>
+          <div className="grade-politicas-limites">
+            {OPERACOES.map((operacao) => {
+              const banco = configuracaoPeriodoConta.operacoes[operacao]
+              return <fieldset className="politica-limite" key={operacao}>
+                <legend>{OPERACAO_LABEL[operacao]} · {PERIODOS_LABEL[periodoConta]}</legend>
+                <small>Teto bancário por operação: {moeda(banco.limite_por_operacao_banco)}</small>
+                <label>Meu máximo por operação (R$)<input type="number" min="0.01" step="0.01" max={banco.limite_por_operacao_banco ?? undefined} inputMode="decimal" value={formularioConta.operacoes[operacao].limite_por_operacao} onChange={(event) => alterarLimiteConta(operacao, 'limite_por_operacao', event.target.value)} disabled={banco.limite_por_operacao_banco == null} placeholder="Usar teto do banco" /></label>
+                {operacao === 'TRANSFERENCIA' && <>
+                  <small>Teto bancário para Pix favoritos: {moeda(banco.limite_por_operacao_favorito_banco)}</small>
+                  <label>Meu máximo por operação para favoritos (R$)<input type="number" min="0.01" step="0.01" max={banco.limite_por_operacao_favorito_banco ?? undefined} inputMode="decimal" value={formularioConta.operacoes[operacao].limite_por_operacao_favorito} onChange={(event) => alterarLimiteConta(operacao, 'limite_por_operacao_favorito', event.target.value)} disabled={banco.limite_por_operacao_favorito_banco == null} placeholder="Usar teto normal" /></label>
+                </>}
+              </fieldset>
+            })}
+            <fieldset className="politica-limite acumulado">
+              <legend>Acumulado do período</legend>
+              <small>Teto acumulado bancário: {moeda(configuracaoPeriodoConta.limite_acumulado_banco)}</small>
+              <label>Meu máximo total no período (R$)<input type="number" min="0.01" step="0.01" max={configuracaoPeriodoConta.limite_acumulado_banco ?? undefined} inputMode="decimal" value={formularioConta.limite_acumulado} onChange={(event) => setFormularioConta((atualForm) => ({ ...atualForm, limite_acumulado: event.target.value }))} disabled={configuracaoPeriodoConta.limite_acumulado_banco == null} placeholder="Usar teto do banco" /></label>
+            </fieldset>
+          </div>
+          <label className="motivo-limites">Motivo da alteração<textarea minLength="5" maxLength="250" value={motivoConta} onChange={(event) => setMotivoConta(event.target.value)} required placeholder="Ex.: quero manter um teto próprio menor." /></label>
+          <button className="botao botao-principal salvar-politica-limites" type="submit" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar limites desta conta'}</button>
+        </form>
+      </section>}
+
       {administradorAtual && formulario && <section className="admin-limites">
         <header className="admin-limites-cabecalho">
-          <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>Configurar políticas</h2><p>A autorização é validada pelo backend e é independente do papel de uma conta PJ.</p></div>
+          <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>Política geral do banco</h2><p>Define os tetos PF/PJ por horário. A autorização é validada pelo backend e é independente do papel de uma conta PJ.</p></div>
           <button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/estornos')}>Histórico de estornos</button>
         </header>
         <form onSubmit={salvarPolitica}>
@@ -236,6 +378,28 @@ export default function Limites() {
           <label className="motivo-limites">Motivo da alteração<textarea minLength="5" maxLength="250" value={motivo} onChange={(event) => setMotivo(event.target.value)} required placeholder="Registre por que esta política está sendo alterada." /></label>
           <button className="botao botao-principal salvar-politica-limites" type="submit" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar política'}</button>
         </form>
+        <section className="credito-cartao-admin" aria-labelledby="titulo-credito-cartao">
+          <div className="credito-cartao-cabecalho"><p className="rotulo-secao">CRÉDITO, SEM REGRA DE HORÁRIO</p><h3 id="titulo-credito-cartao">Limite de crédito por cartão</h3><p>Este é o crédito persistido em CARTAO.LIMITE. Não altera os limites operacionais de pagamentos ou transferências. Somente administradores bancários podem alterá-lo.</p></div>
+          {cartoes.length ? <>
+            <div className="cartoes-limites-lista" aria-label="Cartões e créditos atuais">
+              {cartoes.map((cartao) => <article key={cartao.id_cartao}>
+                <span>Cartão •••• {cartao.final_cartao} · Conta {cartao.id_conta} ({cartao.tipo_conta})</span>
+                <strong>{moeda(cartao.limite)}</strong>
+                <small>Utilizado {moeda(cartao.utilizado)} · disponível {moeda(cartao.disponivel)}</small>
+              </article>)}
+            </div>
+            <form className="form-cartao-credito" onSubmit={salvarLimiteCreditoCartao}>
+              <label>Cartão<select value={cartaoSelecionado} onChange={(event) => { const valor = event.target.value; cartaoSelecionadoRef.current = valor; setCartaoSelecionado(valor); const encontrado = cartoes.find((item) => String(item.id_cartao) === valor); setLimiteCreditoCartao(String(encontrado?.limite ?? '')) }}>{cartoes.map((item) => <option key={item.id_cartao} value={item.id_cartao}>•••• {item.final_cartao} · Conta {item.id_conta} · {item.tipo_conta}</option>)}</select></label>
+              {cartaoAtual && <p>Crédito atual {moeda(cartaoAtual.limite)} · utilizado {moeda(cartaoAtual.utilizado)} · disponível {moeda(cartaoAtual.disponivel)}</p>}
+              <label>Novo limite de crédito (R$)<input type="number" min={cartaoAtual?.utilizado ?? '0.01'} step="0.01" inputMode="decimal" value={limiteCreditoCartao} onChange={(event) => setLimiteCreditoCartao(event.target.value)} required /></label>
+              <label className="motivo-limites">Motivo da alteração<textarea minLength="5" maxLength="250" value={motivoCartao} onChange={(event) => setMotivoCartao(event.target.value)} required placeholder="Registre a justificativa administrativa." /></label>
+              <button className="botao botao-principal salvar-politica-limites" type="submit" disabled={salvando || !cartaoSelecionado}>{salvando ? 'Salvando…' : 'Salvar crédito do cartão'}</button>
+            </form>
+            <div className="historico-limites"><h3>Auditoria de crédito dos cartões</h3>
+              {historicoCartoes.length ? <div>{historicoCartoes.slice(0, 8).map((registro) => <article key={registro.id}><span>Cartão {registro.id_cartao} · Conta {registro.id_conta} · Admin {registro.id_administrador}</span><strong>{moeda(registro.limite_anterior)} → {moeda(registro.limite_novo)} · {registro.motivo}</strong><small>{registro.criado_em ? new Date(registro.criado_em).toLocaleString('pt-BR') : 'Data indisponível'}</small></article>)}</div> : <p>Nenhuma alteração de crédito registrada.</p>}
+            </div>
+          </> : <p className="aviso-teto-limites">Nenhum cartão encontrado para administrar.</p>}
+        </section>
         <section className="historico-limites"><h3>Alterações recentes</h3>
           {historico.length ? <div>{historico.slice(0, 8).map((registro) => <article key={registro.id}>
             <span>{registro.evento === 'POLITICA_ATUALIZADA' ? `${registro.tipo_conta} · ${PERIODOS_LABEL[registro.periodo] || registro.periodo}` : `Conta ${registro.id_conta} · ${registro.operacao}`}</span>
