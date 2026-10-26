@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'src/pages/Limites/**'
+      - 'src/components/Dashboard/CampoMoeda.jsx'
+      - 'src/components/Dashboard/CabecalhoDashboard.jsx'
+      - 'src/pages/Dashboard/Dashboard.css'
       - '.github/workflows/limites-ci.yml'
   push:
     branches:
@@ -19,5 +22,5 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx eslint src/pages/Limites/Limites.jsx
+      - run: npx eslint src/pages/Limites/Limites.jsx src/components/Dashboard/CampoMoeda.jsx src/components/Dashboard/CabecalhoDashboard.jsx
       - run: npm run build
