@@ -264,7 +264,7 @@ const respostaConsultaCobranca = `{
 
 const endpoints = [
   ['endpoint-conta', 'Conta'],
-  ['endpoint-consulta-cpf', 'Verificar CPF (restrito)'],
+  ['endpoint-consulta-cpf', 'Verificar CPF (autenticado)'],
   ['endpoint-saldo', 'Saldo'],
   ['endpoint-movimentacoes', 'Movimentações'],
   ['endpoint-resumo', 'Resumo financeiro'],
@@ -373,9 +373,9 @@ export default function DocumentacaoApi() {
             </article>
 
             <article className="endpoint-api" id="endpoint-consulta-cpf">
-              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/contas/verificar-cpf">Consulta restrita: informa somente se um CPF válido está vinculado a uma conta Arkhé.</CabecalhoEndpoint>
+              <CabecalhoEndpoint metodo="POST" caminho="/api/v1/contas/verificar-cpf">Consulta autenticada: informa somente se um CPF válido está vinculado a uma conta Arkhé.</CabecalhoEndpoint>
               <div className="detalhes-endpoint-api">
-                <p className="alerta-seguranca-api"><strong>Permissão especial obrigatória.</strong> Por proteção dos dados pessoais, credenciais PJ comuns não podem consultar livremente CPFs de terceiros. O administrador precisa aprovar explicitamente o Client ID na configuração <code>ARKHE_API_CONSULTA_CPF_CLIENT_IDS</code>.</p>
+                <p className="alerta-seguranca-api"><strong>Credenciais normais da API.</strong> Qualquer integração ativa pode consultar utilizando seu <code>X-Client-ID</code> e <code>X-Client-Secret</code>, sem liberação adicional. A consulta continua protegida por limites para evitar enumeração de CPFs e não deve ser usada para descobrir indiscriminadamente quem possui conta Arkhé.</p>
                 <p>Faça a consulta exclusivamente no servidor da integração, com finalidade legítima e base apropriada para tratar esse CPF. Não utilize em cadastros públicos ou para descobrir indiscriminadamente quem é cliente.</p>
                 <h3>Corpo da requisição</h3>
                 <BlocoCodigo titulo="JSON" codigo={'{ "cpf": "529.982.247-25" }'} />
@@ -384,7 +384,7 @@ export default function DocumentacaoApi() {
                 <h3>Resposta de exemplo</h3>
                 <BlocoCodigo titulo="JSON" codigo={'{ "possui_conta": true }'} />
                 <p><code>true</code> significa que existe pelo menos uma conta vinculada ao CPF; <code>false</code>, nenhuma. Não significa que a conta esteja ativa. Não são retornados nome, saldo, número da conta nem informações pessoais.</p>
-                <p>Erros: <code>400</code> CPF inválido, <code>401</code> credenciais ausentes/incorretas, <code>403</code> integração sem permissão especial, <code>429</code> excesso de consultas e <code>503</code> Redis indisponível. Limites: 10/minuto por integração e 20/dia por CPF, entre integrações autorizadas.</p>
+                <p>Erros: <code>400</code> CPF inválido, <code>401</code> credenciais ausentes/incorretas, <code>403</code> integração desativada, <code>429</code> excesso de consultas e <code>503</code> Redis indisponível. Limites: 10/minuto e 100/dia por integração, além de 20/dia por CPF entre todas as integrações.</p>
               </div>
             </article>
 
