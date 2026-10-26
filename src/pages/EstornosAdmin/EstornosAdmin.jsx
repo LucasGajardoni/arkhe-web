@@ -90,8 +90,8 @@ export default function EstornosAdmin() {
       <CabecalhoDashboard usuario={perfil} secao="limites" abrirPerfil={() => setPerfilAberto(true)} sair={sair} />
       <main className="conteudo-dashboard-largo corpo-estornos-admin">
         <header className="cabecalho-estornos-admin">
-          <div><p>ADMINISTRAÇÃO BANCÁRIA</p><h1>Estornos e cancelamentos</h1><span>Histórico de operações, responsáveis, datas e motivos.</span></div>
-          <div><button className="atualizar" type="button" onClick={carregar} disabled={carregando}>{carregando ? 'Atualizando…' : 'Atualizar'}</button><button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/limites')}>Voltar aos limites</button></div>
+          <div><p>ADMINISTRAÇÃO BANCÁRIA · ÁREA RESTRITA</p><h1>Histórico geral de estornos</h1><span>Todos os registros do banco. Acesso exclusivo dos administradores bancários; clientes consultam somente o histórico da conta ativa.</span></div>
+          <div><button className="atualizar" type="button" onClick={carregar} disabled={carregando}>{carregando ? 'Atualizando…' : 'Atualizar'}</button><button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/admin')}>Voltar à administração</button></div>
         </header>
         {erro && <p className="estado-estornos-admin erro" role="alert">{erro}</p>}
         {migracaoInstalada === false && <section className="cartao-migracao-estornos" aria-labelledby="titulo-migracao-estornos">

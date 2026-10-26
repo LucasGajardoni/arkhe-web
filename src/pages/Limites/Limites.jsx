@@ -380,7 +380,6 @@ export default function Limites() {
       {secaoAtiva === 'administracao' && administradorAtual && formulario && <section className="admin-limites">
         <header className="admin-limites-cabecalho">
           <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>{abaAdmin === 'politicas' ? 'Políticas gerais PF/PJ' : abaAdmin === 'cartoes' ? 'Crédito por cartão' : 'Histórico das alterações'}</h2><p>{abaAdmin === 'politicas' ? 'Defina os tetos gerais por tipo de conta e horário.' : abaAdmin === 'cartoes' ? 'Crédito não é a mesma coisa que limite de Pix ou pagamentos.' : 'Veja as justificativas e registros das mudanças realizadas.'}</p></div>
-          <button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/estornos')}>Histórico de estornos</button>
         </header>
         <nav className="subabas-limites" aria-label="Áreas administrativas">
           <button type="button" aria-current={abaAdmin === 'politicas' ? 'page' : undefined} onClick={() => setAbaAdmin('politicas')}>Políticas PF/PJ</button>
