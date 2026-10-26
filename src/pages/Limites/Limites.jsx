@@ -362,7 +362,7 @@ export default function Limites() {
             <div className="limite-padrao-rapido">
               <div><strong>Proteção padrão de R$ 5.000,00</strong><small>O valor é o teto quando o banco não definiu regra própria. Você pode escolher um limite pessoal menor.</small></div>
               <button type="button" onClick={() => setFormularioConta((atualForm) => {
-                const teto = (valor) => String(Math.min(5000, Number(valor ?? 5000))).concat('.00').replace('.00.00', '.00')
+                const teto = (valor) => Math.min(5000, Number(valor ?? 5000)).toFixed(2)
                 return {
                   ...atualForm,
                   limite_acumulado: teto(configuracaoPeriodoConta.limite_acumulado_banco),
