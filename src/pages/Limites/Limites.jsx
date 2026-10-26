@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CabecalhoDashboard from '../../components/Dashboard/CabecalhoDashboard.jsx'
 import Icone from '../../components/Dashboard/Icone.jsx'
+import CampoMoeda from '../../components/Dashboard/CampoMoeda.jsx'
 import ModalPerfil from '../../components/Dashboard/ModalPerfil.jsx'
 import NavegacaoMobile from '../../components/Dashboard/NavegacaoMobile.jsx'
 import { useSessao } from '../../hooks/useSessao.js'
@@ -336,7 +337,7 @@ export default function Limites() {
                 {PERIODOS.map((nome) => <option key={nome} value={nome}>{PERIODOS_LABEL[nome]}</option>)}
               </select>
             </label>
-            <div className="aviso-teto-limites">Deixe em branco para usar a regra geral, se existir. Mesmo sem teto bancário, você pode escolher uma restrição pessoal para esta conta.</div>
+            <div className="aviso-teto-limites">Deixe um campo vazio para usar o teto do banco. Quando não há política específica, o Arkhé aplica o teto de segurança de R$ 5.000,00. Você pode reduzir seus limites, mas não aumentá-los além do autorizado.</div>
           </div>
           <div className="limites-ajustes-rapidos">
             {OPERACOES.map((operacao) => {
@@ -344,27 +345,41 @@ export default function Limites() {
               return <div className="ajuste-limite-linha" key={operacao}>
                 <div><strong>{OPERACAO_LABEL[operacao]}</strong><small>Máximo bancário: {moeda(banco.limite_por_operacao_banco)}</small></div>
                 <label>Meu máximo por operação (R$)
-                  <input type="number" min="0.01" step="0.01" max={banco.limite_por_operacao_banco ?? undefined}
+                  <CampoMoeda minValue={0.01}  maxValue={banco.limite_por_operacao_banco ?? undefined}
                     value={formularioConta.operacoes[operacao].limite_por_operacao}
-                    onChange={(event) => alterarLimiteConta(operacao, 'limite_por_operacao', event.target.value)}
+                    onChange={(valor) => alterarLimiteConta(operacao, 'limite_por_operacao', valor)}
                     placeholder="Usar regra do banco" inputMode="decimal" />
                 </label>
                 {operacao === 'TRANSFERENCIA' && banco.limite_por_operacao_favorito_banco != null && <label>Meu máximo para Pix favoritos (R$)
-                  <input type="number" min="0.01" step="0.01" max={banco.limite_por_operacao_favorito_banco}
+                  <CampoMoeda minValue={0.01}  maxValue={banco.limite_por_operacao_favorito_banco}
                     value={formularioConta.operacoes[operacao].limite_por_operacao_favorito}
-                    onChange={(event) => alterarLimiteConta(operacao, 'limite_por_operacao_favorito', event.target.value)}
+                    onChange={(valor) => alterarLimiteConta(operacao, 'limite_por_operacao_favorito', valor)}
                     placeholder="Usar limite normal" inputMode="decimal" />
                 </label>}
                 {operacao === 'TRANSFERENCIA' && banco.limite_por_operacao_favorito_banco == null && <small className="aviso-favorito-limites">O banco não habilitou um teto especial para favoritos. Vale o teto normal de transferências.</small>}
               </div>
             })}
+            <div className="limite-padrao-rapido">
+              <div><strong>Proteção padrão de R$ 5.000,00</strong><small>O valor é o teto quando o banco não definiu regra própria. Você pode escolher um limite pessoal menor.</small></div>
+              <button type="button" onClick={() => setFormularioConta((atualForm) => {
+                const teto = (valor) => String(Math.min(5000, Number(valor ?? 5000))).concat('.00').replace('.00.00', '.00')
+                return {
+                  ...atualForm,
+                  limite_acumulado: teto(configuracaoPeriodoConta.limite_acumulado_banco),
+                  operacoes: Object.fromEntries(OPERACOES.map((item) => [item, {
+                    ...atualForm.operacoes[item],
+                    limite_por_operacao: teto(configuracaoPeriodoConta.operacoes[item].limite_por_operacao_banco),
+                  }])),
+                }
+              })}>Preencher R$ 5.000</button>
+            </div>
             <div className="ajuste-limite-linha">
               <div><strong>Teto total de movimentações no período</strong>
                 <small>Máximo bancário: {moeda(configuracaoPeriodoConta.limite_acumulado_banco)}</small></div>
               <label>Meu máximo total no período (R$)
-                <input type="number" min="0.01" step="0.01" max={configuracaoPeriodoConta.limite_acumulado_banco ?? undefined}
+                <CampoMoeda minValue={0.01}  maxValue={configuracaoPeriodoConta.limite_acumulado_banco ?? undefined}
                   value={formularioConta.limite_acumulado}
-                  onChange={(event) => setFormularioConta((atualForm) => ({ ...atualForm, limite_acumulado: event.target.value }))}
+                  onChange={(valor) => setFormularioConta((atualForm) => ({ ...atualForm, limite_acumulado: valor }))}
                   placeholder="Usar regra do banco" inputMode="decimal" />
               </label>
             </div>
@@ -395,17 +410,17 @@ export default function Limites() {
             {OPERACOES.map((operacao) => <fieldset className="politica-limite" key={operacao}>
               <legend>{OPERACAO_LABEL[operacao]}</legend>
               <label className="ativar-limite"><input type="checkbox" checked={formulario.operacoes[operacao].ativo} onChange={(event) => alterarOperacao(operacao, 'ativo', event.target.checked)} /> Ativar limite por operação</label>
-              <label>Valor máximo por operação (R$)<input type="number" min="0.01" step="0.01" inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao} onChange={(event) => alterarOperacao(operacao, 'limite_por_operacao', event.target.value)} disabled={!formulario.operacoes[operacao].ativo} required={formulario.operacoes[operacao].ativo} placeholder="Ex.: 2.000,00" /></label>
+              <label>Valor máximo por operação (R$)<CampoMoeda minValue={0.01}  inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao} onChange={(valor) => alterarOperacao(operacao, 'limite_por_operacao', valor)} disabled={!formulario.operacoes[operacao].ativo} required={formulario.operacoes[operacao].ativo} placeholder="Ex.: 2.000,00" /></label>
               {operacao === 'TRANSFERENCIA' && <>
                 <label className="ativar-limite"><input type="checkbox" checked={formulario.operacoes[operacao].favorito_ativo} disabled={!formulario.operacoes[operacao].ativo} onChange={(event) => alterarOperacao(operacao, 'favorito_ativo', event.target.checked)} /> Ativar limite maior para Pix favoritos</label>
-                <label>Máximo por operação para favoritos (R$)<input type="number" min="0.01" step="0.01" inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao_favorito} onChange={(event) => alterarOperacao(operacao, 'limite_por_operacao_favorito', event.target.value)} disabled={!formulario.operacoes[operacao].favorito_ativo} required={formulario.operacoes[operacao].favorito_ativo} placeholder="Ex.: 5.000,00" /></label>
+                <label>Máximo por operação para favoritos (R$)<CampoMoeda minValue={0.01}  inputMode="decimal" value={formulario.operacoes[operacao].limite_por_operacao_favorito} onChange={(valor) => alterarOperacao(operacao, 'limite_por_operacao_favorito', valor)} disabled={!formulario.operacoes[operacao].favorito_ativo} required={formulario.operacoes[operacao].favorito_ativo} placeholder="Ex.: 5.000,00" /></label>
                 <small>Aplicado somente a chaves Pix salvas nos favoritos deste usuário e conta.</small>
               </>}
             </fieldset>)}
             <fieldset className="politica-limite acumulado">
               <legend>Acumulado do período</legend>
               <label className="ativar-limite"><input type="checkbox" checked={Boolean(formulario.acumulado?.ativo)} onChange={(event) => setFormulario((atualForm) => ({ ...atualForm, acumulado: { ...atualForm.acumulado, ativo: event.target.checked } }))} /> Ativar teto acumulado</label>
-              <label>Valor máximo total (R$)<input type="number" min="0.01" step="0.01" inputMode="decimal" value={formulario.acumulado?.limite_acumulado ?? ''} onChange={(event) => setFormulario((atualForm) => ({ ...atualForm, acumulado: { ...atualForm.acumulado, limite_acumulado: event.target.value } }))} disabled={!formulario.acumulado?.ativo} required={Boolean(formulario.acumulado?.ativo)} placeholder="Ex.: 8.000,00" /></label>
+              <label>Valor máximo total (R$)<CampoMoeda minValue={0.01}  inputMode="decimal" value={formulario.acumulado?.limite_acumulado ?? ''} onChange={(valor) => setFormulario((atualForm) => ({ ...atualForm, acumulado: { ...atualForm.acumulado, limite_acumulado: valor } }))} disabled={!formulario.acumulado?.ativo} required={Boolean(formulario.acumulado?.ativo)} placeholder="Ex.: 8.000,00" /></label>
               <small>O acumulado considera transferências e pagamentos combinados nesta janela.</small>
             </fieldset>
           </div>
@@ -425,7 +440,7 @@ export default function Limites() {
             <form className="form-cartao-credito" onSubmit={salvarLimiteCreditoCartao}>
               <label>Cartão<select value={cartaoSelecionado} onChange={(event) => { const valor = event.target.value; cartaoSelecionadoRef.current = valor; setCartaoSelecionado(valor); const encontrado = cartoes.find((item) => String(item.id_cartao) === valor); setLimiteCreditoCartao(String(encontrado?.limite ?? '')) }}>{cartoes.map((item) => <option key={item.id_cartao} value={item.id_cartao}>•••• {item.final_cartao} · Conta {item.id_conta} · {item.tipo_conta}</option>)}</select></label>
               {cartaoAtual && <p>Crédito atual {moeda(cartaoAtual.limite)} · utilizado {moeda(cartaoAtual.utilizado)} · disponível {moeda(cartaoAtual.disponivel)}</p>}
-              <label>Novo limite de crédito (R$)<input type="number" min={cartaoAtual?.utilizado ?? '0.01'} step="0.01" inputMode="decimal" value={limiteCreditoCartao} onChange={(event) => setLimiteCreditoCartao(event.target.value)} required /></label>
+              <label>Novo limite de crédito (R$)<CampoMoeda minValue={cartaoAtual?.utilizado ?? '0.01'}  inputMode="decimal" value={limiteCreditoCartao} onChange={(valor) => setLimiteCreditoCartao(valor)} required /></label>
               <label className="motivo-limites">Motivo da alteração<textarea minLength="5" maxLength="250" value={motivoCartao} onChange={(event) => setMotivoCartao(event.target.value)} required placeholder="Registre a justificativa administrativa." /></label>
               <button className="botao botao-principal salvar-politica-limites" type="submit" disabled={salvando || !cartaoSelecionado}>{salvando ? 'Salvando…' : 'Salvar crédito do cartão'}</button>
             </form>
