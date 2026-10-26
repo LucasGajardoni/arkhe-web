@@ -377,3 +377,240 @@
   }
 }
 .favoritos-pix{margin-top:18px;padding:15px;border:1px solid #e4ebe8;border-radius:14px;background:#fbfdfc}.favoritos-pix header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.favoritos-pix header strong{color:#173f3c;font-size:13px}.favoritos-pix header small,.favoritos-pix>p{color:#6c7f7c;font-size:11px}.favoritos-pix ul{display:grid;gap:7px;margin:0;padding:0;list-style:none}.favoritos-pix li{display:flex;align-items:center;gap:6px}.selecionar-favorito-pix{display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:8px;border:0;border-radius:10px;background:#fff;text-align:left;cursor:pointer}.selecionar-favorito-pix>span:first-child{display:grid;width:34px;height:34px;flex:0 0 auto;place-items:center;border-radius:50%;color:#fff;background:#0d4d4d;font-weight:800}.selecionar-favorito-pix>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.selecionar-favorito-pix strong,.selecionar-favorito-pix small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selecionar-favorito-pix strong{color:#183735;font-size:11px}.selecionar-favorito-pix small{color:#71817e;font-size:9px}.selecionar-favorito-pix>b{color:#0c716b;font-size:19px}.remover-favorito-pix{width:32px;height:32px;border:1px solid #e4ebe8;border-radius:9px;color:#8a4747;background:#fff;font-size:19px;cursor:pointer}.remover-favorito-pix:disabled{opacity:.5}.acao-favorito-pix{display:grid;gap:9px;margin-top:12px;padding:12px;border-radius:10px;background:#f5faf8}.acao-favorito-pix>p{margin:0;color:#315c56;font-size:11px}.acao-favorito-pix label{display:grid;gap:6px;color:#526965;font-size:10px;font-weight:700}.acao-favorito-pix input{width:100%;padding:10px;border:1px solid #dce7e3;border-radius:8px;background:#fff;color:#173f3c}.acao-favorito-pix>div{display:flex;justify-content:flex-end;gap:8px}.botao-salvar-favorito-pix{justify-self:start;padding:0;border:0;color:#0c716b;background:transparent;font-size:11px;font-weight:800;cursor:pointer}.erro-favorito-pix{margin:0;color:#9c3030;font-size:10px}
+
+
+/* Confirmação final do Pix: layout compacto, hierarquia clara e ações alinhadas.
+   Escopo exclusivo da etapa concluída; não altera os formulários do Pix. */
+.modal-perfil.modal-pagamento-pix.etapa-sucesso {
+  width: min(540px, 100%);
+  border-radius: 24px;
+  box-shadow: 0 32px 90px rgba(5, 36, 35, .28);
+}
+
+.modal-pagamento-pix.etapa-sucesso > header {
+  align-items: center;
+  padding: 22px 28px 0;
+  border-bottom: 0;
+}
+
+.modal-pagamento-pix.etapa-sucesso > header p {
+  margin: 0;
+  color: #16847b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.modal-pagamento-pix.etapa-sucesso > header h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.modal-pagamento-pix.etapa-sucesso > header button {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 24px;
+}
+
+.modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado {
+  width: 100%;
+  padding: 10px 36px 32px;
+  text-align: center;
+}
+
+.modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado > .icone-sucesso-pix {
+  display: grid;
+  width: 66px;
+  height: 66px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border: 6px solid #e7f5f1;
+  border-radius: 50%;
+  color: #fff;
+  background: #137f77;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  box-sizing: content-box;
+}
+
+.modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado h3 {
+  margin: 0;
+  color: #163e3b;
+  font-size: clamp(21px, 3.5vw, 25px);
+  font-weight: 800;
+  letter-spacing: -.6px;
+  line-height: 1.3;
+}
+
+.modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado > .subtitulo-sucesso-pix {
+  margin: 7px 0 22px;
+  color: #72837f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.modal-pagamento-pix.etapa-sucesso .valor-sucesso-pix {
+  width: 100%;
+  padding: 20px 12px;
+  border-top: 1px solid #e8eeeb;
+  border-bottom: 1px solid #e8eeeb;
+}
+
+.modal-pagamento-pix.etapa-sucesso .valor-sucesso-pix > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #7a8c86;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.modal-pagamento-pix.etapa-sucesso .valor-sucesso-pix > strong {
+  display: block;
+  margin: 0;
+  color: #0e6f68;
+  font-size: clamp(29px, 5vw, 37px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-pagamento-pix.etapa-sucesso .destinatario-sucesso-pix {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 15px 17px;
+  border: 1px solid #e4eee9;
+  border-radius: 13px;
+  background: #f6faf8;
+  text-align: left;
+}
+
+.modal-pagamento-pix.etapa-sucesso .destinatario-sucesso-pix > span {
+  flex-shrink: 0;
+  color: #73847e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.modal-pagamento-pix.etapa-sucesso .destinatario-sucesso-pix > strong {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #183d3a;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix {
+  display: grid;
+  width: 100%;
+  gap: 13px;
+  margin-top: 23px;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .area-acoes-comprovante {
+  margin: 0;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 9px;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante .botao {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #b8d4cd;
+  border-radius: 11px;
+  color: #0d5853;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante .botao:hover:not(:disabled),
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante .botao:focus-visible {
+  border-color: #137f77;
+  background: #edf7f3;
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix > .botao-concluir-pix {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 12px;
+  color: #fff;
+  background: #0d4d4d;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(13, 77, 77, .13);
+}
+
+.modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix > .botao-concluir-pix:hover {
+  background: #12645e;
+}
+
+@media (max-width: 650px) {
+  .modal-perfil.modal-pagamento-pix.etapa-sucesso {
+    width: 100%;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso > header {
+    padding: 19px 22px 0;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado {
+    padding: 9px 22px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado > .icone-sucesso-pix {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 13px;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .sucesso-pagamento-pix-confirmado > .subtitulo-sucesso-pix {
+    margin-bottom: 17px;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .destinatario-sucesso-pix {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .destinatario-sucesso-pix > strong {
+    text-align: left;
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .acoes-comprovante .botao:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-pagamento-pix.etapa-sucesso .acoes-sucesso-pix .botao {
+    transition: none;
+  }
+}
