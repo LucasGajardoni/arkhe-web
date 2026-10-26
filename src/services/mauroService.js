@@ -10,6 +10,14 @@ export const enviarMensagemMauro = (id, mensagem) => requisitarApi(
   { method: 'POST', dados: { mensagem } },
 )
 
+export const transcreverAudioMauro = (id, audio) => {
+  const dados = new FormData()
+  dados.append('audio', audio, 'mauro-audio.webm')
+  return requisitarApi(`${base}/${encodeURIComponent(id)}/audio/transcrever`, {
+    method: 'POST', dados,
+  })
+}
+
 export const cancelarPropostaPixMauro = (idConversa, idProposta) => requisitarApi(
   `${base}/${encodeURIComponent(idConversa)}/pix/propostas/${encodeURIComponent(idProposta)}/cancelar`,
   { method: 'POST', dados: {} },
