@@ -402,6 +402,7 @@ export default function Limites() {
           <button type="button" aria-current={abaAdmin === 'historico' ? 'page' : undefined} onClick={() => setAbaAdmin('historico')}>Histórico de mudanças</button>
         </nav>
         {abaAdmin === 'politicas' && <form onSubmit={salvarPolitica}>
+          <p className="aviso-teto-limites">Regra de segurança: quando uma política estiver desativada ou sem teto, o sistema aplica R$ 5.000,00 por operação e no acumulado do período. Para permitir mais, um administrador precisa definir e ativar um teto explícito.</p>
           <div className="filtros-limites">
             <label>Tipo de conta<select value={tipoConta} onChange={(event) => { const valor = event.target.value; tipoContaRef.current = valor; setTipoConta(valor); setFormulario(montarFormulario(politicas, valor, periodo)) }}>{TIPOS.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></label>
             <label>Período<select value={periodo} onChange={(event) => { const valor = event.target.value; periodoRef.current = valor; setPeriodo(valor); setFormulario(montarFormulario(politicas, tipoConta, valor)) }}>{PERIODOS.map((nome) => <option key={nome} value={nome}>{PERIODOS_LABEL[nome]}</option>)}</select></label>
