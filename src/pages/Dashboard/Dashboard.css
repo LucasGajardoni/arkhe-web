@@ -349,6 +349,11 @@
 }
 
 .atalhos-dashboard-pj { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* A grade PJ tem 8 atalhos: os dois ultimos fecham a quarta linha sem buracos. */
+.atalhos-dashboard-pj > button:nth-last-child(-n+2) {
+  grid-column: span 2;
+  min-height: 106px;
+}
 
 .atalhos-dashboard > button {
   display: flex;
@@ -441,7 +446,7 @@
   .cabecalho-dashboard-pj .barra-dashboard > nav {
     grid-column: 1 / -1; grid-row: 2; order: initial;
     display: flex; width: 100%; height: 44px;
-    justify-content: flex-start; overflow-x: auto; overflow-y: hidden;
+    justify-content: safe center; overflow-x: auto; overflow-y: hidden;
     scrollbar-width: thin;
   }
   .cabecalho-dashboard-pj .barra-dashboard > nav button { height: 100%; }
@@ -1554,4 +1559,12 @@
   .cabecalho-dashboard .marca-dashboard strong { display: none; }
   .cabecalho-dashboard .sair-dashboard { display: inline-flex; min-width: 30px; min-height: 36px; padding: 5px; align-items: center; }
   .trocar-conta-dashboard, .atalho-equipe { padding: 8px; font-size: .72rem; }
+}
+
+@media (max-width: 900px) {
+  /* No tablet e no celular, os atalhos finais ficam lado a lado. */
+  .atalhos-dashboard-pj > button:nth-last-child(-n+2) {
+    grid-column: span 1;
+    min-height: 76px;
+  }
 }
