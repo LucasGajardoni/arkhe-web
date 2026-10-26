@@ -95,7 +95,7 @@ export default function Devolucoes() {
         <article>
           <small>03 · PAGAMENTO JÁ ENVIADO</small>
           <h2>Você pagou e quer o dinheiro de volta?</h2>
-          <p>O pagador não pode retirar dinheiro da conta recebedora sozinho. Para Pix, solicite a devolução ao recebedor; boletos pagos exigem estorno pelo administrador bancário.</p>
+          <p>O pagador não pode retirar dinheiro da conta recebedora sozinho. Para Pix, solicite a devolução ao recebedor; boletos pagos exigem estorno pelo administrador bancário. Compras com cartão e folha de pagamento não aceitam essa devolução nesta versão.</p>
         </article>
       </section>
 
@@ -114,7 +114,7 @@ export default function Devolucoes() {
             <strong>{moeda.format(Number(item.valor) || 0)}</strong>
           </div>
           <div className="registro-devolucoes-status"><span>{estados[item.status] || item.status}</span>
-            <small>{item.participacao === 'recebedor_original' ? 'Você recebeu o pagamento original' : 'Você enviou o pagamento original'}</small>
+            <small>{item.tipo_operacao === 'CANCELAMENTO_COBRANCA' ? (item.participacao === 'recebedor_original' ? 'Esta conta emitiu a cobrança' : 'Esta conta era a pagadora da cobrança') : item.participacao === 'recebedor_original' ? 'Esta conta recebeu o pagamento original' : 'Esta conta enviou o pagamento original'}</small>
           </div>
           <p>{item.motivo || 'Motivo não informado.'}</p>
           <small>{item.id_movimentacao_original ? `Movimentação original #${item.id_movimentacao_original}` : item.id_cobranca ? `Cobrança #${item.id_cobranca}` : ''}</small>
