@@ -77,3 +77,27 @@
   .form-cartao-credito { grid-template-columns:1fr; }
   .form-cartao-credito .motivo-limites { grid-column:auto; }
 }
+
+/* Navegacao: consulta, edicao pessoal e administracao sao areas diferentes. */
+.abas-limites,.subabas-limites { display:flex; flex-wrap:wrap; gap:9px; margin:0 0 20px; }
+.abas-limites button,.subabas-limites button { padding:10px 15px; border:1px solid #d8e2dc; border-radius:999px; background:#fff; color:#42615a; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.abas-limites button[aria-current="page"],.subabas-limites button[aria-current="page"] { background:#0d4d4d; border-color:#0d4d4d; color:white; }
+.abas-limites button:focus-visible,.subabas-limites button:focus-visible { outline:3px solid #b08a1f; outline-offset:3px; }
+.metricas-limites { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.metricas-limites strong { font-size:clamp(16px,2vw,22px); overflow-wrap:anywhere; }
+.explicacao-sem-teto { color:#5f685d; font-size:12px; line-height:1.6; margin:4px 0 12px; }
+.acoes-resumo-limites { margin:-16px 0 30px; }
+.form-ajuste-individual .filtros-limites { grid-template-columns:minmax(190px,1fr) 2fr; align-items:end; }
+.limites-ajustes-rapidos { display:grid; gap:11px; }
+.ajuste-limite-linha { display:grid; grid-template-columns:minmax(160px,1fr) minmax(170px,1fr); gap:18px; align-items:center; padding:16px; border:1px solid #e5e2da; border-radius:12px; background:#faf9f5; }
+.ajuste-limite-linha strong { display:block; color:#0d4d4d; font-size:14px; }
+.ajuste-limite-linha small { display:block; color:#746d60; font-size:11px; margin-top:5px; line-height:1.5; }
+.ajuste-limite-linha label { display:flex; flex-direction:column; gap:7px; color:#655e52; font-size:12px; font-weight:700; }
+.ajuste-limite-linha input { width:100%; min-height:42px; padding:9px 11px; border:1px solid #dedbd1; border-radius:9px; font:inherit; color:#263c38; background:#fff; }
+.ajuste-limite-linha .aviso-favorito-limites { grid-column:1/-1; margin:0; }
+.admin-limites .subabas-limites { margin:22px 0 18px; }
+@media (max-width:700px) {
+  .metricas-limites { grid-template-columns:1fr; }
+  .form-ajuste-individual .filtros-limites,.ajuste-limite-linha { grid-template-columns:1fr; }
+  .acoes-resumo-limites { margin:0 0 20px; }
+}
