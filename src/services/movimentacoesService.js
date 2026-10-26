@@ -87,6 +87,14 @@ export function estornarBoleto(idMovimentacao, motivo) {
   )
 }
 
+export function consultarHistoricoEstornosConta() {
+  return requisitarMovimentacoes(
+    '/api/v1/estornos/minha-conta',
+    { method: 'GET' },
+    'Não foi possível carregar as devoluções desta conta.',
+  )
+}
+
 export function listarEstornosAdmin() {
   return requisitarMovimentacoes(
     '/api/v1/estornos/admin?limite=200',
