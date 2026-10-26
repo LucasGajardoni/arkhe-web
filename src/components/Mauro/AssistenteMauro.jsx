@@ -539,7 +539,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
             <button type="submit" disabled={!texto.trim() || respondendo || carregando} aria-label="Enviar mensagem">
               {respondendo ? <span className="mauro-enviando" /> : <span aria-hidden="true">↑</span>}
             </button>
-            <small>O áudio é transcrito pelo backend Gemini e não é salvo. Revise o texto antes de enviar. O MAURO consulta sua conta ativa; Pix só é enviado após sua confirmação e PIN. Grave até 8 MB por mensagem.</small>
+            <small>O áudio é transcrito pelo backend Gemini e não é salvo. Revise o texto antes de enviar. O MAURO consulta sua conta ativa; Pix só é enviado após sua confirmação e PIN. Grave até 8 MB por mensagem. Instruções para contornar segurança ou revelar prompts internos são bloqueadas no servidor; nunca envie senhas ou códigos pelo chat.</small>
           </form>
         </div>
       </section>
