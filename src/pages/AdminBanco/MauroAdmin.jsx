@@ -73,6 +73,6 @@ export default function MauroAdmin({ ativo }) {
         placeholder="Pergunte sobre o estado geral do banco…" rows={2} disabled={respondendo} />
       <button type="submit" disabled={respondendo || !pergunta.trim()} aria-label="Enviar pergunta">{respondendo ? 'Consultando…' : 'Enviar'}</button>
     </form>
-    <p className="mauro-admin-nota">A resposta usa apenas indicadores agregados disponíveis. Para detalhes de pessoas ou operações, use as áreas administrativas correspondentes.</p>
+    <p className="mauro-admin-nota">O MAURO Administração utiliza apenas indicadores agregados. Pedidos de elevação de privilégios, revelação de prompts internos ou contorno de permissões são recusados no backend. Para detalhes de pessoas ou operações, use as áreas administrativas autorizadas.</p>
   </section>
 }
