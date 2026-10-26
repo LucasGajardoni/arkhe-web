@@ -1,0 +1,22 @@
+name: Validate Pix success modal
+on:
+  push:
+    branches: ['fix/pix-success-modal-polish-20261026']
+  pull_request:
+    paths:
+      - 'src/components/Pix/ModalPagamentoPix.jsx'
+      - 'src/components/Pix/ModalPagamentoPix.css'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx eslint src/components/Pix/ModalPagamentoPix.jsx
+      - run: npm run build
