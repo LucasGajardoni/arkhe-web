@@ -21,6 +21,7 @@ import Limites from './pages/Limites/Limites.jsx'
 import Agendamentos from './pages/Agendamentos/Agendamentos.jsx'
 import Recorrencias from './pages/Agendamentos/Recorrencias.jsx'
 import EstornosAdmin from './pages/EstornosAdmin/EstornosAdmin.jsx'
+import Devolucoes from './pages/Devolucoes/Devolucoes.jsx'
 import AdminBanco from './pages/AdminBanco/AdminBanco.jsx'
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/dashboard/limites" element={<Limites />} />
             <Route path="/dashboard/agendamentos" element={<Agendamentos />} />
             <Route path="/dashboard/recorrencias" element={<Recorrencias />} />
+            <Route path="/dashboard/devolucoes" element={<Devolucoes />} />
             <Route path="/dashboard/estornos" element={<EstornosAdmin />} />
             <Route path="/dashboard/admin" element={<AdminBanco />} />
           </Route>
