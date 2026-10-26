@@ -33,7 +33,7 @@
 .admin-limites-cabecalho p:last-child { margin:0; color:#736c5e; font-size:12px; }
 .filtros-limites { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:22px 0; }
 .filtros-limites label,.politica-limite > label:not(.ativar-limite),.motivo-limites { display:flex; flex-direction:column; gap:7px; color:#655e52; font-size:12px; font-weight:700; }
-.filtros-limites select,.politica-limite input[type="number"],.motivo-limites textarea { width:100%; min-height:42px; padding:9px 11px; border:1px solid #dedbd1; border-radius:9px; color:#263c38; background:#fff; font:inherit; }
+.filtros-limites select,.politica-limite input.campo-moeda,.motivo-limites textarea { width:100%; min-height:42px; padding:9px 11px; border:1px solid #dedbd1; border-radius:9px; color:#263c38; background:#fff; font:inherit; }
 .grade-politicas-limites { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
 .politica-limite { min-width:0; padding:17px; border:1px solid #e8e5dc; border-radius:12px; }
 .politica-limite legend { padding:0 6px; color:#0d4d4d; font-size:13px; font-weight:800; }
@@ -100,4 +100,23 @@
   .metricas-limites { grid-template-columns:1fr; }
   .form-ajuste-individual .filtros-limites,.ajuste-limite-linha { grid-template-columns:1fr; }
   .acoes-resumo-limites { margin:0 0 20px; }
+}
+
+.campo-moeda { font-variant-numeric: tabular-nums; letter-spacing: .015em; }
+.politica-limite input.campo-moeda, .form-cartao-credito input.campo-moeda {
+  width:100%; min-height:42px; padding:9px 11px; border:1px solid #dedbd1;
+  border-radius:9px; color:#213d38; background:#fff; font:inherit;
+}
+input.campo-moeda[aria-invalid="true"] { border-color:#be5248; outline-color:#be5248; }
+.erro-teto-campo { display:block; margin-top:5px; color:#ac3a31; font-size:11px; line-height:1.4; }
+.limite-padrao-rapido { display:flex; justify-content:space-between; align-items:center; gap:15px;
+  border:1px solid #cbded6; border-radius:12px; padding:14px 16px; background:#edf6f0; }
+.limite-padrao-rapido strong { display:block; color:#0d4d4d; font-size:14px; }
+.limite-padrao-rapido small { display:block; margin-top:5px; color:#526c62; font-size:12px; line-height:1.5; }
+.limite-padrao-rapido button { border:1px solid #0d4d4d; border-radius:8px;
+  background:#fff; padding:10px 15px; color:#0d4d4d; font-weight:750; cursor:pointer; white-space:nowrap; }
+.limite-padrao-rapido button:hover { background:#0d4d4d; color:#fff; }
+@media(max-width:700px) {
+  .limite-padrao-rapido { flex-direction:column; align-items:flex-start; }
+  .limite-padrao-rapido button { width:100%; }
 }
