@@ -28,6 +28,7 @@ export const obterStatusAuditoriaAdmin = () => requisitarApi('/api/v1/admin/audi
 
 export const listarEventosAuditoriaAdmin = (filtros = {}) => {
   const parametros = new URLSearchParams()
+  parametros.set('simples', '1')
   Object.entries(filtros).forEach(([chave, valor]) => {
     if (valor !== undefined && valor !== null && valor !== '') parametros.set(chave, valor)
   })
@@ -35,7 +36,7 @@ export const listarEventosAuditoriaAdmin = (filtros = {}) => {
   return requisitarApi(`/api/v1/admin/auditoria${query ? `?${query}` : ''}`)
 }
 
-export const obterEventoAuditoriaAdmin = (idEvento) =>
-  requisitarApi(`/api/v1/admin/auditoria/${encodeURIComponent(idEvento)}`)
+export const obterEventoAuditoriaAdmin = (idEvento, historico = false) =>
+  requisitarApi(`/api/v1/admin/auditoria/${encodeURIComponent(idEvento)}?simples=1${historico ? '&historico=1' : ''}`)
 
 export const urlStreamAuditoriaAdmin = () => `${API_URL}/api/v1/admin/auditoria/stream`
