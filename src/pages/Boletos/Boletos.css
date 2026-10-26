@@ -603,3 +603,8 @@
     justify-self: start;
   }
 }
+
+
+.aviso-devolucoes-boletos { display:flex; justify-content:space-between; align-items:center; gap:18px; padding:14px 18px; margin:0 0 19px; border:1px solid #d6e6dd; border-radius:12px; background:#f1f8f3; color:#3f6258; font-size:12px; line-height:1.6; }
+.aviso-devolucoes-boletos button { flex-shrink:0; border:0; background:transparent; color:#0d4d4d; text-decoration:underline; font:inherit; font-weight:800; cursor:pointer; }
+@media(max-width:700px) { .aviso-devolucoes-boletos { flex-direction:column; align-items:flex-start; } }
