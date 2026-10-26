@@ -6,6 +6,7 @@ import {
   enviarMensagemMauro,
   listarConversasMauro,
   listarMensagensMauro,
+  transcreverAudioMauro,
 } from '../../services/mauroService.js'
 import './AssistenteMauro.css'
 
@@ -114,8 +115,16 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const [pinPix, setPinPix] = useState('')
   const [processandoPix, setProcessandoPix] = useState(false)
   const [historicoMobileAberto, setHistoricoMobileAberto] = useState(false)
+  const [gravandoAudio, setGravandoAudio] = useState(false)
+  const [transcrevendoAudio, setTranscrevendoAudio] = useState(false)
+  const [textoTranscrito, setTextoTranscrito] = useState(false)
   const listaRef = useRef(null)
   const entradaRef = useRef(null)
+  const gravadorRef = useRef(null)
+  const streamAudioRef = useRef(null)
+  const partesAudioRef = useRef([])
+  const cancelarAudioRef = useRef(false)
+  const temporizadorAudioRef = useRef(null)
 
   useEffect(() => {
     let ativo = true
@@ -145,6 +154,13 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     const area = listaRef.current
     if (area) area.scrollTop = area.scrollHeight
   }, [mensagens, respondendo])
+
+  useEffect(() => () => {
+    cancelarAudioRef.current = true
+    clearTimeout(temporizadorAudioRef.current)
+    if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
+    streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
+  }, [])
 
   async function selecionarConversa(id, aindaAtivo = true) {
     setErro('')
@@ -177,6 +193,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     if (!mensagem || !conversaAtiva || respondendo) return
     setErro('')
     setTexto('')
+    setTextoTranscrito(false)
     setMensagens((atual) => [...atual, {
       id: `local-${Date.now()}`, papel: 'USUARIO', conteudo: mensagem, criada_em: new Date().toISOString(),
     }])
@@ -203,6 +220,73 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   function submeter(evento) {
     evento.preventDefault()
     enviar()
+  }
+
+  function pararFluxoDeAudio() {
+    clearTimeout(temporizadorAudioRef.current)
+    streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
+    streamAudioRef.current = null
+    gravadorRef.current = null
+    setGravandoAudio(false)
+  }
+
+  async function iniciarAudio() {
+    setErro('')
+    if (!conversaAtiva || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setErro('Este navegador não oferece gravação de áudio para o MAURO.')
+      return
+    }
+    try {
+      cancelarAudioRef.current = false
+      partesAudioRef.current = []
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamAudioRef.current = stream
+      const tipos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/ogg']
+      const mimeType = tipos.find((tipo) => MediaRecorder.isTypeSupported?.(tipo))
+      const gravador = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      gravadorRef.current = gravador
+      gravador.ondataavailable = (evento) => {
+        if (evento.data?.size) partesAudioRef.current.push(evento.data)
+      }
+      gravador.onstop = async () => {
+        const blob = new Blob(partesAudioRef.current, { type: gravador.mimeType || 'audio/webm' })
+        partesAudioRef.current = []
+        pararFluxoDeAudio()
+        if (cancelarAudioRef.current || !blob.size) return
+        setTranscrevendoAudio(true)
+        try {
+          const resultado = await transcreverAudioMauro(conversaAtiva, blob)
+          setTexto(resultado.transcricao || '')
+          setTextoTranscrito(Boolean(resultado.transcricao))
+          entradaRef.current?.focus()
+        } catch (falha) {
+          setErro(falha.message || 'Não foi possível transcrever o áudio.')
+        } finally {
+          setTranscrevendoAudio(false)
+        }
+      }
+      gravador.start()
+      setGravandoAudio(true)
+      temporizadorAudioRef.current = setTimeout(() => {
+        if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
+      }, 30000)
+    } catch (falha) {
+      pararFluxoDeAudio()
+      setErro(falha.name === 'NotAllowedError'
+        ? 'Permita o microfone no navegador para gravar uma pergunta.'
+        : 'Não consegui iniciar a gravação. Verifique o microfone e tente novamente.')
+    }
+  }
+
+  function concluirAudio() {
+    if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
+  }
+
+  function cancelarAudio() {
+    cancelarAudioRef.current = true
+    partesAudioRef.current = []
+    if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
+    pararFluxoDeAudio()
   }
 
   async function cancelarPix() {
@@ -364,14 +448,29 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
           </div>
 
           {erro && <p className="mauro-erro" role="alert">{erro}</p>}
+          {gravandoAudio && (
+            <div className="mauro-audio-status" role="status">
+              <span><i /> Gravando áudio · até 30 segundos</span>
+              <button type="button" onClick={concluirAudio}>Concluir gravação</button>
+              <button type="button" onClick={cancelarAudio}>Cancelar</button>
+            </div>
+          )}
+          {transcrevendoAudio && <p className="mauro-audio-status" role="status">Transcrevendo no backend do Arkhé…</p>}
+          {textoTranscrito && <p className="mauro-audio-revisao" role="status">Revise a transcrição no campo de texto antes de enviar ao MAURO.</p>}
           <form className="mauro-compositor" onSubmit={submeter}>
             <label className="visualmente-oculto" htmlFor="mauro-pergunta">Escreva sua pergunta para o MAURO</label>
             <textarea ref={entradaRef} id="mauro-pergunta" value={texto} maxLength={2000}
               placeholder="Pergunte sobre sua conta…" onChange={(evento) => setTexto(evento.target.value)} rows={1} />
+            <button type="button" className={`mauro-microfone ${gravandoAudio ? 'gravando' : ''}`}
+              onClick={gravandoAudio ? concluirAudio : iniciarAudio}
+              disabled={respondendo || carregando || transcrevendoAudio}
+              aria-label={gravandoAudio ? 'Concluir gravação de áudio' : 'Gravar pergunta por áudio'}>
+              <span aria-hidden="true">{gravandoAudio ? '■' : '🎙'}</span>
+            </button>
             <button type="submit" disabled={!texto.trim() || respondendo || carregando} aria-label="Enviar mensagem">
               {respondendo ? <span className="mauro-enviando" /> : <span aria-hidden="true">↑</span>}
             </button>
-            <small>O MAURO consulta sua conta ativa e pode preparar Pix. Só envia após sua confirmação explícita e validação segura do PIN.</small>
+            <small>O áudio é transcrito pelo backend Gemini e não é salvo. Revise o texto antes de enviar. O MAURO consulta sua conta ativa; Pix só é enviado após sua confirmação e PIN.</small>
           </form>
         </div>
       </section>
