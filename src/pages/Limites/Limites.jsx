@@ -359,7 +359,7 @@ export default function Limites() {
               </div>
             })}
             <div className="ajuste-limite-linha">
-              <div><strong>Total de transferências e pagamentos no período</strong>
+              <div><strong>Teto total de movimentações no período</strong>
                 <small>Máximo bancário: {moeda(configuracaoPeriodoConta.limite_acumulado_banco)}</small></div>
               <label>Meu máximo total no período (R$)
                 <input type="number" min="0.01" step="0.01" max={configuracaoPeriodoConta.limite_acumulado_banco ?? undefined}
