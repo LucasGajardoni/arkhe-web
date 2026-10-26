@@ -98,12 +98,14 @@ function ModalDetalhesMovimentacao({ item, fechar, atualizar }) {
             <AcoesComprovante idMovimentacao={item.id_movimentacao} />
           )}
 
+          {item.status_operacao === 'CONCLUIDO' && meta.entrada && item.pode_devolver && <p className="aviso-devolucao-extrato">Esta entrada permite devolução integral. O sistema verifica saldo e limites antes de concluir.</p>}
+          {item.status_operacao === 'CONCLUIDO' && !meta.entrada && !item.pode_estornar_boleto && <p className="aviso-devolucao-extrato">Você enviou este pagamento. Para receber de volta, solicite a devolução ao recebedor; não é possível retirar dinheiro de outra conta pelo seu extrato.</p>}
           <footer>
             {perfil.tipoConta === 'PJ' && item.origem === 'folha_pagamento' && item.id_folha && (
               <button className="botao botao-secundario" type="button" onClick={() => navigate(`/dashboard/folha?folha=${encodeURIComponent(item.id_folha)}`)}>Ver folha</button>
             )}
-            {item.pode_devolver && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_devolucao') }}>Devolver pagamento</button>}
-            {item.pode_estornar_boleto && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_estorno') }}>Estornar pagamento</button>}
+            {item.pode_devolver && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_devolucao') }}>Devolver valor recebido</button>}
+            {item.pode_estornar_boleto && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_estorno') }}>Estornar boleto (admin)</button>}
             <button className="botao botao-secundario" type="button" onClick={fechar}>Concluir</button>
           </footer>
         </div>
@@ -112,8 +114,8 @@ function ModalDetalhesMovimentacao({ item, fechar, atualizar }) {
           <div className="fundo-modal-perfil" role="presentation">
             <section className="modal-perfil confirmacao-estorno-extrato" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-estorno">
               <p>CONFIRMAÇÃO FINANCEIRA</p>
-              <h2 id="titulo-confirmar-estorno">{acao === 'confirmar_estorno' ? 'Estornar pagamento de boleto?' : 'Devolver pagamento?'}</h2>
-              <p>Será criada uma movimentação inversa de <strong>{moeda.format(valor)}</strong>. O saldo da conta recebedora será debitado e a movimentação original permanecerá no extrato.</p>
+              <h2 id="titulo-confirmar-estorno">{acao === 'confirmar_estorno' ? 'Estornar boleto como administrador?' : 'Devolver integralmente este valor recebido?'}</h2>
+              <p>Você está confirmando a devolução integral de <strong>{moeda.format(valor)}</strong>. O Arkhé criará uma movimentação inversa, debitará a conta que recebeu o pagamento original e manterá o lançamento no extrato. O backend valida saldo, limites e autorização.</p>
               <label className="motivo-estorno-boleto">Motivo
                 <textarea value={motivo} onChange={(evento) => setMotivo(evento.target.value)} maxLength={500} minLength={5} required placeholder="Informe o motivo da devolução." />
               </label>
@@ -187,7 +189,7 @@ export default function Extrato() {
         {erroSessao && <p className="mensagem-sessao-dashboard" role="alert">{erroSessao}</p>}
 
         <header className="cabecalho-extrato">
-          <div><p>CONTA</p><h1>Seu extrato</h1><span>Entradas e saídas da conta atual, em ordem cronológica.</span></div>
+          <div><p>CONTA</p><h1>Seu extrato</h1><span>Entradas e saídas da conta atual, em ordem cronológica.</span><p><button className="botao botao-secundario" type="button" onClick={() => navigate("/dashboard/devolucoes")}>Como funcionam devoluções e cancelamentos?</button></p></div>
           <button type="button" onClick={dados.carregar} disabled={dados.carregando}>
             {dados.carregando ? 'Atualizando...' : 'Atualizar extrato'}
           </button>
