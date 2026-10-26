@@ -8,7 +8,9 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
   const navigate = useNavigate()
   const primeiroNome = usuario?.nome?.split(' ')[0] || 'Cliente'
   const iniciais = usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'
-  const rotuloConta = descreverConta(usuario)
+  const rotuloConta = usuario?.tipoConta === 'PJ'
+    ? (proprietarioPJ(usuario) ? 'PJ · Proprietário' : 'Conta empresarial')
+    : descreverConta(usuario)
   let rotuloBoletos = 'DDA / Boletos'
 
   if (usuario?.tipoConta === 'PJ') {
@@ -48,7 +50,7 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           <button className="usuario-dashboard" type="button" aria-label={`Abrir perfil de ${usuario?.nome || 'cliente'}`} onClick={abrirPerfil}>
             <span>{iniciais}</span>
             <div>
-              <small>{rotuloConta}</small>
+              <small title={descreverConta(usuario)}>{rotuloConta}</small>
               <strong>{primeiroNome}</strong>
               {usuario?.tipoConta === 'PJ' && <small className="empresa-topo-dashboard">{usuario.nomeFantasia || usuario.razaoSocial}</small>}
             </div>
