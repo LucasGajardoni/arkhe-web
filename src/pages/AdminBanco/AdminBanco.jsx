@@ -8,11 +8,13 @@ import { encerrarSessao } from '../../services/authService.js'
 import {
   buscarUsuariosAdminBanco,
   listarOperacoesAdminBanco,
+  obterPermissaoAdminBanco,
   obterDetalheUsuarioAdminBanco,
   obterResumoAdminBanco,
 } from '../../services/adminBancoService.js'
 import './AdminBanco.css'
 import CentralAuditoria from './CentralAuditoria.jsx'
+import MauroAdmin from './MauroAdmin.jsx'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const dataHora = (valor) => {
@@ -57,6 +59,7 @@ export default function AdminBanco() {
   const [termo, setTermo] = useState('')
   const [filtros, setFiltros] = useState({ conta_id: '', tipo: 'TODOS', status: '', data_inicio: '', data_fim: '' })
   const [carregando, setCarregando] = useState(true)
+  const [adminAutorizado, setAdminAutorizado] = useState(null)
   const [buscando, setBuscando] = useState(false)
   const [erro, setErro] = useState('')
   const [perfilAberto, setPerfilAberto] = useState(false)
@@ -65,6 +68,13 @@ export default function AdminBanco() {
     setErro('')
     setCarregando(true)
     try {
+      const permissao = await obterPermissaoAdminBanco()
+      if (!permissao.autorizado) {
+        setAdminAutorizado(false)
+        setErro('Esta área é exclusiva para administradores bancários autorizados.')
+        return
+      }
+      setAdminAutorizado(true)
       const [dados, recentes] = await Promise.all([
         obterResumoAdminBanco(),
         listarOperacoesAdminBanco({ limite: 12 }),
@@ -72,6 +82,7 @@ export default function AdminBanco() {
       setResumo(dados)
       setOperacoes(recentes.operacoes || [])
     } catch (falha) {
+      setAdminAutorizado(falha.status === 401 || falha.status === 403 ? false : null)
       setErro(falha.message || 'Não foi possível carregar os dados administrativos.')
     } finally {
       setCarregando(false)
@@ -136,6 +147,14 @@ export default function AdminBanco() {
   }
 
   const statusConta = resumo?.contas?.status_proprio
+  if (!carregando && adminAutorizado !== true) return <div className="pagina-dashboard pagina-admin-banco">
+    <main className="conteudo-dashboard-largo conteudo-admin-banco">
+      <section className="cartao-admin-banco"><small>ÁREA RESTRITA</small><h1>{adminAutorizado === false ? 'Acesso administrativo necessário' : 'Autorização não confirmada'}</h1>
+        <p>O MAURO Administração e os dados bancários gerais só podem ser acessados por administradores bancários autorizados no backend.</p>
+        {erro && <p className="alerta-admin-banco erro" role="alert">{erro}</p>}
+      </section>
+    </main>
+  </div>
   return <div className="pagina-dashboard pagina-admin-banco">
     <CabecalhoDashboard usuario={perfil} secao="admin" abrirPerfil={() => setPerfilAberto(true)} sair={sair} />
     <main className="conteudo-dashboard-largo conteudo-admin-banco">
@@ -150,11 +169,13 @@ export default function AdminBanco() {
         <button className={aba === 'visao' ? 'ativo' : ''} onClick={() => setAba('visao')} type="button">Visão geral</button>
         <button className={aba === 'usuarios' ? 'ativo' : ''} onClick={() => setAba('usuarios')} type="button">Usuários e contas</button>
         <button className={aba === 'operacoes' ? 'ativo' : ''} onClick={() => setAba('operacoes')} type="button">Operações</button>
+        <button className={aba === 'mauro' ? 'ativo aba-mauro-admin' : 'aba-mauro-admin'} onClick={() => setAba('mauro')} type="button">MAURO Administração</button>
         <button className={aba === 'auditoria' ? 'ativo aba-auditoria-principal' : 'aba-auditoria-principal'} onClick={() => setAba('auditoria')} type="button">Central de Auditoria</button>
       </nav>
 
       {erro && <p className="alerta-admin-banco erro" role="alert">{erro}</p>}
       {carregando && <p className="estado-admin-banco" role="status">Consultando dados reais do banco…</p>}
+      <MauroAdmin ativo={aba === 'mauro'} />
 
       {!carregando && resumo && aba === 'visao' && <>
         <section className="grade-metricas-admin" aria-label="Indicadores do banco">

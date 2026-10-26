@@ -2,6 +2,12 @@ import { requisitarApi } from './authService.js'
 import { API_URL } from '../config/api.js'
 
 export const obterResumoAdminBanco = () => requisitarApi('/api/v1/admin/banco/resumo')
+export const obterPermissaoAdminBanco = () => requisitarApi('/api/v1/admin/banco/permissao')
+
+export const perguntarMauroAdmin = (pergunta, historico = []) => requisitarApi(
+  '/api/v1/admin/banco/assistente',
+  { method: 'POST', dados: { pergunta, historico } },
+)
 
 export const buscarUsuariosAdminBanco = (termo) =>
   requisitarApi(`/api/v1/admin/banco/usuarios?q=${encodeURIComponent(termo)}`)

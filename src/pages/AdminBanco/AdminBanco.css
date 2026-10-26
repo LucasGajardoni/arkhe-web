@@ -79,6 +79,34 @@
 .links-operacoes-admin { margin-top:16px; }
 .abas-admin-banco .aba-auditoria-principal { color:#885f18; }
 .abas-admin-banco .aba-auditoria-principal.ativo { color:#fff; background:#0d4d4d; }
+.abas-admin-banco .aba-mauro-admin { color:#155a55; }
+.abas-admin-banco .aba-mauro-admin.ativo { color:#fff; background:#0d4d4d; }
+.mauro-admin-painel { display:grid; gap:14px; padding:20px; border:1px solid #dce7dd; border-radius:16px; background:#fff; box-shadow:0 8px 28px rgba(26,44,39,.04); }
+.mauro-admin-painel[hidden] { display:none; }
+.mauro-admin-cabecalho { display:flex; align-items:center; gap:13px; padding:2px 2px 16px; border-bottom:1px solid #efede7; }
+.mauro-admin-avatar { display:grid; flex:0 0 46px; width:46px; height:46px; place-items:center; border:2px solid #e7d8ad; border-radius:50%; color:#fff; background:#0d4d4d; font-size:20px; font-weight:850; }
+.mauro-admin-cabecalho small { color:#b38a39; font-size:9px; font-weight:850; letter-spacing:.08em; }
+.mauro-admin-cabecalho h2 { margin:3px 0; color:#0d4d4d; font-size:20px; }
+.mauro-admin-cabecalho p { margin:0; color:#79766b; font-size:11px; }
+.mauro-admin-fonte { display:flex; align-items:center; gap:7px; margin-left:auto; color:#66756a; font-size:10px; font-weight:750; }
+.mauro-admin-fonte i { width:8px; height:8px; border-radius:50%; background:#39a06d; box-shadow:0 0 0 4px #39a06d1d; }
+.mauro-admin-conversa { display:flex; flex-direction:column; gap:12px; min-height:280px; max-height:min(52vh,540px); overflow:auto; padding:4px 2px; }
+.mauro-admin-mensagem { width:fit-content; max-width:min(760px,88%); padding:12px 15px; border:1px solid #e8e6de; border-radius:13px; background:#f8f8f3; }
+.mauro-admin-mensagem.do-admin { align-self:flex-end; border-color:#d1e4d8; background:#edf5ee; }
+.mauro-admin-mensagem small { color:#9a824b; font-size:9px; font-weight:850; text-transform:uppercase; letter-spacing:.06em; }
+.mauro-admin-mensagem p { margin:5px 0 0; color:#40564d; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.mauro-admin-mensagem.estado-digitando p { color:#827b6b; }
+.mauro-admin-atualizado { margin:-8px 0 0; color:#928b7d; font-size:10px; text-align:right; }
+.mauro-admin-erro { margin:0; padding:10px 12px; border-radius:8px; color:#8b2424; background:#fff5f4; font-size:11px; }
+.mauro-admin-sugestoes { display:flex; flex-wrap:wrap; gap:7px; }
+.mauro-admin-sugestoes button { padding:8px 10px; border:1px solid #dce6dc; border-radius:20px; color:#31594c; background:#fbfcf8; font-size:10px; font-weight:700; cursor:pointer; }
+.mauro-admin-sugestoes button:disabled { opacity:.55; cursor:wait; }
+.mauro-admin-form { display:flex; align-items:flex-end; gap:9px; }
+.mauro-admin-form textarea { flex:1; min-height:48px; max-height:120px; resize:vertical; padding:12px 13px; border:1px solid #dcd9cf; border-radius:10px; color:#344b44; background:#fff; font:inherit; font-size:12px; }
+.mauro-admin-form button { min-width:92px; min-height:44px; padding:10px 14px; border:0; border-radius:9px; color:#fff; background:#0d4d4d; font-size:12px; font-weight:800; cursor:pointer; }
+.mauro-admin-form button:disabled { opacity:.55; cursor:not-allowed; }
+.mauro-admin-nota { margin:0; color:#8a8578; font-size:10px; line-height:1.5; }
+.visualmente-oculto { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; clip-path:inset(50%); }
 .atalho-central-auditoria { width:100%; display:grid; grid-template-columns:1fr auto; gap:6px 15px; align-items:center; margin-top:14px; padding:18px 20px; border:1px solid #cbded2; border-radius:14px; background:linear-gradient(120deg,#edf5ee,#fff); color:#174b41; text-align:left; cursor:pointer; }
 .atalho-central-auditoria span { font-size:16px; font-weight:850; }
 .atalho-central-auditoria small { grid-column:1; color:#777568; font-size:11px; }
@@ -138,4 +166,4 @@
 .snapshots-auditoria pre { max-height:240px; overflow:auto; margin:0; color:#55675e; font:10px/1.5 Consolas,monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:1000px) { .grade-painel-admin { grid-template-columns:1fr; } .filtros-operacoes-admin { grid-template-columns:repeat(3,minmax(120px,1fr)); } .atalhos-config-admin { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:1000px) { .filtros-auditoria { grid-template-columns:repeat(3,minmax(110px,1fr)); } .indicadores-auditoria { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:650px) { .conteudo-admin-banco { padding-top:24px; } .topo-admin-banco { align-items:stretch; flex-direction:column; } .acoes-topo-admin { justify-content:space-between; } .grade-metricas-admin { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .metrica-admin-banco { min-height:110px; padding:14px; } .faixa-status-admin { grid-template-columns:1fr; } .abas-admin-banco { width:100%; overflow:auto; } .abas-admin-banco button { flex:1; white-space:nowrap; padding:10px 9px; font-size:11px; } .cartao-admin-banco { padding:16px; } .filtros-operacoes-admin { grid-template-columns:1fr 1fr; } .lista-usuarios-admin>button { align-items:flex-start; flex-direction:column; } .busca-usuario-admin>div { flex-direction:column; } .cabecalho-central-auditoria { align-items:flex-start; flex-direction:column; padding:17px; } .estado-live-auditoria { width:100%; } .indicadores-auditoria { grid-template-columns:1fr 1fr; } .filtros-auditoria { grid-template-columns:1fr 1fr; } .linha-feed-auditoria { grid-template-columns:9px minmax(0,1fr) auto 12px; gap:8px; padding:13px 11px; } .linha-feed-valor { display:none; } .linha-feed-auditoria time { font-size:9px; } .detalhe-auditoria-grade,.snapshots-auditoria { grid-template-columns:1fr; } .modal-auditoria-fundo { padding:9px; } .modal-auditoria { max-height:95vh; padding:16px; } }
+@media(max-width:650px) { .conteudo-admin-banco { padding-top:24px; } .topo-admin-banco { align-items:stretch; flex-direction:column; } .acoes-topo-admin { justify-content:space-between; } .grade-metricas-admin { grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; } .metrica-admin-banco { min-height:110px; padding:14px; } .faixa-status-admin { grid-template-columns:1fr; } .abas-admin-banco { width:100%; overflow:auto; } .abas-admin-banco button { flex:1; white-space:nowrap; padding:10px 9px; font-size:11px; } .cartao-admin-banco { padding:16px; } .filtros-operacoes-admin { grid-template-columns:1fr 1fr; } .lista-usuarios-admin>button { align-items:flex-start; flex-direction:column; } .busca-usuario-admin>div { flex-direction:column; } .cabecalho-central-auditoria { align-items:flex-start; flex-direction:column; padding:17px; } .estado-live-auditoria { width:100%; } .indicadores-auditoria { grid-template-columns:1fr 1fr; } .filtros-auditoria { grid-template-columns:1fr 1fr; } .linha-feed-auditoria { grid-template-columns:9px minmax(0,1fr) auto 12px; gap:8px; padding:13px 11px; } .linha-feed-valor { display:none; } .linha-feed-auditoria time { font-size:9px; } .detalhe-auditoria-grade,.snapshots-auditoria { grid-template-columns:1fr; } .modal-auditoria-fundo { padding:9px; } .modal-auditoria { max-height:95vh; padding:16px; } .mauro-admin-cabecalho { align-items:flex-start; flex-wrap:wrap; } .mauro-admin-fonte { width:100%; margin-left:59px; } .mauro-admin-painel { padding:14px; } .mauro-admin-mensagem { max-width:96%; } .mauro-admin-form { align-items:stretch; flex-direction:column; } .mauro-admin-form button { align-self:flex-end; } }
