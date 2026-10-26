@@ -675,22 +675,33 @@ export default function ModalPagamentoPix({ usuario, fechar, aoConcluir }) {
     )
   } else {
     conteudo = (
-      <div className="sucesso-pagamento-pix" role="status">
-        <span>✓</span>
+      <div className="sucesso-pagamento-pix sucesso-pagamento-pix-confirmado" role="status">
+        <span className="icone-sucesso-pix" aria-hidden="true">✓</span>
         <h3>Pix enviado com sucesso</h3>
-        <strong>{moeda.format(valorSucesso)}</strong>
-        {recebedorSucesso && <p>{recebedorSucesso}</p>}
-        <AcoesComprovante idMovimentacao={idMovimentacao} />
-        <button className="botao botao-principal" type="button" onClick={fechar}>Concluir</button>
+        <p className="subtitulo-sucesso-pix">Sua transferência foi concluída.</p>
+        <div className="valor-sucesso-pix">
+          <span>VALOR ENVIADO</span>
+          <strong>{moeda.format(valorSucesso)}</strong>
+        </div>
+        {recebedorSucesso && (
+          <div className="destinatario-sucesso-pix">
+            <span>Enviado para</span>
+            <strong>{recebedorSucesso}</strong>
+          </div>
+        )}
+        <div className="acoes-sucesso-pix">
+          <AcoesComprovante idMovimentacao={idMovimentacao} />
+          <button className="botao botao-principal botao-concluir-pix" type="button" onClick={fechar}>Concluir</button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="fundo-modal-perfil" role="presentation" onMouseDown={fecharAoClicarFora}>
-      <section ref={modalRef} className="modal-perfil modal-chave-pix modal-pagamento-pix" role="dialog" aria-modal="true" aria-labelledby="titulo-pagamento-pix" tabIndex="-1">
+      <section ref={modalRef} className={`modal-perfil modal-chave-pix modal-pagamento-pix${etapa === 'sucesso' ? ' etapa-sucesso' : ''}`} role="dialog" aria-modal="true" aria-labelledby="titulo-pagamento-pix" tabIndex="-1">
         <header>
-          <div><p>PAGAR COM PIX</p><h2 id="titulo-pagamento-pix">{titulo}</h2><span>O pagamento só acontece depois da sua confirmação.</span></div>
+          <div><p>{etapa === 'sucesso' ? 'PAGAMENTO CONFIRMADO' : 'PAGAR COM PIX'}</p><h2 id="titulo-pagamento-pix">{titulo}</h2>{etapa !== 'sucesso' && <span>O pagamento só acontece depois da sua confirmação.</span>}</div>
           <button type="button" disabled={processando} onClick={fechar} aria-label="Fechar modal">×</button>
         </header>
         {!['sucesso', 'agendado', 'recorrencia_criada'].includes(etapa) && (
