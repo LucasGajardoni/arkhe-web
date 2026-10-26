@@ -162,6 +162,7 @@ export default function AdminBanco() {
         <div><p>CONTROLE INTERNO · BANCO ARKHÉ</p><h1>Painel administrativo</h1>
           <span>Indicadores e operações consultados diretamente no Firebird.</span></div>
         <div className="acoes-topo-admin"><span>Usuário administrador #{perfil?.idUsuario || '—'}</span>
+          <button className="botao-atualizar-admin" type="button" onClick={() => navigate("/dashboard/estornos")}>Histórico geral de estornos</button>
           <button className="botao-atualizar-admin" type="button" onClick={carregarPainel} disabled={carregando}>{carregando ? 'Atualizando…' : 'Atualizar dados'}</button></div>
       </header>
 
