@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   criarConversaMauro,
+  cancelarPropostaPixMauro,
+  confirmarPropostaPixMauro,
   enviarMensagemMauro,
   listarConversasMauro,
   listarMensagensMauro,
@@ -11,8 +13,18 @@ const sugestoes = [
   'Quanto tenho de saldo?',
   'Quais foram minhas últimas movimentações?',
   'Quanto gastei este mês?',
-  'Tenho pagamentos agendados?',
+  'Mauro, quero fazer um Pix.',
 ]
+
+const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+function rotuloStatusPix(status) {
+  return ({
+    COLETANDO: 'Faltam dados', PREPARADA: 'Aguardando sua confirmação',
+    EXECUTADA: 'Pix enviado', CANCELADA: 'Cancelada', EXPIRADA: 'Expirada',
+    RECUSADA: 'Recusada', ALTERADA: 'Substituída por uma nova proposta',
+  })[status] || status
+}
 
 function horaMensagem(valor) {
   if (!valor) return ''
@@ -97,6 +109,10 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const [carregando, setCarregando] = useState(true)
   const [respondendo, setRespondendo] = useState(false)
   const [erro, setErro] = useState('')
+  const [propostaPix, setPropostaPix] = useState(null)
+  const [mostrarConfirmacaoPix, setMostrarConfirmacaoPix] = useState(false)
+  const [pinPix, setPinPix] = useState('')
+  const [processandoPix, setProcessandoPix] = useState(false)
   const [historicoMobileAberto, setHistoricoMobileAberto] = useState(false)
   const listaRef = useRef(null)
   const entradaRef = useRef(null)
@@ -136,6 +152,9 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     if (!aindaAtivo) return
     setConversaAtiva(id)
     setMensagens(resultado.mensagens || [])
+    setPropostaPix(resultado.proposta_pix || null)
+    setMostrarConfirmacaoPix(false)
+    setPinPix('')
     setHistoricoMobileAberto(false)
   }
 
@@ -147,6 +166,9 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     setConversas((atual) => [nova, ...atual])
     setConversaAtiva(nova.id)
     setMensagens([])
+    setPropostaPix(null)
+    setMostrarConfirmacaoPix(false)
+    setPinPix('')
     setHistoricoMobileAberto(false)
   }
 
@@ -162,6 +184,9 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     try {
       const resultado = await enviarMensagemMauro(conversaAtiva, mensagem)
       setMensagens((atual) => [...atual, resultado.mensagem])
+      if (resultado.proposta_pix) setPropostaPix(resultado.proposta_pix)
+      setMostrarConfirmacaoPix(false)
+      setPinPix('')
       setConversas((atual) => atual.map((item) => item.id === conversaAtiva
         ? { ...item, titulo: item.titulo === 'Conversa com MAURO' ? mensagem.slice(0, 70) : item.titulo, ultima_mensagem: resultado.mensagem.conteudo }
         : item))
@@ -178,6 +203,51 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   function submeter(evento) {
     evento.preventDefault()
     enviar()
+  }
+
+  async function cancelarPix() {
+    if (!propostaPix || processandoPix) return
+    setProcessandoPix(true)
+    setErro('')
+    try {
+      const resultado = await cancelarPropostaPixMauro(conversaAtiva, propostaPix.id)
+      setPropostaPix(resultado.proposta_pix || null)
+      setMostrarConfirmacaoPix(false)
+      setPinPix('')
+      setMensagens((atuais) => [...atuais, {
+        id: `pix-cancelado-${Date.now()}`, papel: 'ASSISTENTE',
+        conteudo: resultado.mensagem || 'Proposta cancelada. Nenhum Pix foi enviado.',
+        criada_em: new Date().toISOString(),
+      }])
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível cancelar a proposta.')
+      if (falha.dados?.proposta_pix) setPropostaPix(falha.dados.proposta_pix)
+    } finally {
+      setProcessandoPix(false)
+    }
+  }
+
+  async function confirmarPix(evento) {
+    evento.preventDefault()
+    if (!propostaPix || processandoPix || !/^\d{6}$/.test(pinPix)) return
+    setProcessandoPix(true)
+    setErro('')
+    try {
+      const resultado = await confirmarPropostaPixMauro(conversaAtiva, propostaPix.id, pinPix)
+      setPropostaPix(resultado.proposta_pix || null)
+      setMostrarConfirmacaoPix(false)
+      setMensagens((atuais) => [...atuais, {
+        id: `pix-resultado-${Date.now()}`, papel: 'ASSISTENTE',
+        conteudo: resultado.mensagem || 'A solicitação foi processada.',
+        criada_em: new Date().toISOString(),
+      }])
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível confirmar o Pix.')
+      if (falha.dados?.proposta_pix) setPropostaPix(falha.dados.proposta_pix)
+    } finally {
+      setPinPix('')
+      setProcessandoPix(false)
+    }
   }
 
   function tratarTecla(evento) {
@@ -257,6 +327,39 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
                 <div className="mauro-balao"><MensagemFormatada texto={item.conteudo} /><time>{horaMensagem(item.criada_em)}</time></div>
               </article>
             ))}
+            {propostaPix && (
+              <section className={`mauro-pix-proposta status-${String(propostaPix.status || '').toLowerCase()}`} aria-label="Resumo da proposta de Pix">
+                <div className="mauro-pix-proposta-topo">
+                  <span aria-hidden="true">↗</span>
+                  <div><small>PROPOSTA PIX</small><b>{rotuloStatusPix(propostaPix.status)}</b></div>
+                </div>
+                <dl>
+                  <div><dt>Valor</dt><dd>{propostaPix.valor != null ? moeda.format(Number(propostaPix.valor)) : 'A informar'}</dd></div>
+                  <div><dt>Origem</dt><dd>{propostaPix.origem || 'Conta ativa'}</dd></div>
+                  <div><dt>Destinatário</dt><dd>{propostaPix.destinatario || 'A informar'}{propostaPix.conta_destino ? <small>{propostaPix.conta_destino}</small> : null}</dd></div>
+                  {propostaPix.expira_em && propostaPix.status === 'PREPARADA' && <div><dt>Validade</dt><dd>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(propostaPix.expira_em))}</dd></div>}
+                  {propostaPix.id_movimentacao && <div><dt>Movimentação</dt><dd>#{propostaPix.id_movimentacao}</dd></div>}
+                </dl>
+                {propostaPix.status === 'PREPARADA' && (
+                  <div className="mauro-pix-acoes">
+                    {!mostrarConfirmacaoPix ? (
+                      <button type="button" className="mauro-pix-confirmar" disabled={processandoPix} onClick={() => setMostrarConfirmacaoPix(true)}>Confirmar Pix</button>
+                    ) : (
+                      <form className="mauro-pix-pin" onSubmit={confirmarPix}>
+                        <label htmlFor="mauro-pin-pix">PIN pessoal para autorizar</label>
+                        <input id="mauro-pin-pix" type="password" inputMode="numeric" autoComplete="off" maxLength={6} pattern="[0-9]{6}" value={pinPix} onChange={(evento) => setPinPix(evento.target.value.replace(/\D/g, '').slice(0, 6))} aria-describedby="mauro-pin-aviso" />
+                        <small id="mauro-pin-aviso">O PIN é enviado diretamente ao Flask e não entra no chat nem no histórico.</small>
+                        <button type="submit" className="mauro-pix-confirmar" disabled={processandoPix || pinPix.length !== 6}>{processandoPix ? 'Validando…' : 'Autorizar e enviar Pix'}</button>
+                      </form>
+                    )}
+                    <button type="button" className="mauro-pix-cancelar" disabled={processandoPix} onClick={cancelarPix}>Cancelar</button>
+                  </div>
+                )}
+                {propostaPix.status === 'COLETANDO' && <button type="button" className="mauro-pix-cancelar sozinho" disabled={processandoPix} onClick={cancelarPix}>Cancelar proposta</button>}
+                {propostaPix.motivo && <p className="mauro-pix-motivo">{propostaPix.motivo}</p>}
+                <p className="mauro-pix-seguranca">Nenhum valor é reservado. Saldo, acesso e limites serão verificados novamente no momento da autorização.</p>
+              </section>
+            )}
             {respondendo && <div className="mauro-digitando"><span /><span /><span /><small>MAURO está pensando</small></div>}
           </div>
 
@@ -268,7 +371,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
             <button type="submit" disabled={!texto.trim() || respondendo || carregando} aria-label="Enviar mensagem">
               {respondendo ? <span className="mauro-enviando" /> : <span aria-hidden="true">↑</span>}
             </button>
-            <small>O MAURO consulta sua conta ativa. Ele não realiza operações financeiras.</small>
+            <small>O MAURO consulta sua conta ativa e pode preparar Pix. Só envia após sua confirmação explícita e validação segura do PIN.</small>
           </form>
         </div>
       </section>

@@ -9,3 +9,13 @@ export const enviarMensagemMauro = (id, mensagem) => requisitarApi(
   `${base}/${encodeURIComponent(id)}/mensagens`,
   { method: 'POST', dados: { mensagem } },
 )
+
+export const cancelarPropostaPixMauro = (idConversa, idProposta) => requisitarApi(
+  `${base}/${encodeURIComponent(idConversa)}/pix/propostas/${encodeURIComponent(idProposta)}/cancelar`,
+  { method: 'POST', dados: {} },
+)
+
+export const confirmarPropostaPixMauro = (idConversa, idProposta, pin) => requisitarApi(
+  `${base}/${encodeURIComponent(idConversa)}/pix/propostas/${encodeURIComponent(idProposta)}/confirmar`,
+  { method: 'POST', dados: { pin } },
+)

@@ -86,6 +86,33 @@
 .mauro-balao strong { color: #183e39; font-weight: 750; }
 .mauro-balao em { font-style: italic; }
 .mauro-balao time { display: block; margin-top: 4px; color: #8b8a7e; font-size: 8px; text-align: right; }
+.mauro-pix-proposta { width: min(480px, 92%); align-self: flex-start; margin: 0 0 2px 35px; padding: 16px; border: 1px solid #d9e4d9; border-radius: 16px; color: #23403a; background: linear-gradient(145deg, #fff, #f2f7f0); box-shadow: 0 8px 22px rgba(21, 65, 54, .08); }
+.mauro-pix-proposta-topo { display: flex; align-items: center; gap: 10px; padding-bottom: 11px; border-bottom: 1px solid #e4ebe2; }
+.mauro-pix-proposta-topo > span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #e7d080; background: #12534c; font-size: 19px; }
+.mauro-pix-proposta-topo div { display: grid; gap: 3px; }
+.mauro-pix-proposta-topo small { color: #268177; font-size: 8px; font-weight: 800; letter-spacing: 1.4px; }
+.mauro-pix-proposta-topo b { color: #183f39; font-size: 12px; }
+.mauro-pix-proposta dl { display: grid; gap: 8px; margin: 13px 0 0; }
+.mauro-pix-proposta dl > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: start; }
+.mauro-pix-proposta dt { color: #7b8479; font-size: 10px; }
+.mauro-pix-proposta dd { display: grid; gap: 2px; margin: 0; color: #25443e; font-size: 11px; font-weight: 700; overflow-wrap: anywhere; }
+.mauro-pix-proposta dd:first-letter { text-transform: uppercase; }
+.mauro-pix-proposta dd small { color: #7b8479; font-size: 9px; font-weight: 500; }
+.mauro-pix-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.mauro-pix-acoes button,.mauro-pix-cancelar.sozinho { min-height: 38px; padding: 0 12px; border-radius: 10px; cursor: pointer; font: inherit; font-size: 10px; font-weight: 750; }
+.mauro-pix-confirmar { color: #f6e8ac; background: #12534c; }
+.mauro-pix-confirmar:disabled,.mauro-pix-cancelar:disabled { cursor: wait; opacity: .58; }
+.mauro-pix-cancelar { color: #725b52; background: #f5ebe6; }
+.mauro-pix-cancelar.sozinho { margin-top: 12px; }
+.mauro-pix-pin { display: grid; min-width: min(250px, 100%); gap: 6px; }
+.mauro-pix-pin label { color: #5d6c62; font-size: 9px; font-weight: 700; }
+.mauro-pix-pin input { width: 130px; padding: 9px 10px; border: 1px solid #ccd9cf; border-radius: 8px; color: #173f3a; background: white; font-size: 14px; letter-spacing: 4px; }
+.mauro-pix-pin small,.mauro-pix-seguranca,.mauro-pix-motivo { color: #7c857b; font-size: 9px; line-height: 1.5; }
+.mauro-pix-pin small { max-width: 260px; }
+.mauro-pix-seguranca { margin: 13px 0 0; padding-top: 10px; border-top: 1px solid #e4ebe2; }
+.mauro-pix-motivo { margin: 10px 0 0; color: #8b463b; }
+.mauro-pix-proposta.status-executada { border-color: #c9e1cf; background: #f1f8f0; }
+.mauro-pix-proposta.status-cancelada,.mauro-pix-proposta.status-expirada,.mauro-pix-proposta.status-recusada,.mauro-pix-proposta.status-alterada { background: #f7f5f0; }
 .mauro-digitando { display: flex; align-items: center; gap: 4px; align-self: flex-start; padding: 10px 12px 10px 36px; color: #858479; font-size: 9px; }
 .mauro-digitando span { width: 5px; height: 5px; border-radius: 50%; background: #29867d; animation: mauro-pulsar 1s infinite ease-in-out; }
 .mauro-digitando span:nth-child(2) { animation-delay: .14s; }
@@ -120,6 +147,10 @@
   .mauro-sugestoes { grid-template-columns: 1fr; gap: 7px; margin-top: 18px; }
   .mauro-sugestoes button { min-height: 44px; font-size: 11px; }
   .mauro-mensagem { max-width: 94%; }
+  .mauro-pix-proposta { width: calc(100% - 34px); margin-left: 34px; padding: 13px; }
+  .mauro-pix-proposta dl > div { grid-template-columns: 78px minmax(0, 1fr); }
+  .mauro-pix-acoes { align-items: stretch; }
+  .mauro-pix-pin { flex-basis: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
