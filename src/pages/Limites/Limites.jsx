@@ -32,7 +32,7 @@ const OPERACAO_LABEL = {
   PAGAMENTO: 'Pagamentos',
 }
 const moeda = (valor) => valor == null
-  ? 'Sem limite adicional'
+  ? 'Sem teto configurado'
   : Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 function montarFormulario(politicas, tipoConta, periodo) {
@@ -100,6 +100,8 @@ export default function Limites() {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [revisao, setRevisao] = useState(0)
+  const [secaoAtiva, setSecaoAtiva] = useState('resumo')
+  const [abaAdmin, setAbaAdmin] = useState('politicas')
 
   useEffect(() => {
     if (!perfil?.idConta) return undefined
@@ -274,25 +276,32 @@ export default function Limites() {
       <header className="topo-limites">
         <div>
           <p className="rotulo-secao">PROTEÇÃO DA CONTA</p>
-          <h1>Limites de movimentação</h1>
-          <p>Consulte os limites operacionais da conta. O crédito do cartão é administrado separadamente.</p>
+          <h1>Limites da minha conta</h1>
+          <p>Veja seus limites, quanto já utilizou e quanto resta. Ajuste seus valores pessoais sem afetar outras contas.</p>
         </div>
         {resumoAtual && <span className="tipo-conta-limites">Conta {resumoAtual.tipo_conta}</span>}
       </header>
 
       {erro && <p className="mensagem-limites erro" role="alert">{erro}</p>}
       {sucesso && <p className="mensagem-limites sucesso" role="status">{sucesso}</p>}
+      <nav className="abas-limites" aria-label="Seções de limites">
+        <button type="button" aria-current={secaoAtiva === 'resumo' ? 'page' : undefined} onClick={() => setSecaoAtiva('resumo')}>Minha situação</button>
+        {resumoAtual?.pode_configurar_conta && <button type="button" aria-current={secaoAtiva === 'pessoal' ? 'page' : undefined} onClick={() => setSecaoAtiva('pessoal')}>Ajustar meus limites</button>}
+        {administradorAtual && <button type="button" aria-current={secaoAtiva === 'administracao' ? 'page' : undefined} onClick={() => setSecaoAtiva('administracao')}>Administração do banco</button>}
+      </nav>
 
-      {contaAtualCarregando ? <div className="estado-limites">Carregando limites da conta…</div> : atualDaConta ? <>
+      {secaoAtiva === 'resumo' && (contaAtualCarregando ? <div className="estado-limites">Carregando limites da conta…</div> : atualDaConta ? <>
         <section className="resumo-limites" aria-label="Resumo dos limites atuais">
           <div className="resumo-limites-titulo">
             <span className="icone-limites"><Icone nome="transferir" tamanho={22} /></span>
             <div><p>PERÍODO ATUAL</p><h2>{PERIODOS_LABEL[atualDaConta.periodo]}</h2></div>
           </div>
           <div className="metricas-limites">
-            <article><span>Utilizado</span><strong>{moeda(atualDaConta.utilizado)}</strong></article>
-            <article><span>Disponível no período</span><strong>{moeda(atualDaConta.disponivel_periodo)}</strong></article>
+            <article><span>Já movimentado no período</span><strong>{moeda(atualDaConta.utilizado)}</strong></article>
+            <article><span>Teto total do período</span><strong>{moeda(atualDaConta.limite_acumulado)}</strong></article>
+            <article><span>Ainda disponível pelo limite</span><strong>{moeda(atualDaConta.disponivel_periodo)}</strong></article>
           </div>
+          {atualDaConta.limite_acumulado == null && <p className="explicacao-sem-teto">Não há teto acumulado configurado neste horário. Isso não significa saldo ilimitado: ainda valem saldo, autenticação e demais regras de segurança.</p>}
           <small>Horário de São Paulo · Período válido até {new Date(`${atualDaConta.fim}-03:00`).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
         </section>
 
@@ -300,8 +309,8 @@ export default function Limites() {
           {atualDaConta.operacoes?.map((item) => <article className="cartao-operacao-limite" key={item.operacao}>
             <div className="titulo-operacao-limite"><span><Icone nome={item.operacao === 'TRANSFERENCIA' ? 'transferir' : 'boleto'} tamanho={19} /></span><h2>{OPERACAO_LABEL[item.operacao]}</h2></div>
             <dl>
-              <div><dt>Máximo por operação</dt><dd>{moeda(item.limite_por_operacao)}</dd></div>
-              <div><dt>Disponível agora</dt><dd>{moeda(item.disponivel_agora)}</dd></div>
+              <div><dt>Teto por operação</dt><dd>{moeda(item.limite_por_operacao)}</dd></div>
+              <div><dt>Posso movimentar agora pelo limite</dt><dd>{moeda(item.disponivel_agora)}</dd></div>
               {item.operacao === 'TRANSFERENCIA' && item.limite_por_operacao_favorito != null && (
                 <>
                   <div><dt>Máximo para destinatários favoritos</dt><dd>{moeda(item.limite_por_operacao_favorito)}</dd></div>
@@ -309,14 +318,15 @@ export default function Limites() {
                 </>
               )}
             </dl>
-            {!item.configurado && <p>Não há um teto adicional configurado para este período.</p>}
+            {!item.configurado && <p>Sem teto operacional cadastrado. O titular pode criar uma restrição pessoal nesta conta.</p>}
           </article>)}
         </section>
-      </> : !erro && <div className="estado-limites">Não foi possível encontrar a conta ativa.</div>}
+        {resumoAtual?.pode_configurar_conta && <div className="acoes-resumo-limites"><button type="button" className="botao botao-principal" onClick={() => setSecaoAtiva('pessoal')}>Quero ajustar meus limites</button></div>}
+      </> : !erro && <div className="estado-limites">Não foi possível encontrar a conta ativa.</div>)}
 
-      {resumo?.pode_configurar_conta && configuracaoPeriodoConta && formularioConta && <section className="admin-limites limites-da-conta">
+      {secaoAtiva === 'pessoal' && resumo?.pode_configurar_conta && configuracaoPeriodoConta && formularioConta && <section className="admin-limites limites-da-conta">
         <header className="admin-limites-cabecalho">
-          <div><p className="rotulo-secao">CONFIGURAÇÃO DA CONTA {configuracaoConta.tipo_conta}</p><h2>Meus limites individuais</h2><p>Esses valores valem somente para a conta ativa e nunca podem superar o teto definido pelo banco.</p></div>
+          <div><p className="rotulo-secao">CONTA {configuracaoConta.tipo_conta}</p><h2>Escolha seus limites pessoais</h2><p>Esses valores valem somente para esta conta. Se houver um teto bancário, seu limite não pode ultrapassá-lo.</p></div>
         </header>
         <form onSubmit={salvarLimitesConta}>
           <div className="filtros-limites">
@@ -347,7 +357,7 @@ export default function Limites() {
         </form>
       </section>}
 
-      {administradorAtual && formulario && <section className="admin-limites">
+      {secaoAtiva === 'administracao' && administradorAtual && formulario && <section className="admin-limites">
         <header className="admin-limites-cabecalho">
           <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>Política geral do banco</h2><p>Define os tetos PF/PJ por horário. A autorização é validada pelo backend e é independente do papel de uma conta PJ.</p></div>
           <button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/estornos')}>Histórico de estornos</button>
