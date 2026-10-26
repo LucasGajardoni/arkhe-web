@@ -104,7 +104,7 @@ function ModalDetalhesMovimentacao({ item, fechar, atualizar }) {
             {perfil.tipoConta === 'PJ' && item.origem === 'folha_pagamento' && item.id_folha && (
               <button className="botao botao-secundario" type="button" onClick={() => navigate(`/dashboard/folha?folha=${encodeURIComponent(item.id_folha)}`)}>Ver folha</button>
             )}
-            {item.pode_devolver && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_devolucao') }}>Devolver valor recebido</button>}
+            {item.pode_devolver && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_devolucao') }}>{meta.entrada ? 'Devolver valor recebido' : 'Devolução administrativa'}</button>}
             {item.pode_estornar_boleto && item.status_operacao === 'CONCLUIDO' && <button className="botao botao-principal" type="button" onClick={() => { setErroAcao(''); setAcao('confirmar_estorno') }}>Estornar boleto (admin)</button>}
             <button className="botao botao-secundario" type="button" onClick={fechar}>Concluir</button>
           </footer>
@@ -114,7 +114,7 @@ function ModalDetalhesMovimentacao({ item, fechar, atualizar }) {
           <div className="fundo-modal-perfil" role="presentation">
             <section className="modal-perfil confirmacao-estorno-extrato" role="alertdialog" aria-modal="true" aria-labelledby="titulo-confirmar-estorno">
               <p>CONFIRMAÇÃO FINANCEIRA</p>
-              <h2 id="titulo-confirmar-estorno">{acao === 'confirmar_estorno' ? 'Estornar boleto como administrador?' : 'Devolver integralmente este valor recebido?'}</h2>
+              <h2 id="titulo-confirmar-estorno">{acao === 'confirmar_estorno' ? 'Estornar boleto como administrador?' : meta.entrada ? 'Devolver integralmente este valor recebido?' : 'Confirmar devolução administrativa?'}</h2>
               <p>Você está confirmando a devolução integral de <strong>{moeda.format(valor)}</strong>. O Arkhé criará uma movimentação inversa, debitará a conta que recebeu o pagamento original e manterá o lançamento no extrato. O backend valida saldo, limites e autorização.</p>
               <label className="motivo-estorno-boleto">Motivo
                 <textarea value={motivo} onChange={(evento) => setMotivo(evento.target.value)} maxLength={500} minLength={5} required placeholder="Informe o motivo da devolução." />
