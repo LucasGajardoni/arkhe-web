@@ -78,7 +78,13 @@
 .mauro-mini-avatar { width: 27px; height: 27px; margin-bottom: 3px; border-radius: 9px; font-size: 11px; }
 .mauro-balao { padding: 12px 14px 8px; border: 1px solid #e7e4db; border-radius: 15px 15px 15px 4px; color: #35443f; background: #fff; box-shadow: 0 3px 9px rgba(30,50,43,.035); }
 .do-usuario .mauro-balao { border-color: #d6e8df; border-radius: 15px 15px 4px 15px; color: #173b36; background: #eaf4ed; }
-.mauro-balao p { white-space: pre-wrap; font-size: 12px; line-height: 1.65; }
+.mauro-balao > p,.mauro-balao > h1,.mauro-balao > h2,.mauro-balao > h3 { margin: 0 0 7px; white-space: pre-wrap; font-size: 12px; line-height: 1.65; }
+.mauro-balao > p:last-of-type { margin-bottom: 0; }
+.mauro-balao > h1,.mauro-balao > h2,.mauro-balao > h3 { color: #173f3a; font-weight: 750; }
+.mauro-balao ul,.mauro-balao ol { display: grid; gap: 4px; margin: 0 0 8px; padding-left: 20px; font-size: 12px; line-height: 1.6; }
+.mauro-balao code { padding: 1px 4px; border-radius: 4px; color: #17524c; background: #edf2ec; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .94em; }
+.mauro-balao strong { color: #183e39; font-weight: 750; }
+.mauro-balao em { font-style: italic; }
 .mauro-balao time { display: block; margin-top: 4px; color: #8b8a7e; font-size: 8px; text-align: right; }
 .mauro-digitando { display: flex; align-items: center; gap: 4px; align-self: flex-start; padding: 10px 12px 10px 36px; color: #858479; font-size: 9px; }
 .mauro-digitando span { width: 5px; height: 5px; border-radius: 50%; background: #29867d; animation: mauro-pulsar 1s infinite ease-in-out; }

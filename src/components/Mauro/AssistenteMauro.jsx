@@ -27,6 +27,68 @@ function mensagemErro(falha, padrao) {
   return falha?.message || padrao
 }
 
+function formatarTrecho(texto, chaveBase) {
+  const partes = texto.split(/(\*\*[^*]+?\*\*|__[^_]+?__|\*[^*\n]+?\*|_[^_\n]+?_|`[^`\n]+?`)/g)
+  return partes.map((parte, indice) => {
+    const chave = `${chaveBase}-${indice}`
+    if ((parte.startsWith('**') && parte.endsWith('**')) || (parte.startsWith('__') && parte.endsWith('__'))) {
+      return <strong key={chave}>{parte.slice(2, -2)}</strong>
+    }
+    if ((parte.startsWith('*') && parte.endsWith('*')) || (parte.startsWith('_') && parte.endsWith('_'))) {
+      return <em key={chave}>{parte.slice(1, -1)}</em>
+    }
+    if (parte.startsWith('`') && parte.endsWith('`')) {
+      return <code key={chave}>{parte.slice(1, -1)}</code>
+    }
+    return parte
+  })
+}
+
+function MensagemFormatada({ texto }) {
+  const linhas = String(texto || '').split(/\r?\n/)
+  const blocos = []
+  let paragrafo = []
+  const fecharParagrafo = () => {
+    if (!paragrafo.length) return
+    blocos.push({ tipo: 'p', linhas: paragrafo })
+    paragrafo = []
+  }
+
+  for (const linha of linhas) {
+    const lista = linha.match(/^\s*[-*]\s+(.+)$/)
+    const ordenada = linha.match(/^\s*\d+[.)]\s+(.+)$/)
+    const titulo = linha.match(/^\s{0,3}(#{1,3})\s+(.+)$/)
+    if (!linha.trim()) {
+      fecharParagrafo()
+    } else if (lista || ordenada) {
+      fecharParagrafo()
+      const tipo = lista ? 'ul' : 'ol'
+      const item = (lista || ordenada)[1]
+      const anterior = blocos[blocos.length - 1]
+      if (anterior?.tipo === tipo) anterior.itens.push(item)
+      else blocos.push({ tipo, itens: [item] })
+    } else if (titulo) {
+      fecharParagrafo()
+      blocos.push({ tipo: 'h', nivel: titulo[1].length, texto: titulo[2] })
+    } else {
+      paragrafo.push(linha)
+    }
+  }
+  fecharParagrafo()
+
+  return blocos.map((bloco, indice) => {
+    if (bloco.tipo === 'ul' || bloco.tipo === 'ol') {
+      const Lista = bloco.tipo === 'ul' ? 'ul' : 'ol'
+      return <Lista key={`lista-${indice}`}>{bloco.itens.map((item, itemIndice) => <li key={itemIndice}>{formatarTrecho(item, `lista-${indice}-${itemIndice}`)}</li>)}</Lista>
+    }
+    if (bloco.tipo === 'h') {
+      const Titulo = `h${bloco.nivel}`
+      return <Titulo key={`titulo-${indice}`}>{formatarTrecho(bloco.texto, `titulo-${indice}`)}</Titulo>
+    }
+    return <p key={`paragrafo-${indice}`}>{formatarTrecho(bloco.linhas.join(' '), `paragrafo-${indice}`)}</p>
+  })
+}
+
 export default function AssistenteMauro({ fechar, tipoConta }) {
   const [conversas, setConversas] = useState([])
   const [conversaAtiva, setConversaAtiva] = useState(null)
@@ -192,7 +254,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
             {mensagens.map((item) => (
               <article key={item.id} className={`mauro-mensagem ${item.papel === 'USUARIO' ? 'do-usuario' : 'do-assistente'}`}>
                 {item.papel !== 'USUARIO' && <span className="mauro-mini-avatar">M</span>}
-                <div className="mauro-balao"><p>{item.conteudo}</p><time>{horaMensagem(item.criada_em)}</time></div>
+                <div className="mauro-balao"><MensagemFormatada texto={item.conteudo} /><time>{horaMensagem(item.criada_em)}</time></div>
               </article>
             ))}
             {respondendo && <div className="mauro-digitando"><span /><span /><span /><small>MAURO está pensando</small></div>}
