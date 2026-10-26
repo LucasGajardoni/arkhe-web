@@ -227,6 +227,7 @@ export default function Limites() {
         operacoes: Object.fromEntries(OPERACOES.map((operacao) => [operacao, {
           limite_por_operacao: formularioConta.operacoes[operacao].limite_por_operacao || null,
           limite_por_operacao_favorito: operacao === 'TRANSFERENCIA'
+            && configuracaoConta?.periodos?.find((item) => item.periodo === periodoConta)?.operacoes?.TRANSFERENCIA?.limite_por_operacao_favorito_banco != null
             ? (formularioConta.operacoes[operacao].limite_por_operacao_favorito || null)
             : null,
         }])),
@@ -378,7 +379,7 @@ export default function Limites() {
 
       {secaoAtiva === 'administracao' && administradorAtual && formulario && <section className="admin-limites">
         <header className="admin-limites-cabecalho">
-          <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>Política geral do banco</h2><p>Define os tetos PF/PJ por horário. A autorização é validada pelo backend e é independente do papel de uma conta PJ.</p></div>
+          <div><p className="rotulo-secao">ADMINISTRAÇÃO BANCÁRIA</p><h2>{abaAdmin === 'politicas' ? 'Políticas gerais PF/PJ' : abaAdmin === 'cartoes' ? 'Crédito por cartão' : 'Histórico das alterações'}</h2><p>{abaAdmin === 'politicas' ? 'Defina os tetos gerais por tipo de conta e horário.' : abaAdmin === 'cartoes' ? 'Crédito não é a mesma coisa que limite de Pix ou pagamentos.' : 'Veja as justificativas e registros das mudanças realizadas.'}</p></div>
           <button className="botao botao-secundario" type="button" onClick={() => navigate('/dashboard/estornos')}>Histórico de estornos</button>
         </header>
         <nav className="subabas-limites" aria-label="Áreas administrativas">
