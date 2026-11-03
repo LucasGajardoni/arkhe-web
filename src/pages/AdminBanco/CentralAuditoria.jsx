@@ -21,7 +21,7 @@ function DetalheLog({ evento, fechar }) {
       <div className="detalhe-auditoria-grade">
         <p><b>Data e hora</b><span>{dataHora(evento.data_hora)}</span></p>
         <p><b>Usuário</b><span>{evento.usuario || 'Não identificado'}</span></p>
-        <p><b>IP do computador</b><span>{evento.ip || 'Não informado'}</span></p>
+        <p><b>IP</b><span>{evento.ip || 'Não informado'}</span></p>
         <p><b>Tabela</b><span>{evento.tabela}</span></p>
         <p><b>ID do registro</b><span>{evento.id_registro ?? '—'}</span></p>
         <p><b>Ação</b><span>{evento.acao}</span></p>
@@ -110,7 +110,7 @@ export default function CentralAuditoria() {
     <div className="feed-auditoria">
       <div className="feed-auditoria-titulo"><h3>{historico ? 'Histórico preservado' : 'Últimos registros'}</h3><span>{eventos.length} registros</span></div>
       {carregando ? <p className="estado-admin-banco" role="status">Carregando…</p> : eventos.length === 0 ? <p className="estado-admin-banco">Nenhum registro encontrado.</p> :
-        <div className="rolagem-log-admin"><table className="tabela-log-admin"><thead><tr>{['ID log', 'Data e hora', 'Usuário', 'Tabela', 'ID registro', 'Ação', 'Valor anterior', 'Valor novo', 'IP do computador'].map((titulo) => <th key={titulo} scope="col">{titulo}</th>)}</tr></thead>
+        <div className="rolagem-log-admin"><table className="tabela-log-admin"><thead><tr>{['ID log', 'Data e hora', 'Usuário', 'Tabela', 'ID registro', 'Ação', 'Valor anterior', 'Valor novo', 'IP'].map((titulo) => <th key={titulo} scope="col">{titulo}</th>)}</tr></thead>
           <tbody>{eventos.map((evento) => <tr key={evento.id_log}>
             <td><button type="button" className="abrir-log-admin" onClick={() => abrirDetalhe(evento.id_log)} aria-label={`Abrir log ${evento.id_log}`}>{evento.id_log}</button></td>
             <td>{dataHora(evento.data_hora)}</td><td>{evento.usuario || '—'}</td><td>{evento.tabela}</td><td>{evento.id_registro ?? '—'}</td><td>{evento.acao}</td>
