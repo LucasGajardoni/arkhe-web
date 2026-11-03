@@ -4,10 +4,12 @@ import { API_URL } from '../config/api.js'
 export const obterResumoAdminBanco = () => requisitarApi('/api/v1/admin/banco/resumo')
 export const obterPermissaoAdminBanco = () => requisitarApi('/api/v1/admin/banco/permissao')
 
-export const perguntarMauroAdmin = (pergunta, historico = []) => requisitarApi(
+export const perguntarMauroAdmin = (pergunta) => requisitarApi(
   '/api/v1/admin/banco/assistente',
-  { method: 'POST', dados: { pergunta, historico } },
+  { method: 'POST', dados: { pergunta } },
 )
+
+export const obterHistoricoMauroAdmin = () => requisitarApi('/api/v1/admin/banco/assistente/mensagens')
 
 export const buscarUsuariosAdminBanco = (termo) =>
   requisitarApi(`/api/v1/admin/banco/usuarios?q=${encodeURIComponent(termo)}`)
