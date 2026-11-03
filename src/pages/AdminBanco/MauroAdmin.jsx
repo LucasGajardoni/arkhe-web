@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { perguntarMauroAdmin } from '../../services/adminBancoService.js'
+import { obterHistoricoMauroAdmin, perguntarMauroAdmin } from '../../services/adminBancoService.js'
 
 const SUGESTOES = [
   'Quantos usuários e contas existem no Arkhé?',
@@ -17,7 +17,22 @@ export default function MauroAdmin({ ativo }) {
   const [respondendo, setRespondendo] = useState(false)
   const [atualizadoEm, setAtualizadoEm] = useState('')
   const [erro, setErro] = useState('')
+  const [carregandoHistorico, setCarregandoHistorico] = useState(true)
   const listaRef = useRef(null)
+  const enviandoRef = useRef(false)
+  const ativoRef = useRef(true)
+
+  useEffect(() => {
+    ativoRef.current = true
+    obterHistoricoMauroAdmin().then((resultado) => {
+      if (ativoRef.current && resultado.mensagens?.length) setMensagens(resultado.mensagens)
+    }).catch((falha) => {
+      if (ativoRef.current) setErro(falha.message || 'Não foi possível carregar o histórico.')
+    }).finally(() => {
+      if (ativoRef.current) setCarregandoHistorico(false)
+    })
+    return () => { ativoRef.current = false }
+  }, [])
 
   useEffect(() => {
     if (ativo && listaRef.current) listaRef.current.scrollTop = listaRef.current.scrollHeight
@@ -25,8 +40,8 @@ export default function MauroAdmin({ ativo }) {
 
   async function enviar(texto = pergunta) {
     const atual = String(texto || '').trim()
-    if (!atual || respondendo) return
-    const historico = mensagens.slice(-8).map(({ papel, conteudo }) => ({ papel, conteudo }))
+    if (!atual || respondendo || carregandoHistorico || enviandoRef.current) return
+    enviandoRef.current = true
     setErro('')
     setPergunta('')
     setRespondendo(true)
@@ -34,15 +49,17 @@ export default function MauroAdmin({ ativo }) {
       id: `user-${Date.now()}`, papel: 'USUARIO', conteudo: atual,
     }])
     try {
-      const resultado = await perguntarMauroAdmin(atual, historico)
+      const resultado = await perguntarMauroAdmin(atual)
+      if (!ativoRef.current) return
       setMensagens((anteriores) => [...anteriores, {
         id: `assistant-${Date.now()}`, papel: 'ASSISTENTE', conteudo: resultado.resposta,
       }])
       setAtualizadoEm(resultado.gerado_em || '')
     } catch (falha) {
-      setErro(falha.message || 'Não foi possível consultar o MAURO Administração.')
+      if (ativoRef.current) setErro(falha.message || 'Não foi possível consultar o MAURO Administração.')
     } finally {
-      setRespondendo(false)
+      enviandoRef.current = false
+      if (ativoRef.current) setRespondendo(false)
     }
   }
 
@@ -55,6 +72,7 @@ export default function MauroAdmin({ ativo }) {
     </header>
 
     <div className="mauro-admin-conversa" ref={listaRef} aria-live="polite" aria-relevant="additions text">
+      {carregandoHistorico && <p role="status">Carregando seu histórico…</p>}
       {mensagens.map((mensagem) => <article className={`mauro-admin-mensagem ${mensagem.papel === 'USUARIO' ? 'do-admin' : 'do-mauro'}`} key={mensagem.id}>
         <small>{mensagem.papel === 'USUARIO' ? 'Você' : 'MAURO'}</small>
         <p>{mensagem.conteudo}</p>
@@ -65,13 +83,13 @@ export default function MauroAdmin({ ativo }) {
     {atualizadoEm && <p className="mauro-admin-atualizado">Última consulta: {new Date(atualizadoEm).toLocaleString('pt-BR')}</p>}
     {erro && <p className="mauro-admin-erro" role="alert">{erro}</p>}
     <div className="mauro-admin-sugestoes" aria-label="Sugestões de perguntas">
-      {SUGESTOES.map((sugestao) => <button type="button" key={sugestao} disabled={respondendo} onClick={() => enviar(sugestao)}>{sugestao}</button>)}
+      {SUGESTOES.map((sugestao) => <button type="button" key={sugestao} disabled={respondendo || carregandoHistorico} onClick={() => enviar(sugestao)}>{sugestao}</button>)}
     </div>
     <form className="mauro-admin-form" onSubmit={(evento) => { evento.preventDefault(); enviar() }}>
       <label className="visualmente-oculto" htmlFor="pergunta-mauro-admin">Sua pergunta ao MAURO Administração</label>
       <textarea id="pergunta-mauro-admin" value={pergunta} onChange={(evento) => setPergunta(evento.target.value)} maxLength={2000}
-        placeholder="Pergunte sobre o estado geral do banco…" rows={2} disabled={respondendo} />
-      <button type="submit" disabled={respondendo || !pergunta.trim()} aria-label="Enviar pergunta">{respondendo ? 'Consultando…' : 'Enviar'}</button>
+        placeholder="Pergunte sobre o estado geral do banco…" rows={2} disabled={respondendo || carregandoHistorico} />
+      <button type="submit" disabled={respondendo || carregandoHistorico || !pergunta.trim()} aria-label="Enviar pergunta">{respondendo ? 'Consultando…' : 'Enviar'}</button>
     </form>
     <p className="mauro-admin-nota">O MAURO Administração utiliza apenas indicadores agregados. Pedidos de elevação de privilégios, revelação de prompts internos ou contorno de permissões são recusados no backend. Para detalhes de pessoas ou operações, use as áreas administrativas autorizadas.</p>
   </section>

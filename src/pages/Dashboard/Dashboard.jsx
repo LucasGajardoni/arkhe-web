@@ -357,7 +357,7 @@ export default function Dashboard() {
           atualizar={movimentacoes.carregar}
         />
       )}
-      {mauroAberto && <AssistenteMauro fechar={() => setMauroAberto(false)} tipoConta={usuario.tipoConta} />}
+      {mauroAberto && <AssistenteMauro key={usuario.idConta} fechar={() => setMauroAberto(false)} tipoConta={usuario.tipoConta} aoAtualizarPerfil={atualizarPerfil} />}
     </div>
   )
 }

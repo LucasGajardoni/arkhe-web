@@ -9,6 +9,7 @@ import {
   transcreverAudioMauro,
 } from '../../services/mauroService.js'
 import './AssistenteMauro.css'
+import PropostaCadastroMauro from './PropostaCadastroMauro.jsx'
 
 const sugestoes = [
   'Quanto tenho de saldo?',
@@ -108,7 +109,7 @@ function MensagemFormatada({ texto }) {
   })
 }
 
-export default function AssistenteMauro({ fechar, tipoConta }) {
+export default function AssistenteMauro({ fechar, tipoConta, aoAtualizarPerfil }) {
   const [conversas, setConversas] = useState([])
   const [conversaAtiva, setConversaAtiva] = useState(null)
   const [mensagens, setMensagens] = useState([])
@@ -117,6 +118,10 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const [respondendo, setRespondendo] = useState(false)
   const [erro, setErro] = useState('')
   const [propostaPix, setPropostaPix] = useState(null)
+  const [propostaCadastro, setPropostaCadastro] = useState(null)
+  const [opcoes, setOpcoes] = useState(sugestoes)
+  const [temAnteriores, setTemAnteriores] = useState(false)
+  const [carregandoAnteriores, setCarregandoAnteriores] = useState(false)
   const [mostrarConfirmacaoPix, setMostrarConfirmacaoPix] = useState(false)
   const [pinPix, setPinPix] = useState('')
   const [processandoPix, setProcessandoPix] = useState(false)
@@ -132,44 +137,66 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   const streamAudioRef = useRef(null)
   const partesAudioRef = useRef([])
   const cancelarAudioRef = useRef(false)
-  const temporizadorAudioRef = useRef(null)
   const audioContextRef = useRef(null)
   const frameAudioRef = useRef(null)
   const inicioAudioRef = useRef(0)
   const audioExcedeuLimiteRef = useRef(false)
+  const ativoRef = useRef(true)
+  const versaoConversaRef = useRef(0)
+  const conversaRef = useRef(null)
+  const enviandoRef = useRef(false)
+  const scrollAnteriorRef = useRef(null)
 
   useEffect(() => {
     let ativo = true
+    ativoRef.current = true
+    const versao = ++versaoConversaRef.current
     async function iniciar() {
       try {
         const resultado = await listarConversasMauro()
-        if (!ativo) return
+        if (!ativo || versao !== versaoConversaRef.current) return
         const lista = resultado.conversas || []
         setConversas(lista)
-        if (lista.length) {
-          await selecionarConversa(lista[0].id, ativo)
-        } else {
-          await novaConversa(ativo)
+        let id = lista[0]?.id
+        if (!id) {
+          const criada = await criarConversaMauro()
+          if (!ativo || versao !== versaoConversaRef.current) return
+          id = criada.conversa.id
+          setConversas([criada.conversa])
         }
+        const historico = await listarMensagensMauro(id)
+        if (!ativo || versao !== versaoConversaRef.current) return
+        conversaRef.current = id
+        setConversaAtiva(id)
+        setMensagens(historico.mensagens || [])
+        setPropostaPix(historico.proposta_pix || null)
+        setPropostaCadastro(historico.proposta_cadastro || null)
+        setTemAnteriores(Boolean(historico.tem_anteriores))
+        setOpcoes(historico.sugestoes || sugestoes)
       } catch (falha) {
-        if (ativo) setErro(mensagemErro(falha, 'Não foi possível abrir o MAURO.'))
+        if (ativo && versao === versaoConversaRef.current) setErro(mensagemErro(falha, 'Não foi possível abrir o MAURO.'))
       } finally {
-        if (ativo) setCarregando(false)
+        if (ativo && versao === versaoConversaRef.current) setCarregando(false)
       }
     }
     iniciar()
-    return () => { ativo = false }
-    // Load the account-scoped persisted history only when the panel opens.
+    return () => {
+      ativo = false
+      ativoRef.current = false
+      versaoConversaRef.current += 1
+    }
   }, [])
 
   useEffect(() => {
     const area = listaRef.current
-    if (area) area.scrollTop = area.scrollHeight
+    if (area && scrollAnteriorRef.current) {
+      area.scrollTop = area.scrollHeight - scrollAnteriorRef.current.altura + scrollAnteriorRef.current.posicao
+      scrollAnteriorRef.current = null
+    } else if (area) area.scrollTop = area.scrollHeight
   }, [mensagens, respondendo])
 
   useEffect(() => () => {
     cancelarAudioRef.current = true
-    clearInterval(temporizadorAudioRef.current)
     if (frameAudioRef.current) cancelAnimationFrame(frameAudioRef.current)
     if (gravadorRef.current?.state === 'recording') gravadorRef.current.stop()
     streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
@@ -179,34 +206,77 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   }, [])
 
   async function selecionarConversa(id, aindaAtivo = true) {
+    const versao = ++versaoConversaRef.current
+    cancelarAudio()
+    setTranscrevendoAudio(false)
+    setTexto('')
+    conversaRef.current = id
+    enviandoRef.current = false
+    setRespondendo(false)
+    setProcessandoPix(false)
+    setCarregandoAnteriores(false)
+    setCarregando(true)
     setErro('')
-    const resultado = await listarMensagensMauro(id)
-    if (!aindaAtivo) return
     setConversaAtiva(id)
-    setMensagens(resultado.mensagens || [])
-    setPropostaPix(resultado.proposta_pix || null)
+    setMensagens([])
+    setPropostaCadastro(null)
+    scrollAnteriorRef.current = null
+    setPropostaPix(null)
+    setTemAnteriores(false)
     setMostrarConfirmacaoPix(false)
     setPinPix('')
     setHistoricoMobileAberto(false)
+    try {
+      const resultado = await listarMensagensMauro(id)
+      if (!aindaAtivo || !ativoRef.current || versao !== versaoConversaRef.current) return
+      setMensagens(resultado.mensagens || [])
+      setPropostaPix(resultado.proposta_pix || null)
+      setPropostaCadastro(resultado.proposta_cadastro || null)
+      setTemAnteriores(Boolean(resultado.tem_anteriores))
+      setOpcoes(resultado.sugestoes || sugestoes)
+    } finally {
+      if (ativoRef.current && versao === versaoConversaRef.current) setCarregando(false)
+    }
   }
 
   async function novaConversa(aindaAtivo = true) {
+    const versao = ++versaoConversaRef.current
+    cancelarAudio()
+    setTranscrevendoAudio(false)
+    setProcessandoPix(false)
+    setCarregandoAnteriores(false)
     setErro('')
-    const resultado = await criarConversaMauro()
-    if (!aindaAtivo) return
-    const nova = resultado.conversa
-    setConversas((atual) => [nova, ...atual])
-    setConversaAtiva(nova.id)
-    setMensagens([])
-    setPropostaPix(null)
-    setMostrarConfirmacaoPix(false)
-    setPinPix('')
-    setHistoricoMobileAberto(false)
+    setCarregando(true)
+    setConversaAtiva(null)
+    conversaRef.current = null
+    try {
+      const resultado = await criarConversaMauro()
+      if (!aindaAtivo || !ativoRef.current || versao !== versaoConversaRef.current) return
+      const nova = resultado.conversa
+      setConversas((atual) => [nova, ...atual])
+      setConversaAtiva(nova.id)
+      conversaRef.current = nova.id
+      enviandoRef.current = false
+      setRespondendo(false)
+      setMensagens([])
+      setPropostaPix(null)
+      setPropostaCadastro(null)
+      setTemAnteriores(false)
+      setOpcoes(sugestoes)
+      setMostrarConfirmacaoPix(false)
+      setPinPix('')
+      setHistoricoMobileAberto(false)
+    } finally {
+      if (ativoRef.current && versao === versaoConversaRef.current) setCarregando(false)
+    }
   }
 
   async function enviar(pergunta = texto) {
     const mensagem = pergunta.trim()
-    if (!mensagem || !conversaAtiva || respondendo) return
+    if (!mensagem || !conversaAtiva || respondendo || carregando || enviandoRef.current) return
+    const versao = versaoConversaRef.current
+    const idConversa = conversaAtiva
+    enviandoRef.current = true
     setErro('')
     setTexto('')
     setTextoTranscrito(false)
@@ -215,22 +285,58 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
     }])
     setRespondendo(true)
     try {
-      const resultado = await enviarMensagemMauro(conversaAtiva, mensagem)
+      const resultado = await enviarMensagemMauro(idConversa, mensagem)
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setMensagens((atual) => [...atual, resultado.mensagem])
       if (resultado.proposta_pix) setPropostaPix(resultado.proposta_pix)
+      if (resultado.proposta_cadastro) setPropostaCadastro(resultado.proposta_cadastro)
+      setOpcoes(resultado.sugestoes || sugestoes)
       setMostrarConfirmacaoPix(false)
       setPinPix('')
       setConversas((atual) => atual.map((item) => item.id === conversaAtiva
         ? { ...item, titulo: item.titulo === 'Conversa com MAURO' ? mensagem.slice(0, 70) : item.titulo, ultima_mensagem: resultado.mensagem.conteudo }
         : item))
     } catch (falha) {
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setErro(mensagemErro(falha, 'Não consegui responder agora. Tente novamente.'))
       setMensagens((atual) => atual.filter((item) => !(typeof item.id === 'string' && item.id.startsWith('local-'))))
       setTexto(mensagem)
+      if (falha.dados?.sugestoes) setOpcoes(falha.dados.sugestoes)
     } finally {
-      setRespondendo(false)
-      entradaRef.current?.focus()
+      if (ativoRef.current && versao === versaoConversaRef.current) {
+        enviandoRef.current = false
+        setRespondendo(false)
+        entradaRef.current?.focus()
+      }
     }
+  }
+
+  async function carregarAnteriores() {
+    if (!mensagens.length || carregandoAnteriores) return
+    const versao = versaoConversaRef.current
+    setCarregandoAnteriores(true)
+    try {
+      const resultado = await listarMensagensMauro(conversaAtiva, mensagens[0].id)
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
+      const area = listaRef.current
+      if (area) scrollAnteriorRef.current = { altura: area.scrollHeight, posicao: area.scrollTop }
+      setMensagens((atuais) => [...(resultado.mensagens || []), ...atuais])
+      setTemAnteriores(Boolean(resultado.tem_anteriores))
+    } catch (falha) {
+      if (ativoRef.current && versao === versaoConversaRef.current) setErro(falha.message)
+    } finally {
+      if (ativoRef.current && versao === versaoConversaRef.current) setCarregandoAnteriores(false)
+    }
+  }
+
+  function atualizarCadastro(resultado, idConversa) {
+    if (!ativoRef.current || conversaRef.current !== idConversa) return
+    setPropostaCadastro(resultado.proposta_cadastro || null)
+    if (resultado.perfil) aoAtualizarPerfil?.({ usuario: resultado.perfil })
+    if (resultado.mensagem) setMensagens((atuais) => [...atuais, {
+      id: `cadastro-${Date.now()}`, papel: 'ASSISTENTE', conteudo: resultado.mensagem,
+      criada_em: new Date().toISOString(),
+    }])
   }
 
   function submeter(evento) {
@@ -239,7 +345,6 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   }
 
   function pararFluxoDeAudio() {
-    clearInterval(temporizadorAudioRef.current)
     if (frameAudioRef.current) cancelAnimationFrame(frameAudioRef.current)
     frameAudioRef.current = null
     streamAudioRef.current?.getTracks().forEach((faixa) => faixa.stop())
@@ -253,6 +358,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
   }
 
   async function iniciarAudio() {
+    const versao = versaoConversaRef.current
     setErro('')
     if (!conversaAtiva || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setErro('Este navegador não oferece gravação de áudio para o MAURO.')
@@ -264,6 +370,10 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
       audioExcedeuLimiteRef.current = false
       setTempoAudioMs(0)
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (!ativoRef.current || versao !== versaoConversaRef.current) {
+        stream.getTracks().forEach((faixa) => faixa.stop())
+        return
+      }
       streamAudioRef.current = stream
       const AudioContextDisponivel = window.AudioContext || window.webkitAudioContext
       let analisador = null
@@ -296,7 +406,12 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
       const mimeType = tipos.find((tipo) => MediaRecorder.isTypeSupported?.(tipo))
       const gravador = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       gravadorRef.current = gravador
+      gravador.onstart = (evento) => {
+        inicioAudioRef.current = evento.timeStamp
+      }
       gravador.ondataavailable = (evento) => {
+        if (!ativoRef.current || versao !== versaoConversaRef.current) return
+        setTempoAudioMs(Math.max(0, evento.timeStamp - inicioAudioRef.current))
         if (evento.data?.size) {
           partesAudioRef.current.push(evento.data)
           const totalBytes = partesAudioRef.current.reduce((total, parte) => total + parte.size, 0)
@@ -307,6 +422,7 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
         }
       }
       gravador.onstop = async () => {
+        if (!ativoRef.current || versao !== versaoConversaRef.current) return
         const tipoAudio = (gravador.mimeType || 'audio/webm').split(';', 1)[0]
         const blob = new Blob(partesAudioRef.current, { type: tipoAudio })
         partesAudioRef.current = []
@@ -319,22 +435,20 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
         setTranscrevendoAudio(true)
         try {
           const resultado = await transcreverAudioMauro(conversaAtiva, blob)
+          if (!ativoRef.current || versao !== versaoConversaRef.current) return
           setTexto(resultado.transcricao || '')
           setTextoTranscrito(Boolean(resultado.transcricao))
           entradaRef.current?.focus()
         } catch (falha) {
-          setErro(falha.message || 'Não consegui transcrever o áudio. Tente novamente ou digite sua pergunta.')
+          if (ativoRef.current && versao === versaoConversaRef.current) setErro(falha.message || 'Não consegui transcrever o áudio. Tente novamente ou digite sua pergunta.')
         } finally {
-          setTranscrevendoAudio(false)
+          if (ativoRef.current && versao === versaoConversaRef.current) setTranscrevendoAudio(false)
         }
       }
       gravador.start(1000)
       setGravandoAudio(true)
-      inicioAudioRef.current = Date.now()
-      temporizadorAudioRef.current = setInterval(() => {
-        setTempoAudioMs(Date.now() - inicioAudioRef.current)
-      }, 250)
     } catch (falha) {
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       pararFluxoDeAudio()
       setErro(falha.name === 'NotAllowedError'
         ? 'Permita o microfone no navegador para gravar uma pergunta.'
@@ -355,10 +469,12 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
 
   async function cancelarPix() {
     if (!propostaPix || processandoPix) return
+    const versao = versaoConversaRef.current
     setProcessandoPix(true)
     setErro('')
     try {
       const resultado = await cancelarPropostaPixMauro(conversaAtiva, propostaPix.id)
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setPropostaPix(resultado.proposta_pix || null)
       setMostrarConfirmacaoPix(false)
       setPinPix('')
@@ -368,20 +484,23 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
         criada_em: new Date().toISOString(),
       }])
     } catch (falha) {
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setErro(falha.message || 'Não foi possível cancelar a proposta.')
       if (falha.dados?.proposta_pix) setPropostaPix(falha.dados.proposta_pix)
     } finally {
-      setProcessandoPix(false)
+      if (ativoRef.current && versao === versaoConversaRef.current) setProcessandoPix(false)
     }
   }
 
   async function confirmarPix(evento) {
     evento.preventDefault()
     if (!propostaPix || processandoPix || !/^\d{6}$/.test(pinPix)) return
+    const versao = versaoConversaRef.current
     setProcessandoPix(true)
     setErro('')
     try {
       const resultado = await confirmarPropostaPixMauro(conversaAtiva, propostaPix.id, pinPix)
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setPropostaPix(resultado.proposta_pix || null)
       setMostrarConfirmacaoPix(false)
       setMensagens((atuais) => [...atuais, {
@@ -390,11 +509,14 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
         criada_em: new Date().toISOString(),
       }])
     } catch (falha) {
+      if (!ativoRef.current || versao !== versaoConversaRef.current) return
       setErro(falha.message || 'Não foi possível confirmar o Pix.')
       if (falha.dados?.proposta_pix) setPropostaPix(falha.dados.proposta_pix)
     } finally {
-      setPinPix('')
-      setProcessandoPix(false)
+      if (ativoRef.current && versao === versaoConversaRef.current) {
+        setPinPix('')
+        setProcessandoPix(false)
+      }
     }
   }
 
@@ -457,6 +579,11 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
           )}
 
           <div className="mauro-mensagens" ref={listaRef} aria-live="polite" aria-busy={carregando || respondendo}>
+            {temAnteriores && (
+              <button className="mauro-historico-anterior" type="button" onClick={carregarAnteriores} disabled={carregandoAnteriores}>
+                {carregandoAnteriores ? 'Carregando…' : 'Carregar mensagens anteriores'}
+              </button>
+            )}
             {carregando && <div className="mauro-estado">Abrindo seu histórico…</div>}
             {!carregando && mensagens.length === 0 && (
               <div className="mauro-boas-vindas">
@@ -508,10 +635,26 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
                 <p className="mauro-pix-seguranca">Nenhum valor é reservado. Saldo, acesso e limites serão verificados novamente no momento da autorização.</p>
               </section>
             )}
+            {propostaCadastro && (
+              <PropostaCadastroMauro
+                key={`${conversaAtiva}-${propostaCadastro.id}`}
+                proposta={propostaCadastro}
+                idConversa={conversaAtiva}
+                desabilitado={respondendo || processandoPix}
+                aoAtualizar={(resultado) => atualizarCadastro(resultado, conversaAtiva)}
+              />
+            )}
             {respondendo && <div className="mauro-digitando"><span /><span /><span /><small>MAURO está pensando</small></div>}
           </div>
 
           {erro && <p className="mauro-erro" role="alert">{erro}</p>}
+          {mensagens.length > 0 && !carregando && (
+            <div className="mauro-sugestoes mauro-opcoes" aria-label="Opções de atendimento">
+              {opcoes.map((opcao) => (
+                <button type="button" key={opcao} disabled={respondendo || processandoPix} onClick={() => enviar(opcao)}>{opcao}</button>
+              ))}
+            </div>
+          )}
           {gravandoAudio && (
             <div className="mauro-audio-status">
               <span className="mauro-audio-legenda" role="status" aria-live="polite" aria-label={`Gravando pergunta, ${formatarDuracaoAudio(tempoAudioMs)}.`}>
@@ -531,7 +674,10 @@ export default function AssistenteMauro({ fechar, tipoConta }) {
             <textarea ref={entradaRef} id="mauro-pergunta" value={texto} maxLength={2000}
               placeholder="Pergunte sobre sua conta…" onChange={(evento) => setTexto(evento.target.value)} rows={1} />
             <button type="button" className={`mauro-microfone ${gravandoAudio ? 'gravando' : ''}`}
-              onClick={gravandoAudio ? concluirAudio : iniciarAudio}
+              onClick={() => {
+                if (gravandoAudio) concluirAudio()
+                else iniciarAudio()
+              }}
               disabled={respondendo || carregando || transcrevendoAudio}
               aria-label={gravandoAudio ? 'Concluir gravação de áudio' : 'Gravar pergunta por áudio'}>
               <span aria-hidden="true">{gravandoAudio ? '■' : '🎙'}</span>
