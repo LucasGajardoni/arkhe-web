@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import arkheLogo from '../../assets/arkhe-logo.svg'
 import Icone from './Icone.jsx'
@@ -6,6 +7,29 @@ import { proprietarioPJ, rotuloConta as descreverConta } from '../../utils/conta
 
 export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPerfil, sair }) {
   const navigate = useNavigate()
+  const [menuAberto, setMenuAberto] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (!menuAberto) return undefined
+    function fecharFora(evento) {
+      if (menuRef.current && !menuRef.current.contains(evento.target)) setMenuAberto(false)
+    }
+    function fecharEscape(evento) {
+      if (evento.key === 'Escape') setMenuAberto(false)
+    }
+    document.addEventListener('pointerdown', fecharFora)
+    document.addEventListener('keydown', fecharEscape)
+    return () => {
+      document.removeEventListener('pointerdown', fecharFora)
+      document.removeEventListener('keydown', fecharEscape)
+    }
+  }, [menuAberto])
+
+  function navegarMenu(destino) {
+    setMenuAberto(false)
+    navigate(destino)
+  }
   const primeiroNome = usuario?.nome?.split(' ')[0] || 'Cliente'
   const iniciais = usuario?.nome?.split(' ').slice(0, 2).map((nome) => nome[0]).join('') || 'AR'
   const rotuloConta = usuario?.tipoConta === 'PJ'
@@ -58,6 +82,29 @@ export default function CabecalhoDashboard({ usuario, secao = 'inicio', abrirPer
           <button className="sair-dashboard" type="button" onClick={sair} aria-label="Sair">
             <Icone nome="sair" tamanho={20} />
           </button>
+          <div className="menu-conta-mobile" ref={menuRef}>
+            <button
+              className="botao-menu-conta-mobile"
+              type="button"
+              aria-label="Opções da conta"
+              aria-haspopup="menu"
+              aria-expanded={menuAberto}
+              onClick={() => setMenuAberto((aberto) => !aberto)}
+            >
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+            {menuAberto && (
+              <div className="painel-menu-conta-mobile" role="menu" aria-label="Opções da conta">
+                <span className="rotulo-menu-conta-mobile">Minha conta</span>
+                <button type="button" role="menuitem" onClick={() => navegarMenu('/selecionar-conta')}>Trocar conta</button>
+                {proprietarioPJ(usuario) && <button type="button" role="menuitem" onClick={() => navegarMenu('/dashboard/acessos')}>Gerenciar acessos</button>}
+                {usuario?.administradorBanco === true && <button type="button" role="menuitem" onClick={() => navegarMenu('/dashboard/admin')}>Administração</button>}
+                <button className="acao-sair-menu-conta" type="button" role="menuitem" onClick={() => { setMenuAberto(false); sair() }}>Sair da conta</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
